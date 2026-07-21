@@ -1,4 +1,4 @@
-import { type Page } from "puppeteer-core";
+import { type Page, Browser } from "puppeteer-core";
 import { DataJob } from "../data/data.ts";
 import { saveJob } from "../db/addData.ts";
 import { LINKEDIN_URL_JOB } from "../data/data.ts";
@@ -10,10 +10,18 @@ const SELECTORS = {
 };
 
 async function extractDescription(page: Page) {
-  await page.waitForSelector(SELECTORS.description, {
-    visible: true,
-    timeout: 10000,
-  });
+  const exists = await page.$(SELECTORS.description);
+
+  if (!exists) {
+    try {
+      await page.waitForSelector(SELECTORS.description, {
+        visible: true,
+        timeout: 10000,
+      });
+    } catch {
+      return null;
+    }
+  }
 
   return page.$eval(
     SELECTORS.description,
@@ -51,10 +59,9 @@ async function extractCompanyName(page: Page) {
   }, SELECTORS.companyName);
 }
 
-async function extractData(page: Page, jobId: string) {
-  await page.goto(`${LINKEDIN_URL_JOB}${jobId}`, {
-    waitUntil: "load",
-  });
+async function extractData(browser: Browser, jobId: string) {
+  const page = await browser.newPage();
+  await page.goto(`${LINKEDIN_URL_JOB}${jobId}`, { waitUntil: "load", });
 
   const companyName = (await extractCompanyName(page))?.trim();
   const link = (await extractLink(page, jobId))?.trim();
@@ -72,15 +79,16 @@ async function extractData(page: Page, jobId: string) {
     link,
   };
 
+  await page.close();
   return await saveJob(data);
 }
 
-export async function getJobData(page: Page, jobIds: string[]) {
+export async function getJobData(browser: Browser, jobIds: string[]) {
   const savedJobs = [];
 
   for (const jobId of jobIds) {
     try {
-      const id = await extractData(page, jobId);
+      const id = await extractData(browser, jobId);
       savedJobs.push(id);
     } catch (err) {
       console.error(`Failed to extract job ${jobId}`, err);
