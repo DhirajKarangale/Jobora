@@ -67,7 +67,5 @@ export async function getJobIds(page: Page) {
   }
 
   const uniqueJobIds = await filterExistingJobIds(jobIds);
-  console.log("LinkedIn:", uniqueJobIds.length);
-
   return uniqueJobIds;
 }
