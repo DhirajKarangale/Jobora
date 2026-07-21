@@ -1,25 +1,38 @@
 import { type Page } from "puppeteer-core";
 import { URL_JOB } from "./linkedInData.ts";
+import { DataJob } from "../data/data.ts";
+import { saveJob } from "../db/addData.ts";
+
+const SELECTORS = {
+  description:
+    '[data-sdui-component="com.linkedin.sdui.generated.jobseeker.dsl.impl.aboutTheJob"]',
+
+  applyLink:
+    'a[href*="/jobs/view/"][href*="/apply/"], a[href*="/safety/go/"]',
+
+  companyName: '[aria-label^="Company,"]',
+};
 
 async function extractDescription(page: Page) {
-  const selector =
-    '[data-sdui-component="com.linkedin.sdui.generated.jobseeker.dsl.impl.aboutTheJob"]';
-
-  await page.waitForSelector(selector, {
+  await page.waitForSelector(SELECTORS.description, {
     visible: true,
     timeout: 10000,
   });
 
-  return page.$eval(selector, el => el.textContent?.trim() ?? null);
+  return page.$eval(
+    SELECTORS.description,
+    el => el.textContent?.trim() ?? null
+  );
 }
 
 async function extractLink(page: Page, jobId: string) {
-  const selector = 'a[href*="/jobs/view/"][href*="/apply/"], a[href*="/safety/go/"]';
-  await page.waitForSelector(selector, { timeout: 10000 });
+  await page.waitForSelector(SELECTORS.applyLink, {
+    timeout: 10000,
+  });
 
   const href = await page.$eval(
-    selector,
-    a => (a as HTMLAnchorElement).href
+    SELECTORS.applyLink,
+    el => (el as HTMLAnchorElement).href.trim()
   );
 
   if (href.includes("/jobs/view/") && href.includes("/apply/")) {
@@ -30,30 +43,41 @@ async function extractLink(page: Page, jobId: string) {
   if (!encoded) return null;
 
   const url = new URL(decodeURIComponent(encoded));
-  return `${url.origin}${url.pathname}`;
+  return `${url.origin}${url.pathname}`.trim();
 }
 
 async function extractCompanyName(page: Page) {
-  return page.evaluate(() => {
-    const element = document.querySelector('[aria-label^="Company,"]');
+  return page.evaluate(selector => {
+    const element = document.querySelector(selector);
     if (!element) return null;
-    const label = element.getAttribute("aria-label");
-    return label?.match(/^Company,\s*(.+?)\.$/)?.[1] ?? null;
-  });
+
+    const label = element.getAttribute("aria-label")?.trim();
+    return label?.match(/^Company,\s*(.+?)\.$/)?.[1]?.trim() ?? null;
+  }, SELECTORS.companyName);
 }
 
 async function extractData(page: Page, jobId: string) {
-  const url = `${URL_JOB}${jobId}`;
-  await page.goto(url, { waitUntil: "load", });
+  await page.goto(`${URL_JOB}${jobId}`, {
+    waitUntil: "load",
+  });
 
-  const companyName = await extractCompanyName(page);
-  const link = await extractLink(page, jobId);
-  const description = await extractDescription(page);
+  const companyName = (await extractCompanyName(page))?.trim();
+  const link = (await extractLink(page, jobId))?.trim();
+  const description = (await extractDescription(page))?.trim();
 
-  console.log(`------------------------ ${companyName} ------------------------`);
-  console.log(jobId, "->", link);
-  console.log(description);
-  console.log("------------------------ End ------------------------ \n\n");
+  if (!companyName || !link || !description) return;
+
+  const data: DataJob = {
+    id: null,
+    sourceName: "LinkedIn",
+    sourceJobId: jobId,
+    companyName,
+    jobId: null,
+    description,
+    link,
+  };
+
+  await saveJob(data);
 }
 
 export async function getJobData(page: Page, jobIds: string[]) {
