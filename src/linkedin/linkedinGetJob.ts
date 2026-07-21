@@ -26,12 +26,11 @@ async function extractDescription(page: Page) {
 }
 
 async function extractLink(page: Page, jobId: string) {
-  await page.waitForSelector(SELECTORS.applyLink, {
-    timeout: 10000,
-  });
+  const element = await page.$(SELECTORS.applyLink);
 
-  const href = await page.$eval(
-    SELECTORS.applyLink,
+  if (!element) return null;
+
+  const href = await element.evaluate(
     el => (el as HTMLAnchorElement).href.trim()
   );
 
@@ -76,7 +75,7 @@ async function extractData(page: Page, jobId: string) {
     description,
     link,
   };
-
+  
   await saveJob(data);
 }
 
