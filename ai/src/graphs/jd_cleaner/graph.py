@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import TypedDict, Dict, Any
 from langgraph.graph import StateGraph, START, END
 
 from utils.huggingface import invoke_llm
@@ -8,6 +8,7 @@ from graphs.jd_cleaner.prompts import (
     get_vocabulary_standardization_prompt,
     get_consistency_prompt,
     get_language_normalization_prompt,
+    get_structuring_prompt,
 )
 
 # Model fallback lists
@@ -38,6 +39,7 @@ NORMALIZATION_MODELS = [
 class JDState(TypedDict):
     raw_text: str
     current_text: str
+    structured_data: Dict[str, Any]
 
 
 def run_llm_step(text: str, prompt: str, models: list[str]) -> str:
@@ -50,6 +52,20 @@ def run_llm_step(text: str, prompt: str, models: list[str]) -> str:
     except Exception as e:
         print(f"LLM Step failed: {e}")
         return text
+
+
+def run_llm_json_step(text: str, prompt: str, models: list[str]) -> Dict[str, Any]:
+    """Helper to run LLM and parse JSON with fallback models."""
+    if not text or not text.strip():
+        return {}
+    try:
+        result = invoke_llm(models, prompt, parse_as_json=True)
+        if isinstance(result, dict):
+            return result
+        return {}
+    except Exception as e:
+        print(f"LLM JSON Step failed: {e}")
+        return {}
 
 
 # --- Graph Nodes ---
@@ -89,6 +105,14 @@ def language_normalization_node(state: JDState) -> JDState:
     final_text = run_llm_step(text, prompt, NORMALIZATION_MODELS)
     return {"current_text": final_text}
 
+def structuring_node(state: JDState) -> JDState:
+    text = state["current_text"]
+    raw_text = state.get("raw_text", "")
+    print("[Node] Running JD structuring node...")
+    prompt = get_structuring_prompt(text, raw_text)
+    structured_dict = run_llm_json_step(text, prompt, NORMALIZATION_MODELS)
+    return {"structured_data": structured_dict}
+
 
 # --- Build Graph ---
 builder = StateGraph(JDState)
@@ -98,23 +122,29 @@ builder.add_node("semantic_normalization", semantic_normalization_node)
 builder.add_node("vocabulary_standardization", vocabulary_standardization_node)
 builder.add_node("consistency", consistency_node)
 builder.add_node("language_normalization", language_normalization_node)
+builder.add_node("structuring", structuring_node)
 
 builder.add_edge(START, "text_cleaning")
 builder.add_edge("text_cleaning", "semantic_normalization")
 builder.add_edge("semantic_normalization", "vocabulary_standardization")
 builder.add_edge("vocabulary_standardization", "consistency")
 builder.add_edge("consistency", "language_normalization")
-builder.add_edge("language_normalization", END)
+builder.add_edge("language_normalization", "structuring")
+builder.add_edge("structuring", END)
 
 jd_cleaner_graph = builder.compile()
 
-def process_job_description(raw_text: str) -> str:
+def process_job_description(raw_text: str) -> Dict[str, Any]:
     """Entry point for the whole workflow."""
     if not raw_text:
-        return ""
-    initial_state = {"raw_text": raw_text, "current_text": raw_text}
-    print("Starting job description cleaning workflow...")
+        return {"current_text": "", "structured_data": {}}
+    initial_state = {"raw_text": raw_text, "current_text": raw_text, "structured_data": {}}
+    print("Starting job description cleaning & structuring workflow...")
     
     final_state = jd_cleaner_graph.invoke(initial_state)
     
-    return final_state.get("current_text", "")
+    return {
+        "current_text": final_state.get("current_text", ""),
+        "structured_data": final_state.get("structured_data", {})
+    }
+

@@ -43,7 +43,7 @@ def _get_llm(name: str, token_index: int):
         "repo_id": cfg["model_id"],
         "do_sample": cfg.get("do_sample", False),
         "temperature": cfg.get("temperature", 0.1),
-        "max_new_tokens": cfg.get("max_new_tokens", 512),
+        "max_new_tokens": max(cfg.get("max_new_tokens", 512), 1024),
         "repetition_penalty": cfg.get("repetition_penalty", 1.03),
         "return_full_text": False,
         "huggingfacehub_api_token": token,
