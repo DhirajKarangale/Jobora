@@ -135,16 +135,12 @@ builder.add_edge("structuring", END)
 jd_cleaner_graph = builder.compile()
 
 def process_job_description(raw_text: str) -> Dict[str, Any]:
-    """Entry point for the whole workflow."""
+    """Entry point for the whole workflow. Returns the structured JSON data directly."""
     if not raw_text:
-        return {"current_text": "", "structured_data": {}}
+        return {}
     initial_state = {"raw_text": raw_text, "current_text": raw_text, "structured_data": {}}
-    print("Starting job description cleaning & structuring workflow...")
     
     final_state = jd_cleaner_graph.invoke(initial_state)
     
-    return {
-        "current_text": final_state.get("current_text", ""),
-        "structured_data": final_state.get("structured_data", {})
-    }
+    return final_state.get("structured_data", {})
 

@@ -16,21 +16,12 @@ def main():
         
         if job and job.get("description"):
             raw_desc = job["description"]
-            print(f"\n--- Original Job Description ---\n{raw_desc[:500]}...\n")
             
-            # Run the cleaning & structuring workflow
-            result = process_job_description(raw_desc)
-            
-            cleaned_text = result.get("current_text", "")
-            structured_data = result.get("structured_data", {})
-            
-            print(f"\n--- Cleaned Text ---\n{cleaned_text}\n")
+            # Run the cleaning & structuring workflow to get JSON data
+            structured_json = process_job_description(raw_desc)
             
             import json
-            print(f"\n--- Structured Data (JSON) ---\n{json.dumps(structured_data, indent=2)}\n")
-            
-            # Optional: Update the database with cleaned description or structured data
-            # update_job(conn, job_id, {"description": cleaned_text})
+            print(json.dumps(structured_json, indent=2))
         else:
             print("Job not found or description is empty.")
 
