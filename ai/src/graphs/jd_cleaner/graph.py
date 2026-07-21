@@ -1,0 +1,120 @@
+from typing import TypedDict
+from langgraph.graph import StateGraph, START, END
+
+from utils.huggingface import invoke_llm
+from graphs.jd_cleaner.prompts import (
+    get_cleaning_prompt,
+    get_semantic_normalization_prompt,
+    get_vocabulary_standardization_prompt,
+    get_consistency_prompt,
+    get_language_normalization_prompt,
+)
+
+# Model fallback lists
+CLEANING_MODELS = [
+    "llama3",
+    "qwen2_5",
+    "qwen2_5_7b",
+    "deepseek_r1_distill_llama_8b",
+    "hermes",
+    "mistral",
+    "phi3_mini",
+    "gemma_7b",
+    "zephyr",
+]
+
+NORMALIZATION_MODELS = [
+    "qwen2_5",
+    "llama3",
+    "qwen2_5_7b",
+    "deepseek_r1_distill_llama_8b",
+    "hermes",
+    "deepseek_v3",
+    "phi3_mini",
+    "gemma_7b",
+    "zephyr",
+]
+
+class JDState(TypedDict):
+    raw_text: str
+    current_text: str
+
+
+def run_llm_step(text: str, prompt: str, models: list[str]) -> str:
+    """Helper to run the LLM with fallback models."""
+    if not text or not text.strip():
+        return ""
+    try:
+        result = invoke_llm(models, prompt, parse_as_json=False)
+        return result.strip() if result else text
+    except Exception as e:
+        print(f"LLM Step failed: {e}")
+        return text
+
+
+# --- Graph Nodes ---
+
+def text_cleaning_node(state: JDState) -> JDState:
+    text = state["current_text"]
+    print("[Node] Running text cleaning...")
+    prompt = get_cleaning_prompt(text)
+    cleaned = run_llm_step(text, prompt, CLEANING_MODELS)
+    return {"current_text": cleaned}
+
+def semantic_normalization_node(state: JDState) -> JDState:
+    text = state["current_text"]
+    print("[Node] Running semantic normalization...")
+    prompt = get_semantic_normalization_prompt(text)
+    normalized = run_llm_step(text, prompt, NORMALIZATION_MODELS)
+    return {"current_text": normalized}
+
+def vocabulary_standardization_node(state: JDState) -> JDState:
+    text = state["current_text"]
+    print("[Node] Running vocabulary standardization...")
+    prompt = get_vocabulary_standardization_prompt(text)
+    standardized = run_llm_step(text, prompt, NORMALIZATION_MODELS)
+    return {"current_text": standardized}
+
+def consistency_node(state: JDState) -> JDState:
+    text = state["current_text"]
+    print("[Node] Running consistency check...")
+    prompt = get_consistency_prompt(text)
+    consistent = run_llm_step(text, prompt, NORMALIZATION_MODELS)
+    return {"current_text": consistent}
+
+def language_normalization_node(state: JDState) -> JDState:
+    text = state["current_text"]
+    print("[Node] Running language normalization...")
+    prompt = get_language_normalization_prompt(text)
+    final_text = run_llm_step(text, prompt, NORMALIZATION_MODELS)
+    return {"current_text": final_text}
+
+
+# --- Build Graph ---
+builder = StateGraph(JDState)
+
+builder.add_node("text_cleaning", text_cleaning_node)
+builder.add_node("semantic_normalization", semantic_normalization_node)
+builder.add_node("vocabulary_standardization", vocabulary_standardization_node)
+builder.add_node("consistency", consistency_node)
+builder.add_node("language_normalization", language_normalization_node)
+
+builder.add_edge(START, "text_cleaning")
+builder.add_edge("text_cleaning", "semantic_normalization")
+builder.add_edge("semantic_normalization", "vocabulary_standardization")
+builder.add_edge("vocabulary_standardization", "consistency")
+builder.add_edge("consistency", "language_normalization")
+builder.add_edge("language_normalization", END)
+
+jd_cleaner_graph = builder.compile()
+
+def process_job_description(raw_text: str) -> str:
+    """Entry point for the whole workflow."""
+    if not raw_text:
+        return ""
+    initial_state = {"raw_text": raw_text, "current_text": raw_text}
+    print("Starting job description cleaning workflow...")
+    
+    final_state = jd_cleaner_graph.invoke(initial_state)
+    
+    return final_state.get("current_text", "")

@@ -1,4 +1,5 @@
 from utils.db import init_db, get_all_jobs, get_job, update_job, delete_job
+from graphs.jd_cleaner.graph import process_job_description
 
 def main():
     try:
@@ -9,26 +10,23 @@ def main():
         return
 
     try:
-        # Example usage of the database functions:
+        # Get a specific job
+        job_id = "008bdd12-39ca-4d5b-b61f-b46c9938f34b"
+        job = get_job(conn, job_id)
         
-        # 1. Get all jobs
-        # jobs = get_all_jobs(conn)
-        # print(f"Found {len(jobs)} jobs.")
-        
-        # 2. Update a job (assuming you have a valid UUID to test with)
-        # job_id_to_update = "some-uuid-here"
-        # updated = update_job(conn, job_id_to_update, {"match": 0.95, "company_name": "New Company"})
-        # print("Updated job:", updated)
-        
-        # 3. Delete a job
-        # job_id_to_delete = "another-uuid-here"
-        # delete_job(conn, job_id_to_delete)
-        # print("Job deleted.")
-
-        job = get_job(conn, "008bdd12-39ca-4d5b-b61f-b46c9938f34b")
-        print(f"Job: {job}")
-        
-        pass # Remove this when you uncomment the examples above
+        if job and job.get("description"):
+            raw_desc = job["description"]
+            print(f"\n--- Original Job Description ---\n{raw_desc[:500]}...\n")
+            
+            # Run the cleaning workflow
+            cleaned_desc = process_job_description(raw_desc)
+            
+            print(f"\n--- Cleaned Job Description ---\n{cleaned_desc}\n")
+            
+            # Optional: Update the database with cleaned description
+            # update_job(conn, job_id, {"description": cleaned_desc})
+        else:
+            print("Job not found or description is empty.")
 
     finally:
         # Always make sure to close the connection when done

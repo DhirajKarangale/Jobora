@@ -34,17 +34,25 @@ def _get_llm(name: str, token_index: int):
 
     token = HF_TOKENS[token_index]
 
-    endpoint = HuggingFaceEndpoint(
-        task=cfg["task"],
-        repo_id=cfg["model_id"],
-        provider=cfg.get("provider", "huggingface"),
-        do_sample=cfg.get("do_sample", False),
-        temperature=cfg.get("temperature", 0.1),
-        max_new_tokens=cfg.get("max_new_tokens", 512),
-        repetition_penalty=cfg.get("repetition_penalty", 1.03),
-        return_full_text=False,
-        huggingfacehub_api_token=token,
-    )
+    provider = cfg.get("provider")
+    if provider in ["auto", "huggingface", ""]:
+        provider = None
+
+    endpoint_kwargs = {
+        "task": cfg["task"],
+        "repo_id": cfg["model_id"],
+        "do_sample": cfg.get("do_sample", False),
+        "temperature": cfg.get("temperature", 0.1),
+        "max_new_tokens": cfg.get("max_new_tokens", 512),
+        "repetition_penalty": cfg.get("repetition_penalty", 1.03),
+        "return_full_text": False,
+        "huggingfacehub_api_token": token,
+    }
+    if provider:
+        endpoint_kwargs["provider"] = provider
+
+    endpoint = HuggingFaceEndpoint(**endpoint_kwargs)
+
 
     if cfg["task"] == "conversational":
         llm = ChatHuggingFace(llm=endpoint)

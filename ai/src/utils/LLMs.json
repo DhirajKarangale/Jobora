@@ -1,7 +1,7 @@
 [
     {
         "name": "llama3",
-        "model_id": "meta-llama/Meta-Llama-3-8B-Instruct",
+        "model_id": "meta-llama/Llama-3.1-8B-Instruct",
         "task": "conversational",
         "provider": "auto",
         "do_sample": false,
@@ -71,7 +71,7 @@
     },
     {
         "name": "qwen2_5",
-        "model_id": "Qwen/Qwen2.5-14B-Instruct",
+        "model_id": "Qwen/Qwen2.5-72B-Instruct",
         "task": "conversational",
         "provider": "auto",
         "do_sample": false,
