@@ -9,6 +9,10 @@ const SELECTORS = {
   companyName: '[aria-label^="Company,"]',
 };
 
+function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function extractDescription(page: Page) {
   const exists = await page.$(SELECTORS.description);
 
@@ -63,9 +67,12 @@ async function extractData(browser: Browser, jobId: string) {
   const page = await browser.newPage();
   await page.goto(`${LINKEDIN_URL_JOB}${jobId}`, { waitUntil: "load", });
 
+  await delay(1000);
   const companyName = (await extractCompanyName(page))?.trim();
   const link = (await extractLink(page, jobId))?.trim();
   const description = (await extractDescription(page))?.trim();
+  await delay(1000);
+  await page.close();
 
   if (!companyName || !link || !description) return;
 
@@ -79,7 +86,6 @@ async function extractData(browser: Browser, jobId: string) {
     link,
   };
 
-  await page.close();
   return await saveJob(data);
 }
 

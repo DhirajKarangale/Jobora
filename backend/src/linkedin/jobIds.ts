@@ -1,18 +1,36 @@
-import { type Page } from "puppeteer-core";
-import { LINKEDIN_PAGES } from "../data/data.ts";
+import { type Browser, Page } from "puppeteer-core";
+import { LINKEDIN_PAGES, LINKEDIN_URL_JOB_SEARCH } from "../data/data.ts";
 import { filterExistingJobIds } from "../db/checkJobIds.ts";
 
+const MAX_RETRIES = 3;
 const JOB_SELECTOR = 'div[componentkey^="job-card-component-ref-"]';
 const NEXT_BUTTON_SELECTOR = '[data-testid="pagination-controls-next-button-visible"]';
 
+function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function extractJobIds(page: Page): Promise<string[]> {
-  const ids = await page.evaluate(selector => {
-    return [...document.querySelectorAll(selector)]
-      .map(el => el.getAttribute("componentkey"))
-      .map(key => key?.replace("job-card-component-ref-", ""))
-      .filter(Boolean);
-  }, JOB_SELECTOR);
-  return ids as string[];
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      await page.waitForSelector(JOB_SELECTOR, { visible: true, timeout: 10000, });
+
+      const ids = await page.evaluate(selector => {
+        return [...document.querySelectorAll(selector)]
+          .map(el => el.getAttribute("componentkey"))
+          .map(key => key?.replace("job-card-component-ref-", ""))
+          .filter(Boolean);
+      }, JOB_SELECTOR);
+
+      if (ids.length > 0) return ids as string[];
+    } catch {
+    }
+
+    console.log(`No job cards found. Reloading page (${attempt}/${MAX_RETRIES})...`);
+    await page.reload({ waitUntil: "networkidle2", });
+  }
+
+  return [];
 }
 
 async function waitForNextPage(
@@ -43,14 +61,19 @@ async function waitForNextPage(
   }
 }
 
-export async function getJobIds(page: Page) {
+export async function getJobIds(browser: Browser) {
+  const page = await browser.newPage();
+  await page.goto(LINKEDIN_URL_JOB_SEARCH, { waitUntil: "load", });
+
   let pageCount = LINKEDIN_PAGES;
   const jobIds = new Set<string>();
 
   while (pageCount-- > 0) {
+    await delay(1000);
     const currentJobIds = await extractJobIds(page);
-    if (currentJobIds.length === 0) break;
+    await delay(1000);
 
+    if (currentJobIds.length === 0) break;
     currentJobIds.forEach(id => jobIds.add(id));
 
     const exists = await page.$(NEXT_BUTTON_SELECTOR);
@@ -61,6 +84,7 @@ export async function getJobIds(page: Page) {
     if (!pageChanged) break;
   }
 
+  await page.close();
   const uniqueJobIds = await filterExistingJobIds(jobIds);
   return uniqueJobIds;
 }

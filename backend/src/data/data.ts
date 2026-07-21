@@ -1,4 +1,4 @@
-export const LINKEDIN_PAGES = 3;
+export const LINKEDIN_PAGES = 2;
 export const LINKEDIN_URL_JOB = "https://www.linkedin.com/jobs/view/";
 export const LINKEDIN_URL_JOB_SEARCH = "https://www.linkedin.com/jobs/search-results/?currentJobId=4442784137&keywords=software%20engineer&origin=JOB_SEARCH_PAGE_JOB_FILTER&referralSearchId=uW6cOvg%2FqGDP91uF52c9Ug%3D%3D&f_TPR=r86400";
 
