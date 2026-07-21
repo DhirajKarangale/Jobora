@@ -24,5 +24,7 @@ export async function saveJob(data: DataJob) {
     data.link,
   ];
 
-  await pool.query(query, values);
+  const { rows } = await pool.query(query, values);
+
+  return rows[0].id;
 }

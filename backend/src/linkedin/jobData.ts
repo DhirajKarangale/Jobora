@@ -1,15 +1,11 @@
 import { type Page } from "puppeteer-core";
-import { URL_JOB } from "./linkedInData.ts";
 import { DataJob } from "../data/data.ts";
 import { saveJob } from "../db/addData.ts";
+import { LINKEDIN_URL_JOB } from "../data/data.ts";
 
 const SELECTORS = {
-  description:
-    '[data-sdui-component="com.linkedin.sdui.generated.jobseeker.dsl.impl.aboutTheJob"]',
-
-  applyLink:
-    'a[href*="/jobs/view/"][href*="/apply/"], a[href*="/safety/go/"]',
-
+  description: '[data-sdui-component="com.linkedin.sdui.generated.jobseeker.dsl.impl.aboutTheJob"]',
+  applyLink: 'a[href*="/jobs/view/"][href*="/apply/"], a[href*="/safety/go/"]',
   companyName: '[aria-label^="Company,"]',
 };
 
@@ -35,7 +31,7 @@ async function extractLink(page: Page, jobId: string) {
   );
 
   if (href.includes("/jobs/view/") && href.includes("/apply/")) {
-    return `${URL_JOB}${jobId}/apply`;
+    return `${LINKEDIN_URL_JOB}${jobId}/apply`;
   }
 
   const encoded = new URL(href).searchParams.get("url");
@@ -56,7 +52,7 @@ async function extractCompanyName(page: Page) {
 }
 
 async function extractData(page: Page, jobId: string) {
-  await page.goto(`${URL_JOB}${jobId}`, {
+  await page.goto(`${LINKEDIN_URL_JOB}${jobId}`, {
     waitUntil: "load",
   });
 
@@ -75,16 +71,21 @@ async function extractData(page: Page, jobId: string) {
     description,
     link,
   };
-  
-  await saveJob(data);
+
+  return await saveJob(data);
 }
 
 export async function getJobData(page: Page, jobIds: string[]) {
+  const savedJobs = [];
+
   for (const jobId of jobIds) {
     try {
-      await extractData(page, jobId);
+      const id = await extractData(page, jobId);
+      savedJobs.push(id);
     } catch (err) {
       console.error(`Failed to extract job ${jobId}`, err);
     }
   }
+
+  return savedJobs;
 }
