@@ -88,7 +88,7 @@ export function JobCard({
           <a href={job.link} target="_blank" rel="noopener noreferrer" className="w-full">
             <Button
               size="sm"
-              className="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-lg shadow-xs hover:shadow-indigo-500/25 transition-all duration-200 cursor-pointer text-xs h-9"
+              className="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-lg shadow-xs hover:shadow-indigo-500/25 transition-all duration-200 text-xs h-9"
             >
               Apply
               <ExternalLink className="w-3.5 h-3.5 ml-1.5" />

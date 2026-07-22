@@ -185,7 +185,7 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
             <a href={job.link} target="_blank" rel="noopener noreferrer">
               <Button
                 size="sm"
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-xs hover:shadow-indigo-500/20 cursor-pointer text-xs h-8"
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-xs hover:shadow-indigo-500/20 text-xs h-8"
               >
                 Apply Now
                 <ExternalLink className="w-3.5 h-3.5 ml-1.5" />

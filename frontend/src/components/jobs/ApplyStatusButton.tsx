@@ -32,7 +32,7 @@ export function ApplyStatusButton({
         variant="outline"
         onClick={handleClick}
         disabled={isPending}
-        className={`border text-xs h-8 cursor-pointer transition-all ${
+        className={`border text-xs h-8 transition-all ${
           isPending
             ? targetIsApply
               ? "opacity-80 bg-indigo-500/10 text-indigo-600 border-indigo-500/30"
@@ -58,7 +58,7 @@ export function ApplyStatusButton({
     <button
       onClick={handleClick}
       disabled={isPending}
-      className={`inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-md transition-all border cursor-pointer ${
+      className={`inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-md transition-all border cursor-pointer disabled:cursor-not-allowed ${
         isPending
           ? targetIsApply
             ? "opacity-80 bg-indigo-500/10 text-indigo-600 border-indigo-500/30"

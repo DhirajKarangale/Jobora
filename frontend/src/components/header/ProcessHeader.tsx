@@ -33,7 +33,7 @@ export function ProcessHeader() {
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Scraper Status:
             </span>
-            {isLoading && isRunning === undefined ? (
+            {isLoading || isRefetching ? (
               <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-500" />
                 Checking...
@@ -65,7 +65,7 @@ export function ProcessHeader() {
             <Button
               onClick={() => startProcess()}
               disabled={isStarting || isLoading}
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold shadow-md hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer"
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold shadow-md hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200"
             >
               {isStarting ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
@@ -80,7 +80,7 @@ export function ProcessHeader() {
             variant="outline"
             onClick={refreshStatus}
             disabled={isRefetching}
-            className="border-border hover:bg-accent/80 transition-all duration-200 cursor-pointer"
+            className="border-border hover:bg-accent/80 transition-all duration-200"
           >
             <RefreshCw className={`w-4 h-4 mr-1.5 ${isRefetching ? "animate-spin text-indigo-500" : ""}`} />
             Refresh

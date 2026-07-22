@@ -14,7 +14,8 @@ export function useProcessStatus() {
   } = useQuery({
     queryKey: ["processStatus"],
     queryFn: fetchProcessStatus,
-    refetchInterval: 5000,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const startMutation = useMutation({
