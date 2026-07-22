@@ -1,6 +1,6 @@
 import { type Browser, Page } from "puppeteer-core";
 import { LINKEDIN_PAGES, LINKEDIN_URL_JOB_SEARCH } from "../data/data.ts";
-import { filterExistingJobIds } from "../db/checkJobIds.ts";
+import { filterExistingJobIds } from "../db/index.ts";
 
 const MAX_RETRIES = 3;
 const JOB_SELECTOR = 'div[componentkey^="job-card-component-ref-"]';

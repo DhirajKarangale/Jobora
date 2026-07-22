@@ -1,6 +1,6 @@
 import { type Page, Browser } from "puppeteer-core";
 import { DataJob } from "../data/data.ts";
-import { saveJob } from "../db/addData.ts";
+import { saveJob } from "../db/index.ts";
 import { LINKEDIN_URL_JOB } from "../data/data.ts";
 import { addToProcessStream } from "../redis/index.ts";
 
