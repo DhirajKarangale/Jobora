@@ -174,7 +174,7 @@ export async function setJobAppliedStatus(jobId: string, isApplied: boolean): Pr
     query = `
       UPDATE jobs
       SET isapplied = $2
-      WHERE id = $1::uuid OR source_jobid = $1 OR jobid = $1
+      WHERE id = $1::uuid OR source_jobid = $1::text OR jobid = $1::text
     `;
     params = [jobId, isApplied];
   } else {
@@ -195,7 +195,7 @@ export async function getJobIdentifiers(jobId: string): Promise<string[]> {
   let params: any[] = [];
 
   if (isUuid(jobId)) {
-    query = `SELECT id::text, source_jobid, jobid FROM jobs WHERE id = $1::uuid OR source_jobid = $1 OR jobid = $1`;
+    query = `SELECT id::text, source_jobid, jobid FROM jobs WHERE id = $1::uuid OR source_jobid = $1::text OR jobid = $1::text`;
     params = [jobId];
   } else {
     query = `SELECT id::text, source_jobid, jobid FROM jobs WHERE source_jobid = $1 OR jobid = $1`;
