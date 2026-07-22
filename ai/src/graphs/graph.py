@@ -246,7 +246,9 @@ def process_job_description(job_input: Any, job_id: str = "", source_jobid: str 
     return {
         "id": jid,
         "source_jobid": sjid,
-        "eligible": eligible_val
+        "eligible": eligible_val,
+        "cleaned_description": final_state.get("current_text", ""),
+        "structured_data": final_state.get("structured_data", {})
     }
 
 
