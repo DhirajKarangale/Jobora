@@ -34,12 +34,12 @@ export function ApplyStatusButton({
         onClick={handleClick}
         disabled={isPending}
         className={`border text-xs h-8 transition-all ${isPending
-            ? targetIsApply
-              ? "opacity-80 bg-indigo-500/10 text-indigo-600 border-indigo-500/30"
-              : "bg-destructive/15 text-destructive border-destructive/40 font-bold"
-            : isApplied
-              ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 font-bold hover:bg-emerald-500/30"
-              : "border-border text-muted-foreground hover:text-foreground hover:bg-accent font-medium"
+          ? targetIsApply
+            ? "opacity-80 bg-indigo-500/10 text-indigo-600 border-indigo-500/30"
+            : "bg-destructive/15 text-destructive border-destructive/40 font-bold"
+          : isApplied
+            ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 font-bold hover:bg-emerald-500/30"
+            : "border-border text-muted-foreground hover:text-foreground hover:bg-accent font-medium"
           }`}
       >
         {isPending ? (
@@ -60,12 +60,12 @@ export function ApplyStatusButton({
       onClick={handleClick}
       disabled={isPending}
       className={`inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-md transition-all border cursor-pointer disabled:cursor-not-allowed ${isPending
-          ? targetIsApply
-            ? "opacity-80 bg-indigo-500/10 text-indigo-600 border-indigo-500/30"
-            : "bg-destructive/15 text-destructive border-destructive/40 font-bold"
-          : isApplied
-            ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 font-bold shadow-2xs hover:bg-emerald-500/30"
-            : "bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border-border/60 font-medium"
+        ? targetIsApply
+          ? "opacity-80 bg-indigo-500/10 text-indigo-600 border-indigo-500/30"
+          : "bg-destructive/15 text-destructive border-destructive/40 font-bold"
+        : isApplied
+          ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 font-bold shadow-2xs hover:bg-emerald-500/30"
+          : "bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border-border/60 font-medium"
         }`}
     >
       {isPending ? (
@@ -75,7 +75,7 @@ export function ApplyStatusButton({
       ) : (
         <CheckCircle2 className="w-3 h-3 text-muted-foreground/60" />
       )}
-      {isPending ? (targetIsApply ? "Marking apply" : "unmarking apply") : isApplied ? "Applied" : "Mark as Apply"}
+      {isPending ? (targetIsApply ? "Marking apply" : "Unmarking apply") : isApplied ? "Applied" : "Mark Apply"}
     </button>
   );
 }
