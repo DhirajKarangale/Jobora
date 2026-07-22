@@ -14,8 +14,13 @@ JSON_PATH = os.path.join(BASE_DIR, "LLMs.json")
 with open(JSON_PATH, "r") as file:
     LLMs = json.load(file)
 
-hf_tokens_env = os.getenv("HF_TOKENS", "")
+hf_tokens_env = os.getenv("HF_TOKENS")
+if not hf_tokens_env or not hf_tokens_env.strip():
+    raise ValueError("Missing required environment variable: HF_TOKENS")
+
 HF_TOKENS = [t.strip() for t in hf_tokens_env.split(",") if t.strip()]
+if not HF_TOKENS:
+    raise ValueError("HF_TOKENS environment variable contains no valid tokens.")
 
 _current_token_index = 0
 _connected_llms = {}
