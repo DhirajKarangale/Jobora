@@ -1,99 +1,46 @@
 def get_cleaning_prompt(text: str) -> str:
-    return f"""
-Clean the following raw text by removing formatting issues, extra whitespace, broken lines, and non-informative conversational noise.
+    return f"""Clean, normalize, and summarize the raw job description text below into a clear, professional, and structured technical summary.
+
+CLEANING & NORMALIZATION INSTRUCTIONS:
+1. Formatting & Code Removal: Strip HTML tags/code, emojis, icons, separators (e.g., '---', '***', '==='), unicode apostrophe escapes (e.g., '\\u2019' or smart quotes -> convert to standard ASCII "'"), broken lines, extra spaces, and inconsistent casing/formatting.
+2. Noise & Repetition Removal: Remove repeated words/statements, fillers ("uh", "basically", "you know"), conversational noise, HR boilerplate, EEO disclaimers, company introduction fluff, and apply links.
+3. Concise Summary: Summarize the core requirements concisely.
 
 STRICT RULES:
-- Do NOT add any new information, facts, or assumptions.
-- Preserve 100% of the original meaning and technical details.
-- Return only the cleaned text.
+- Preserve ALL technical details, job requirements, skills, qualifications, tools, experience, and core job details verbatim.
+- Do NOT invent, assume, or extrapolate any new facts or technologies.
+- Return ONLY the cleaned, summarized text.
 
 Text to clean:
-{text}
-"""
-
-def get_semantic_normalization_prompt(text: str) -> str:
-    return f"""
-Semantically normalize the following text to make it clear, consistent, and unambiguous.
-
-STRICT RULES:
-- Rely strictly on the provided text. Do NOT add, invent, or assume any facts, tools, technologies, or requirements.
-- The original meaning and intent must remain unchanged.
-- Preserve uncertainty and discussion context (e.g., "We might add search later" -> "Search was discussed as a potential enhancement").
-- Return only the normalized text.
-
-Text to normalize:
-{text}
-"""
-
-def get_vocabulary_standardization_prompt(text: str) -> str:
-    return f"""
-Standardize the vocabulary in the following text.
-- Replace informal or inconsistent synonyms with standard terms (e.g., "app" -> "application").
-- Standardize entity representations without changing the underlying meaning.
-
-STRICT RULES:
-- Do NOT add any tools, languages, or concepts not present in the text.
-- Return only the standardized text.
-
-Text to standardize:
-{text}
-"""
-
-def get_consistency_prompt(text: str) -> str:
-    return f"""
-Ensure requirement consistency and reduce ambiguity in the following text.
-- Remove vague or redundant statements.
-- Clearly separate known facts from unknowns.
-
-STRICT RULES:
-- Do NOT guess, extrapolate, or invent missing details.
-- Rely strictly on the provided input text.
-- Return only the consistent text.
-
-Text to process:
-{text}
-"""
-
-def get_language_normalization_prompt(text: str) -> str:
-    return f"""
-Normalize the language of the following text into professional, well-structured text.
-
-STRICT RULES:
-- Improve grammar and readability only.
-- Do NOT introduce any new technologies, tools, or requirements that are not in the input.
-- Maintain exact scope and intent.
-- Return only the normalized text.
-
-Text to normalize:
 {text}
 """
 
 def get_structuring_prompt(text: str, raw_text: str = "") -> str:
     context_str = f"Cleaned Text:\n{text}"
     if raw_text:
-        context_str += f"\n\nOriginal Job Description:\n{raw_text[:4000]}"
+        context_str += f"\n\nOriginal Text:\n{raw_text[:4000]}"
 
-    return f"""
-Analyze the job description below and extract a developer-centric structured JSON object.
+    return f"""Analyze the job description below and extract a developer-centric structured JSON object.
 
-CRITICAL ANTI-HALLUCINATION INSTRUCTIONS:
-- Extract ONLY technologies, languages, tools, skills, concepts, and qualifications that are EXPLICITLY mentioned in the input text.
-- DO NOT assume, guess, or invent any programming language (e.g. Java, Python, C++), framework (e.g. React, Spring), database, or tool unless it is explicitly written in the input text!
-- If no specific programming language or framework is explicitly named in the text, DO NOT include any! Do NOT make up examples.
-- If a field is not explicitly mentioned, set it to "Not provided" or an empty list [].
+CRITICAL INSTRUCTIONS:
+- Extract ONLY technologies, languages, tools, skills, concepts, and qualifications EXPLICITLY mentioned in the input text.
+- DO NOT assume, guess, or invent any programming language, framework, database, or tool unless explicitly written in the input text.
+- Normalize unicode apostrophes (e.g. '\\u2019' or '’') to standard ASCII (e.g., "Bachelor's" instead of "Bachelor\\u2019s").
 
-EXTRACT THE FOLLOWING FIELDS:
-1. "title": The official job title as stated in the text.
-2. "focus": Include a developer role classification (e.g., "Frontend Developer", "Backend Developer", "Fullstack Developer", "AI Developer", "Agentic AI Developer", "DevOps Engineer", or "Generic Software Engineer" if broad/general) followed by a concise summary of the primary technical focus and core engineering areas derived strictly from the text (e.g., "Generic Software Engineer: Focuses on Application Design, Development Leadership, Information Modeling, and System Performance Optimization").
-3. "skills": A single array combining ALL explicit technical skills, engineering concepts, methodologies, tools, and principles mentioned in the text (e.g., ["Application Programming Principles", "Information Modeling", "Data Structures", "Algorithms", "Agile Methodology", "Test Plan Execution", "Software Quality"]).
-4. "responsibilities": A reduced list of 3-5 key technical responsibilities from the text that are NOT already obvious or redundant.
-5. "experience": The explicit years of experience mentioned (e.g. "5-8 years", or "Not provided").
-6. "education": The explicit degree/qualification mentioned (e.g. "Bachelor's/University degree or equivalent experience", or "Not provided").
-7. "salary": Salary range if explicitly stated (else "Not provided").
-8. "location": Job location if explicitly stated (else "Not provided").
-9. "time_type": Employment type if explicitly stated (e.g., "Full-time", or "Not provided").
+FIELD SPECIFICATIONS:
+1. "title": Understand the JD well and determine the best-matching software developer job title (e.g., "Generic Software Engineer", "Backend Developer", "Frontend Developer", "Fullstack Developer", "AI Developer", "DevOps Engineer", "Mobile Developer", etc.).
+2. "skills": Extract ONLY technical skills explicitly present in the JD (programming languages, frameworks, libraries, tools, databases, and technical concepts like System Design, DSA, OOP, Multi-threading). MUST BE SORTED with the primary core technologies the role focuses on AT THE TOP of the list, followed by secondary tools and concepts. No fluff or non-technical jargon.
+3. "experience": Required experience range (min and max, e.g. "3-5 years", "7+ years", or "Not provided").
+4. "education": Degree/qualification explicitly mentioned (e.g., "Bachelor's degree in Computer Science", or "Not provided").
+5. "salary": Given salary range (min and max, e.g. "$120,000 - $150,000", or "Not provided").
+6. "location": Job location if explicitly stated (e.g. "Remote", "Pune", or "Not provided").
+7. "employment_type": Employment type if explicitly stated (e.g., "Full-time", "Part-time", "Contractor", "Intern", "Freelancer", or "Not provided").
+8. "extra": Array of critical extra technical data ONLY IF present in the JD and not covered above that strictly matters to a software engineer (e.g., ["Remote option available", "On-call rotation required"]). This field is NOT compulsory; if no extra technical details exist, set it to "Not provided" or []. Do NOT include HR fluff or company perks.
 
-Return ONLY a valid JSON object. Do NOT add extra conversational text outside the JSON.
+Return ONLY a valid JSON object. Do NOT wrap in markdown or add conversational text outside the JSON.
 
 {context_str}
 """
+
+
+

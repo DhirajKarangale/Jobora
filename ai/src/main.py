@@ -16,6 +16,8 @@ def main():
         job_id_hackjob_java = "4c847b0a-5e98-4e14-bf80-d4e507afa844"
         job_id_eqnix_generic = "4c847b0a-5e98-4e14-bf80-d4e507afa844"
         job = get_job(conn, job_id_eton_csharp)
+
+        print("Desc: ", job.get("description"))
         
         if job and job.get("description"):
             raw_desc = job["description"]
@@ -24,7 +26,7 @@ def main():
             structured_json = process_job_description(raw_desc)
             
             import json
-            print(json.dumps(structured_json, indent=2))
+            print(json.dumps(structured_json, indent=2, ensure_ascii=False))
         else:
             print("Job not found or description is empty.")
 
