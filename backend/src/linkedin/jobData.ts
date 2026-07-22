@@ -2,6 +2,7 @@ import { type Page, Browser } from "puppeteer-core";
 import { DataJob } from "../data/data.ts";
 import { saveJob } from "../db/addData.ts";
 import { LINKEDIN_URL_JOB } from "../data/data.ts";
+import { addToProcessStream } from "../redis/index.ts";
 
 const SELECTORS = {
   description: '[data-sdui-component="com.linkedin.sdui.generated.jobseeker.dsl.impl.aboutTheJob"]',
@@ -95,7 +96,10 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
   for (const jobId of jobIds) {
     try {
       const id = await extractData(browser, jobId);
-      savedJobs.push(id);
+      if (id) {
+        savedJobs.push(id);
+        await addToProcessStream({ id });
+      }
     } catch (err) {
       console.error(`Failed to extract job ${jobId}`, err);
     }
