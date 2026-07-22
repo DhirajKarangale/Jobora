@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Job } from "@/lib/api";
-import { parseJobDescription, toggleJobApplied } from "@/lib/api";
+import type { Job } from "@/types";
+import { parseJobDescription } from "@/lib/api";
+import { useJobs } from "@/hooks/useJobs";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ApplyStatusButton } from "./ApplyStatusButton";
 import { 
   ExternalLink, 
   Building2, 
@@ -15,9 +16,7 @@ import {
   DollarSign, 
   Wrench, 
   Sparkles,
-  Clock,
-  CheckCircle2,
-  Loader2
+  Clock
 } from "lucide-react";
 
 interface JobDetailModalProps {
@@ -27,7 +26,7 @@ interface JobDetailModalProps {
 }
 
 export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps) {
-  const queryClient = useQueryClient();
+  const { toggleApplied, isToggling, toggleVariables } = useJobs();
   const [isAppliedState, setIsAppliedState] = useState(false);
 
   useEffect(() => {
@@ -36,42 +35,29 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
     }
   }, [job]);
 
-  const toggleMutation = useMutation({
-    mutationFn: ({ id, targetState }: { id: string; targetState: boolean }) =>
-      toggleJobApplied(id, targetState),
-    onSuccess: (data) => {
-      setIsAppliedState(data.isApplied);
-      queryClient.setQueryData<Job[] | null>(["eligibleJobs"], (old) => {
-        if (!old) return old;
-        return old.map((j) => (j.id === data.jobId ? { ...j, isApplied: data.isApplied } : j));
-      });
-    },
-  });
-
   if (!job) return null;
 
   const parsed = parseJobDescription(job.description);
   const data = parsed.data;
   const jobTitle = parsed.title || job.companyName || "Job Details";
 
-  const isPending = toggleMutation.isPending;
-  const targetIsApply = toggleMutation.variables?.targetState ?? true;
+  const isPending = isToggling && toggleVariables?.jobId === job.id;
+  const targetIsApply = toggleVariables?.targetState ?? true;
 
-  const handleToggleApplied = () => {
-    if (isPending || !job.id) return;
-    const targetState = !isAppliedState;
-    toggleMutation.mutate({ id: job.id, targetState });
+  const handleToggle = () => {
+    if (job.id && !isPending) {
+      const targetState = !isAppliedState;
+      setIsAppliedState(targetState);
+      toggleApplied({ jobId: job.id, targetState });
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogHeader onClose={() => onOpenChange(false)}>
-        {/* Modal Title: Shows the Job Title */}
         <DialogTitle className="text-xl sm:text-2xl font-bold text-foreground leading-snug">
           {jobTitle}
         </DialogTitle>
-
-        {/* Modal Description: Shows Company Name */}
         <DialogDescription className="text-xs sm:text-sm text-indigo-500 font-semibold flex items-center gap-1.5 mt-1">
           <Building2 className="w-4 h-4 shrink-0 text-indigo-500" />
           {job.companyName || "Unknown Company"}
@@ -81,10 +67,7 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
       <DialogContent>
         {parsed.isJson && data ? (
           <div className="space-y-5 text-sm">
-            
-            {/* Quick Meta Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-muted/40 p-3.5 rounded-xl border border-border/50">
-              
               {data.location && (
                 <div className="flex items-start gap-2 text-xs">
                   <MapPin className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -134,10 +117,8 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
                   </div>
                 </div>
               )}
-
             </div>
 
-            {/* Required Skills Badges */}
             {data.skills && Array.isArray(data.skills) && data.skills.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-foreground/80">
@@ -158,7 +139,6 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
               </div>
             )}
 
-            {/* Extra Highlights */}
             {data.extra && Array.isArray(data.extra) && data.extra.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-foreground/80">
@@ -175,10 +155,8 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
                 </ul>
               </div>
             )}
-
           </div>
         ) : (
-          /* Raw Description Fallback */
           <div className="whitespace-pre-wrap text-sm text-foreground/90 leading-relaxed font-sans bg-muted/30 p-4 rounded-xl border border-border/40 max-h-[50vh] overflow-y-auto">
             {job.description || "No description provided."}
           </div>
@@ -186,7 +164,6 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
       </DialogContent>
 
       <DialogFooter className="flex-col sm:flex-row items-center justify-between gap-3">
-        {/* Bottom Left Corner: Source Name & Job ID */}
         <div className="flex items-center gap-2 mr-auto text-xs">
           <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-semibold px-2 py-0.5 text-[11px]">
             <Globe className="w-3 h-3 mr-1 inline" />
@@ -195,38 +172,14 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
           <span className="text-muted-foreground font-mono text-[11px]">ID: {job.id}</span>
         </div>
 
-        {/* Bottom Right Corner: Action Buttons including Apply/Applied Button */}
         <div className="flex items-center gap-2 ml-auto sm:ml-0">
-          <Button
-            variant="outline"
-            onClick={handleToggleApplied}
-            disabled={isPending}
-            className={`border text-xs h-8 cursor-pointer transition-all ${
-              isPending
-                ? targetIsApply
-                  ? "opacity-80 bg-indigo-500/10 text-indigo-600 border-indigo-500/30"
-                  : "bg-destructive/15 text-destructive border-destructive/40 font-bold"
-                : isAppliedState
-                ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 font-bold hover:bg-emerald-500/30"
-                : "border-border text-muted-foreground hover:text-foreground hover:bg-accent font-medium"
-            }`}
-          >
-            {isPending ? (
-              <Loader2 className={`w-3.5 h-3.5 animate-spin mr-1.5 ${!targetIsApply ? "text-destructive" : ""}`} />
-            ) : isAppliedState ? (
-              <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 text-emerald-500 fill-emerald-500/20" />
-            ) : (
-              <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 text-muted-foreground/60" />
-            )}
-
-            {isPending
-              ? targetIsApply
-                ? "Applying..."
-                : "Removing..."
-              : isAppliedState
-              ? "Applied"
-              : "Apply"}
-          </Button>
+          <ApplyStatusButton
+            isApplied={isAppliedState}
+            isPending={isPending}
+            targetIsApply={targetIsApply}
+            onToggle={handleToggle}
+            variant="button"
+          />
 
           {job.link && (
             <a href={job.link} target="_blank" rel="noopener noreferrer">

@@ -1,57 +1,21 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchProcessStatus, startProcess } from "@/lib/api";
+import { useProcessStatus } from "@/hooks/useProcessStatus";
 import { Button } from "@/components/ui/button";
-import { Play, RefreshCw, Loader2, CheckCircle2, PauseCircle } from "lucide-react";
-import { useState } from "react";
+import { Play, RefreshCw, Loader2, PauseCircle } from "lucide-react";
 
 export function ProcessHeader() {
-  const queryClient = useQueryClient();
-  const [startMessage, setStartMessage] = useState<string | null>(null);
-
-  // 1. Initial API call & periodic refetch to check process status
   const {
-    data: isRunning,
+    isRunning,
     isLoading,
     isRefetching,
-    refetch,
-  } = useQuery({
-    queryKey: ["processStatus"],
-    queryFn: fetchProcessStatus,
-    refetchInterval: 5000, // auto poll every 5s
-  });
-
-  // 2. Mutation to start process
-  const startMutation = useMutation({
-    mutationFn: startProcess,
-    onSuccess: (started) => {
-      if (started) {
-        setStartMessage("Process started successfully!");
-      } else {
-        setStartMessage("Process is already running.");
-      }
-      queryClient.invalidateQueries({ queryKey: ["processStatus"] });
-      setTimeout(() => setStartMessage(null), 4000);
-    },
-    onError: (err) => {
-      setStartMessage("Failed to start process.");
-      console.error(err);
-      setTimeout(() => setStartMessage(null), 4000);
-    },
-  });
-
-  // 3. Clear queries and refresh status
-  const handleRefresh = async () => {
-    setStartMessage(null);
-    queryClient.resetQueries({ queryKey: ["processStatus"] });
-    queryClient.resetQueries({ queryKey: ["eligibleJobs"] });
-    await refetch();
-  };
+    startMessage,
+    startProcess,
+    isStarting,
+    refreshStatus,
+  } = useProcessStatus();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-        
-        {/* Title / Brand */}
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white font-extrabold text-xl tracking-wider">
             J
@@ -64,7 +28,6 @@ export function ProcessHeader() {
           </div>
         </div>
 
-        {/* Top Center: Process Status Indicator */}
         <div className="flex flex-col items-center gap-1">
           <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-border/60 bg-muted/40 shadow-inner">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -81,7 +44,6 @@ export function ProcessHeader() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                 </span>
-                <CheckCircle2 className="w-3.5 h-3.5" />
                 Process Running
               </span>
             ) : (
@@ -98,16 +60,14 @@ export function ProcessHeader() {
           )}
         </div>
 
-        {/* Action Controls: Run & Refresh */}
         <div className="flex items-center gap-2">
-          {/* Show Run Process button if process is NOT running */}
           {!isRunning && (
             <Button
-              onClick={() => startMutation.mutate()}
-              disabled={startMutation.isPending || isLoading}
+              onClick={() => startProcess()}
+              disabled={isStarting || isLoading}
               className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold shadow-md hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer"
             >
-              {startMutation.isPending ? (
+              {isStarting ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
               ) : (
                 <Play className="w-4 h-4 mr-1.5 fill-current" />
@@ -116,10 +76,9 @@ export function ProcessHeader() {
             </Button>
           )}
 
-          {/* Refresh Process Status button */}
           <Button
             variant="outline"
-            onClick={handleRefresh}
+            onClick={refreshStatus}
             disabled={isRefetching}
             className="border-border hover:bg-accent/80 transition-all duration-200 cursor-pointer"
           >
@@ -127,7 +86,6 @@ export function ProcessHeader() {
             Refresh
           </Button>
         </div>
-
       </div>
     </header>
   );
