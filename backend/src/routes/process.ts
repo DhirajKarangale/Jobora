@@ -5,12 +5,12 @@ import linkedin from "../portals/linkedin/index.ts";
 let isProcessRunning = false;
 
 export async function getProcessStatus(_req: Request, res: Response): Promise<void> {
-  res.json(isProcessRunning);
+  res.json(true);
 }
 
 export async function startProcess(_req: Request, res: Response): Promise<void> {
   if (isProcessRunning) {
-    res.json(false);
+    res.json(true);
     return;
   }
 
