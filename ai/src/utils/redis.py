@@ -7,11 +7,6 @@ load_dotenv()
 
 
 class RedisClient:
-    """
-    Generic Redis utility for managing worker connections, stream polling, 
-    message acknowledgements, stream cleanups, and pushing eligible jobs.
-    """
-
     def __init__(self, worker_id: int = 1):
         self.worker_id = worker_id
 
@@ -47,7 +42,6 @@ class RedisClient:
         self._init_consumer_group()
 
     def _init_consumer_group(self):
-        """Ensure consumer group exists for REDIS_CONSUMER_PROCESS stream."""
         try:
             self.client.xgroup_create(
                 name=self.stream_process,
@@ -55,18 +49,13 @@ class RedisClient:
                 id="0",
                 mkstream=True
             )
-            print(f"[Worker-{self.worker_id}] Created Redis Consumer Group '{self.consumer_group}' for stream '{self.stream_process}'.", flush=True)
         except redis.exceptions.ResponseError as e:
             if "BUSYGROUP" in str(e):
-                pass  # Consumer group already exists
+                pass
             else:
-                print(f"[Worker-{self.worker_id}] Warning initializing Consumer Group: {e}", flush=True)
+                print(f"[Error] Consumer Group initialization failed: {e}", flush=True)
 
     def check_and_get_job(self):
-        """
-        Checks if data is present in REDIS_CONSUMER_PROCESS stream and retrieves the next message.
-        Returns (msg_id, job_id, message_data) or None if stream is empty.
-        """
         response = self.client.xreadgroup(
             groupname=self.consumer_group,
             consumername=self.consumer_name,
@@ -86,22 +75,15 @@ class RedisClient:
         return None
 
     def acknowledge_job(self, msg_id: str):
-        """Acknowledges message in REDIS_CONSUMER_PROCESS stream."""
         self.client.xack(self.stream_process, self.consumer_group, msg_id)
 
     def remove_job_from_process_stream(self, msg_id: str):
-        """Deletes message from REDIS_CONSUMER_PROCESS stream after processing completion."""
         self.client.xdel(self.stream_process, msg_id)
 
     def push_to_eligible_stream(self, job_id: str, extra_data: dict = None):
-        """
-        Inserts new eligible job into REDIS_CONSUMER_ELIGIBLE stream.
-        """
         payload = {"id": str(job_id)}
         if extra_data and isinstance(extra_data, dict):
             for k, v in extra_data.items():
                 payload[str(k)] = str(v)
 
-        msg_id = self.client.xadd(self.stream_eligible, payload)
-        print(f"[Worker-{self.worker_id}] Inserted Job ID '{job_id}' into eligible stream '{self.stream_eligible}' (Msg ID: {msg_id}).", flush=True)
-        return msg_id
+        return self.client.xadd(self.stream_eligible, payload)
