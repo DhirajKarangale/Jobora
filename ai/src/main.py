@@ -11,8 +11,11 @@ def main():
 
     try:
         # Get a specific job
-        job_id = "008bdd12-39ca-4d5b-b61f-b46c9938f34b"
-        job = get_job(conn, job_id)
+        job_id_phonepe_backend = "77e0fda6-baaa-4963-adec-46a12755c63e"
+        job_id_eton_csharp = "04cfca07-f5c0-49c6-8f41-f033646a94c4"
+        job_id_hackjob_java = "4c847b0a-5e98-4e14-bf80-d4e507afa844"
+        job_id_eqnix_generic = "4c847b0a-5e98-4e14-bf80-d4e507afa844"
+        job = get_job(conn, job_id_eton_csharp)
         
         if job and job.get("description"):
             raw_desc = job["description"]

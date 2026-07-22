@@ -84,7 +84,7 @@ CRITICAL ANTI-HALLUCINATION INSTRUCTIONS:
 
 EXTRACT THE FOLLOWING FIELDS:
 1. "title": The official job title as stated in the text.
-2. "focus": A concise summary of the primary technical focus and core engineering area of this role, derived ONLY from facts in the text (e.g., "Focuses on Application Design, Development Leadership, Information Modeling, and System Performance Optimization").
+2. "focus": Include a developer role classification (e.g., "Frontend Developer", "Backend Developer", "Fullstack Developer", "AI Developer", "Agentic AI Developer", "DevOps Engineer", or "Generic Software Engineer" if broad/general) followed by a concise summary of the primary technical focus and core engineering areas derived strictly from the text (e.g., "Generic Software Engineer: Focuses on Application Design, Development Leadership, Information Modeling, and System Performance Optimization").
 3. "skills": A single array combining ALL explicit technical skills, engineering concepts, methodologies, tools, and principles mentioned in the text (e.g., ["Application Programming Principles", "Information Modeling", "Data Structures", "Algorithms", "Agile Methodology", "Test Plan Execution", "Software Quality"]).
 4. "responsibilities": A reduced list of 3-5 key technical responsibilities from the text that are NOT already obvious or redundant.
 5. "experience": The explicit years of experience mentioned (e.g. "5-8 years", or "Not provided").
