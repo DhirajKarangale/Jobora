@@ -1,8 +1,7 @@
 import { type Page, Browser } from "puppeteer-core";
-import { DataJob } from "../data/data.ts";
-import { saveJob } from "../db/index.ts";
-import { LINKEDIN_URL_JOB } from "../data/data.ts";
-import { addToProcessStream } from "../redis/index.ts";
+import { DataJob, LINKEDIN_URL_JOB } from "../../utils/constants.ts";
+import { saveJob } from "../../cloud/db/index.ts";
+import { addToProcessStream } from "../../cloud/redis/index.ts";
 
 const SELECTORS = {
   description: '[data-sdui-component="com.linkedin.sdui.generated.jobseeker.dsl.impl.aboutTheJob"]',
@@ -66,7 +65,7 @@ async function extractCompanyName(page: Page) {
 
 async function extractData(browser: Browser, jobId: string) {
   const page = await browser.newPage();
-  await page.goto(`${LINKEDIN_URL_JOB}${jobId}`, { waitUntil: "load", });
+  await page.goto(`${LINKEDIN_URL_JOB}${jobId}`, { waitUntil: "load" });
 
   await delay(1000);
   const companyName = (await extractCompanyName(page))?.trim();

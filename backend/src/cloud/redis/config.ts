@@ -3,22 +3,23 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const redisUrl = process.env.REDIS_URL;
+if (!process.env.REDIS_URL) {
+  throw new Error("Missing required environment variable: REDIS_URL");
+}
 
-export const redis = new Redis(redisUrl || "redis://127.0.0.1:6379", {
+export const redis = new Redis(process.env.REDIS_URL, {
   lazyConnect: true,
   maxRetriesPerRequest: 3,
 });
 
 redis.on("error", (err: Error) => {
-  console.error("Redis error:", err.message);
+  console.error("Redis connection error:", err.message);
 });
 
 export async function connectRedis(): Promise<Redis> {
   try {
     if (redis.status !== "ready" && redis.status !== "connect") {
       await redis.connect();
-      console.log("Connected to Redis successfully.");
     }
     return redis;
   } catch (error) {

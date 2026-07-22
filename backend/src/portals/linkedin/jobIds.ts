@@ -1,6 +1,6 @@
 import { type Browser, Page } from "puppeteer-core";
-import { LINKEDIN_PAGES, LINKEDIN_URL_JOB_SEARCH } from "../data/data.ts";
-import { filterExistingJobIds } from "../db/index.ts";
+import { LINKEDIN_PAGES, LINKEDIN_URL_JOB_SEARCH } from "../../utils/constants.ts";
+import { filterExistingJobIds } from "../../cloud/db/index.ts";
 
 const MAX_RETRIES = 3;
 const JOB_SELECTOR = 'div[componentkey^="job-card-component-ref-"]';
@@ -13,7 +13,7 @@ function delay(ms: number) {
 async function extractJobIds(page: Page): Promise<string[]> {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      await page.waitForSelector(JOB_SELECTOR, { visible: true, timeout: 10000, });
+      await page.waitForSelector(JOB_SELECTOR, { visible: true, timeout: 10000 });
 
       const ids = await page.evaluate(selector => {
         return [...document.querySelectorAll(selector)]
@@ -26,8 +26,7 @@ async function extractJobIds(page: Page): Promise<string[]> {
     } catch {
     }
 
-    console.log(`No job cards found. Reloading page (${attempt}/${MAX_RETRIES})...`);
-    await page.reload({ waitUntil: "networkidle2", });
+    await page.reload({ waitUntil: "networkidle2" });
   }
 
   return [];
@@ -63,7 +62,7 @@ async function waitForNextPage(
 
 export async function getJobIds(browser: Browser) {
   const page = await browser.newPage();
-  await page.goto(LINKEDIN_URL_JOB_SEARCH, { waitUntil: "load", });
+  await page.goto(LINKEDIN_URL_JOB_SEARCH, { waitUntil: "load" });
 
   let pageCount = LINKEDIN_PAGES;
   const jobIds = new Set<string>();
