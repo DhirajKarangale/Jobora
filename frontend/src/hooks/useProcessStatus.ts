@@ -32,8 +32,6 @@ export function useProcessStatus() {
 
   const handleRefresh = async () => {
     setStartMessage(null);
-    queryClient.resetQueries({ queryKey: ["processStatus"] });
-    queryClient.resetQueries({ queryKey: ["eligibleJobs"] });
     await refetch();
   };
 
