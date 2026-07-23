@@ -8,6 +8,8 @@ export interface Job {
   addedDate?: string | null;
   isExpired?: boolean;
   portal_link?: string | null;
+  isEligible?: boolean;
+  appliedDate?: string | null;
 }
 
 export interface ParsedJobData {

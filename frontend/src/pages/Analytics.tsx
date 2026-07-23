@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import type { AnalyticsFilter } from "@/lib/api";
+import type { AnalyticsFilter, Job } from "@/lib/api";
 import { fetchFilterOptions } from "@/lib/api";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { Briefcase, CheckCircle2, Send, Search, Calendar, Filter, Loader2, AlertCircle } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { Briefcase, CheckCircle2, Send, Search, Calendar, Filter, Loader2, AlertCircle, Eye, Building2, Globe } from "lucide-react";
 import { Combobox } from "@/components/ui/combobox";
+import { AnalyticsJobModal } from "@/components/jobs/AnalyticsJobModal";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+const STATUS_COLORS = ['#3b82f6', '#10b981', '#ef4444']; // Active, Applied, Expired
 
 export function Analytics() {
   const [filters, setFilters] = useState<AnalyticsFilter>({
@@ -14,10 +20,17 @@ export function Analytics() {
   });
 
   const [filterOptions, setFilterOptions] = useState<{ sources: string[], companies: string[] }>({ sources: [], companies: [] });
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   useEffect(() => {
-    fetchFilterOptions().then(setFilterOptions).catch(() => { });
-  }, []);
+    fetchFilterOptions(filters.sourceName, filters.companyName).then(options => {
+      setFilterOptions(options);
+      // Auto-update source if we selected a company and it only has one source
+      if (filters.companyName && !filters.sourceName && options.sources.length === 1) {
+        setFilters(prev => ({ ...prev, sourceName: options.sources[0] }));
+      }
+    }).catch(() => { });
+  }, [filters.sourceName, filters.companyName]);
 
   const { data, isLoading, error } = useAnalytics(filters);
 
@@ -27,13 +40,13 @@ export function Analytics() {
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-indigo-500/20 backdrop-blur-md shadow-xs">
-        <div className="space-y-1 text-center sm:text-left">
-          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight flex items-center justify-center sm:justify-start gap-2">
-            <BarChart className="w-6 h-6 text-indigo-500" />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-indigo-500/20 backdrop-blur-md shadow-xs">
+        <div className="space-y-1 text-left w-full">
+          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight flex items-center justify-start gap-2">
+            <BarChart className="w-6 h-6 text-indigo-500 shrink-0" />
             Analytics Dashboard
           </h2>
-          <p className="text-xs sm:text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground ml-8">
             Monitor job scraping metrics and your application progress over time.
           </p>
         </div>
@@ -73,7 +86,7 @@ export function Analytics() {
             options={filterOptions.sources}
             value={filters.sourceName || ''}
             onChange={(val) => handleFilterChange('sourceName', val)}
-            placeholder="All"
+            placeholder="All Sources"
           />
         </div>
 
@@ -85,7 +98,7 @@ export function Analytics() {
             options={filterOptions.companies}
             value={filters.companyName || ''}
             onChange={(val) => handleFilterChange('companyName', val)}
-            placeholder="All"
+            placeholder="All Companies"
           />
         </div>
       </div>
@@ -123,7 +136,7 @@ export function Analytics() {
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-muted-foreground">Eligible Jobs</p>
+                <p className="text-sm font-semibold text-muted-foreground">Open Jobs</p>
                 <p className="text-3xl font-black">{data.summary.eligibleJobs.toLocaleString()}</p>
               </div>
             </div>
@@ -140,10 +153,10 @@ export function Analytics() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-xs space-y-6">
+            <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-xs space-y-6 min-w-0">
               <div className="space-y-1">
-                <h3 className="text-lg font-bold">Volume Trends</h3>
-                <p className="text-xs text-muted-foreground">Daily counts of scraped and eligible jobs</p>
+                <h3 className="text-lg font-bold">Total Scraped vs Eligible Trends</h3>
+                <p className="text-xs text-muted-foreground">Daily counts of all scraped jobs and eligible matches</p>
               </div>
               <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -172,24 +185,24 @@ export function Analytics() {
               </div>
             </div>
 
-            <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-xs space-y-6">
+            <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-xs space-y-6 min-w-0">
               <div className="space-y-1">
-                <h3 className="text-lg font-bold">Application Activity</h3>
-                <p className="text-xs text-muted-foreground">Daily count of jobs applied to</p>
+                <h3 className="text-lg font-bold">Top 10 Hiring Companies</h3>
+                <p className="text-xs text-muted-foreground">Companies with the most jobs from your scrape</p>
               </div>
               <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data.timeSeries} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <BarChart data={data.jobsByCompany} margin={{ top: 5, right: 20, bottom: 25, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
                     <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 12 }}
-                      tickFormatter={(val) => {
-                        const date = new Date(val);
-                        return `${date.getMonth() + 1}/${date.getDate()}`;
-                      }}
+                      dataKey="name"
+                      tick={{ fontSize: 10 }}
                       stroke="currentColor"
                       opacity={0.5}
+                      angle={-45}
+                      textAnchor="end"
+                      height={50}
+                      interval={0}
                     />
                     <YAxis tick={{ fontSize: 12 }} stroke="currentColor" opacity={0.5} allowDecimals={false} />
                     <Tooltip
@@ -197,14 +210,161 @@ export function Analytics() {
                       labelStyle={{ fontWeight: 'bold', color: 'var(--foreground)', marginBottom: '8px' }}
                       cursor={{ fill: 'var(--muted)', opacity: 0.4 }}
                     />
-                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                    <Bar dataKey="appliedJobs" name="Jobs Applied" fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                    <Bar dataKey="count" name="Jobs" fill="#8b5cf6" radius={[4, 4, 0, 0]} maxBarSize={50}>
+                      {data.jobsByCompany.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
+
+            <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-xs space-y-6 min-w-0">
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold">Jobs by Source</h3>
+                <p className="text-xs text-muted-foreground">Distribution of scraped jobs across portals</p>
+              </div>
+              <div className="h-72 w-full flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={data.jobsBySource}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="count"
+                    >
+                      {data.jobsBySource.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
+                      itemStyle={{ color: 'var(--foreground)' }}
+                    />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-xs space-y-6 min-w-0">
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold">Job Status Breakdown</h3>
+                <p className="text-xs text-muted-foreground">Overview of Active, Applied, and Expired jobs</p>
+              </div>
+              <div className="h-72 w-full flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={data.statusBreakdown}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      labelLine={false}
+                    >
+                      {data.statusBreakdown.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={STATUS_COLORS[index % STATUS_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
+                      itemStyle={{ color: 'var(--foreground)' }}
+                    />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+          </div>
+
+          <div className="bg-card rounded-2xl border border-border shadow-xs overflow-hidden mt-6">
+            <div className="p-5 sm:p-6 border-b border-border space-y-1">
+              <h3 className="text-lg font-bold">Filtered Jobs</h3>
+              <p className="text-xs text-muted-foreground">List of up to 100 recent jobs matching your current filters</p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold">Added Date</th>
+                    <th className="px-6 py-4 font-semibold">Source</th>
+                    <th className="px-6 py-4 font-semibold">Company</th>
+                    <th className="px-6 py-4 font-semibold">Status</th>
+                    <th className="px-6 py-4 font-semibold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {data.jobsList.map((job) => (
+                    <tr key={job.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
+                        {job.addedDate ? new Date(job.addedDate).toLocaleDateString() : '-'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Globe className="w-4 h-4 text-indigo-500" />
+                          <span className="font-medium">{job.sourceName}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 max-w-[200px]">
+                          <Building2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <span className="truncate font-medium" title={job.companyName || ''}>
+                            {job.companyName || 'Unknown'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {job.isApplied ? (
+                          <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Applied</Badge>
+                        ) : !job.isEligible ? (
+                          <Badge variant="secondary" className="bg-slate-500/10 text-slate-600 border-slate-500/20">Not Eligible</Badge>
+                        ) : job.isExpired ? (
+                          <Badge variant="secondary" className="bg-red-500/10 text-red-600 border-red-500/20">Expired</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/20">Active</Badge>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-500/10"
+                          onClick={() => setSelectedJob(job)}
+                        >
+                          <Eye className="w-4 h-4 mr-1.5" />
+                          View Details
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                  {data.jobsList.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                        No jobs found matching the selected filters.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </>
+      )}
+
+      {selectedJob && (
+        <AnalyticsJobModal
+          job={selectedJob}
+          isOpen={!!selectedJob}
+          onClose={() => setSelectedJob(null)}
+        />
       )}
     </section>
   );

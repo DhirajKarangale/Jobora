@@ -21,8 +21,9 @@ export async function getAnalytics(req: Request, res: Response): Promise<void> {
 
 export async function getFilterOptionsHandler(req: Request, res: Response): Promise<void> {
   try {
+    const { sourceName, companyName } = req.query;
     const { getFilterOptions } = await import("../cloud/db/index.ts");
-    const options = await getFilterOptions();
+    const options = await getFilterOptions(sourceName as string | undefined, companyName as string | undefined);
     res.json(options);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch filter options" });
