@@ -1,6 +1,6 @@
 import { type Request, type Response } from "express";
 import { edge, closeBrowser } from "../utils/browserManager.ts";
-import linkedin from "../portals/linkedin/index.ts";
+import linkedin from "../job_portals/linkedin/index.ts";
 
 let isProcessRunning = false;
 
