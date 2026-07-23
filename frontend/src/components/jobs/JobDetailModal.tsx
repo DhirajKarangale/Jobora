@@ -7,15 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ApplyStatusButton } from "./ApplyStatusButton";
 import { ExpiredStatusButton } from "./ExpiredStatusButton";
-import { 
-  ExternalLink, 
-  Building2, 
-  Globe, 
-  MapPin, 
-  Briefcase, 
-  GraduationCap, 
-  DollarSign, 
-  Wrench, 
+import {
+  ExternalLink,
+  Building2,
+  Globe,
+  MapPin,
+  Briefcase,
+  GraduationCap,
+  DollarSign,
+  Wrench,
   Sparkles,
   Clock
 } from "lucide-react";
@@ -68,13 +68,12 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`sm:max-w-[800px] max-h-[90vh] overflow-y-auto flex flex-col gap-6 p-6 transition-all duration-300 bg-background ${
-        isAppliedState
+      <DialogContent className={`sm:max-w-[800px] max-h-[90vh] overflow-y-auto flex flex-col gap-6 p-6 transition-all duration-300 bg-background ${isAppliedState
           ? "border-2 border-emerald-500/50 shadow-[0_0_20px_-3px_rgba(16,185,129,0.15)]"
           : isExpiredState
-          ? "border-2 border-red-500/50 shadow-[0_0_20px_-3px_rgba(239,68,68,0.15)]"
-          : "border border-border"
-      }`}>
+            ? "border-2 border-red-500/50 shadow-[0_0_20px_-3px_rgba(239,68,68,0.15)]"
+            : "border border-border"
+        }`}>
         <DialogHeader>
           <DialogTitle className="text-xl sm:text-2xl font-bold text-foreground leading-snug pr-6">
             {jobTitle}
@@ -195,7 +194,7 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
               <Globe className="w-3 h-3 mr-1 inline" />
               {job.sourceName || "LinkedIn"}
             </Badge>
-            <span className="text-muted-foreground font-mono text-[11px]">ID: {job.id}</span>
+            {/* <span className="text-muted-foreground font-mono text-[11px]">ID: {job.id}</span> */}
           </div>
 
           <div className="flex items-center gap-2 ml-auto sm:ml-0">
