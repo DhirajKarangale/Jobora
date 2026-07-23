@@ -13,7 +13,6 @@ export const redis = new Redis(process.env.REDIS_URL, {
 });
 
 redis.on("error", (err: Error) => {
-  console.error("Redis connection error:", err.message);
 });
 
 export async function connectRedis(): Promise<Redis> {
@@ -23,7 +22,6 @@ export async function connectRedis(): Promise<Redis> {
     }
     return redis;
   } catch (error) {
-    console.error("Failed to connect to Redis:", error);
     throw error;
   }
 }

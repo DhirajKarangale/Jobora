@@ -109,7 +109,6 @@ def invoke_llm(model_names: list[str], prompt: str, parse_as_json: bool = False)
                             delay = 2 ** network_retries
                             time.sleep(delay)
                         else:
-                            print(f"[Error] Model '{model_name}' failed after retries: {e}", flush=True)
                             attempts_with_different_tokens = len(HF_TOKENS)
                             break
 

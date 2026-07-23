@@ -15,7 +15,6 @@ export async function getAnalytics(req: Request, res: Response): Promise<void> {
 
     res.json(analyticsData);
   } catch (error) {
-    console.error("Error fetching analytics data:", error);
     res.status(500).json({ error: "Failed to fetch analytics data" });
   }
 }
@@ -26,7 +25,6 @@ export async function getFilterOptionsHandler(req: Request, res: Response): Prom
     const options = await getFilterOptions();
     res.json(options);
   } catch (error) {
-    console.error("Error fetching filter options:", error);
     res.status(500).json({ error: "Failed to fetch filter options" });
   }
 }

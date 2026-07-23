@@ -44,26 +44,22 @@ def run_worker(worker_id: int = 1):
             is_busy = True
 
             if job_id:
-                print(f"[Worker-{worker_id}] Start processing job: {job_id}", flush=True)
                 redis_handler.acknowledge_job(msg_id)
 
                 try:
                     manage_job_workflow(job_id=job_id, redis_handler=redis_handler, msg_id=msg_id)
                 except Exception as wf_err:
-                    print(f"[Worker-{worker_id}] Error executing workflow for job '{job_id}': {wf_err}", flush=True)
+                    pass
             else:
-                print(f"[Worker-{worker_id}] Error: Invalid payload in stream message '{msg_id}'", flush=True)
                 redis_handler.acknowledge_job(msg_id)
                 redis_handler.remove_job_from_process_stream(msg_id)
 
             is_busy = False
 
         except redis.exceptions.ConnectionError as ce:
-            print(f"[Worker-{worker_id}] Error: Redis Connection Error: {ce}", flush=True)
             time.sleep(5)
         except Exception as e:
             if running:
-                print(f"[Worker-{worker_id}] Error: {e}", flush=True)
                 time.sleep(2)
 
 

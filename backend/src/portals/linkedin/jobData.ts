@@ -100,7 +100,6 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
         await addToProcessStream({ id });
       }
     } catch (err) {
-      console.error(`Failed to extract job ${jobId}`, err);
     }
   }
 

@@ -48,8 +48,6 @@ class RedisClient:
         except redis.exceptions.ResponseError as e:
             if "BUSYGROUP" in str(e):
                 pass
-            else:
-                print(f"[Error] Consumer Group initialization failed: {e}", flush=True)
 
     def check_and_get_job(self):
         response = self.client.xreadgroup(

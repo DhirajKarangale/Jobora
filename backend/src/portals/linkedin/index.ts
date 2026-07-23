@@ -5,5 +5,4 @@ import { getJobData } from "./jobData.ts";
 export default async function linkedin(browser: Browser) {
   const jobIds = await getJobIds(browser);
   const savedJobs = await getJobData(browser, jobIds);
-  console.log(`Got ${savedJobs.length} jobs in linkedin`);
 }

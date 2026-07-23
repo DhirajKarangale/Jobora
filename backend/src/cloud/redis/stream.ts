@@ -25,7 +25,5 @@ export async function addToProcessStream(data: Record<string, any>): Promise<str
     throw new Error(`Failed to add message to stream: ${streamKey}`);
   }
 
-  console.log(`Send data to process redis stream: ${data.id || messageId}`);
-
   return messageId;
 }

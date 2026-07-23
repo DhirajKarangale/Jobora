@@ -72,7 +72,6 @@ def run_llm_step(text: str, prompt: str, models: list[str]) -> str:
         result = invoke_llm(models, prompt, parse_as_json=False)
         return result.strip() if result else text
     except Exception as e:
-        print(f"[Error] LLM Step failed: {e}", flush=True)
         return text
 
 
@@ -85,7 +84,6 @@ def run_llm_json_step(text: str, prompt: str, models: list[str]) -> Dict[str, An
             return result
         return {}
     except Exception as e:
-        print(f"[Error] LLM JSON Step failed: {e}", flush=True)
         return {}
 
 

@@ -22,7 +22,6 @@ export async function startProcess(_req: Request, res: Response): Promise<void> 
       browser = await edge();
       await linkedin(browser);
     } catch (error) {
-      console.error("Error in scraping process:", error);
     } finally {
       if (browser) {
         try {

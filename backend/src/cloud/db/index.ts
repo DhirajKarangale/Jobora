@@ -17,7 +17,7 @@ export const pool = new Pool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  max: 20, // Keep active pool connections ready to prevent handshake overhead
+  max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
   ssl: {
@@ -31,7 +31,6 @@ export async function connectDb() {
     client.release();
     return pool;
   } catch (error) {
-    console.error("Failed to connect to PostgreSQL database:", error);
     throw error;
   }
 }
@@ -194,7 +193,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     case '1.5y': startDate.setMonth(startDate.getMonth() - 18); break;
     case 'all':
     default:
-      startDate = new Date(0); // Epoch
+      startDate = new Date(0);
       break;
   }
 

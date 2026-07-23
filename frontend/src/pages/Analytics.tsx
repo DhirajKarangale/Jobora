@@ -16,7 +16,7 @@ export function Analytics() {
   const [filterOptions, setFilterOptions] = useState<{ sources: string[], companies: string[] }>({ sources: [], companies: [] });
   
   useEffect(() => {
-    fetchFilterOptions().then(setFilterOptions).catch(console.error);
+    fetchFilterOptions().then(setFilterOptions).catch(() => {});
   }, []);
 
   const { data, isLoading, error } = useAnalytics(filters);
@@ -39,7 +39,6 @@ export function Analytics() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-card p-5 rounded-2xl border border-border shadow-xs">
         <div className="flex flex-col gap-2">
           <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
@@ -108,7 +107,6 @@ export function Analytics() {
 
       {data && !isLoading && (
         <>
-          {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             <div className="bg-card p-6 rounded-2xl border border-border shadow-xs flex items-center gap-4 hover:shadow-md transition-shadow">
               <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
@@ -141,9 +139,7 @@ export function Analytics() {
             </div>
           </div>
 
-          {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Trend Chart (Line) */}
             <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-xs space-y-6">
               <div className="space-y-1">
                 <h3 className="text-lg font-bold">Volume Trends</h3>
@@ -176,7 +172,6 @@ export function Analytics() {
               </div>
             </div>
 
-            {/* Application Chart (Bar) */}
             <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-xs space-y-6">
               <div className="space-y-1">
                 <h3 className="text-lg font-bold">Application Activity</h3>

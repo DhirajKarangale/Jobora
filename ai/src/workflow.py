@@ -11,7 +11,6 @@ def manage_job_workflow(job_id: str, redis_handler=None, msg_id: str = None):
         job = get_job(conn, job_id)
 
         if not job:
-            print(f"[Error] Job with ID '{job_id}' not found in database.", flush=True)
             if redis_handler and msg_id:
                 redis_handler.remove_job_from_process_stream(msg_id)
             return None
@@ -34,11 +33,9 @@ def manage_job_workflow(job_id: str, redis_handler=None, msg_id: str = None):
         if redis_handler and msg_id:
             redis_handler.remove_job_from_process_stream(msg_id)
 
-        print(f"[Completed] Job ID: {job_id} | isEligible: {is_eligible}", flush=True)
         return updated_job
 
     except Exception as e:
-        print(f"[Error] Failed to execute workflow for job ID '{job_id}': {e}", flush=True)
         if redis_handler and msg_id:
             try:
                 redis_handler.remove_job_from_process_stream(msg_id)

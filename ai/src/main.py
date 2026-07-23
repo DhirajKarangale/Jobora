@@ -18,7 +18,6 @@ def main():
         raise ValueError("Environment variable 'WORKERS' is required but not set.")
 
     workers_count = int(workers_env)
-    print(f"[Main] Starting Jobora AI Engine with {workers_count} workers...", flush=True)
 
     processes = []
 
@@ -37,7 +36,6 @@ def main():
             p.join()
 
     except KeyboardInterrupt:
-        print("\n[Main] Terminating worker processes...", flush=True)
         for p in processes:
             if p.is_alive():
                 p.terminate()
