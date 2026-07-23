@@ -18,10 +18,6 @@ class RedisClient:
         if not self.stream_process:
             raise ValueError("Environment variable 'REDIS_CONSUMER_PROCESS' is required but not set.")
 
-        self.stream_eligible = os.getenv("REDIS_CONSUMER_ELIGIBLE")
-        if not self.stream_eligible:
-            raise ValueError("Environment variable 'REDIS_CONSUMER_ELIGIBLE' is required but not set.")
-
         check_rate_env = os.getenv("REDIS_CHECK_RATE")
         if not check_rate_env:
             raise ValueError("Environment variable 'REDIS_CHECK_RATE' is required but not set.")
@@ -79,11 +75,3 @@ class RedisClient:
 
     def remove_job_from_process_stream(self, msg_id: str):
         self.client.xdel(self.stream_process, msg_id)
-
-    def push_to_eligible_stream(self, job_id: str, extra_data: dict = None):
-        payload = {"id": str(job_id)}
-        if extra_data and isinstance(extra_data, dict):
-            for k, v in extra_data.items():
-                payload[str(k)] = str(v)
-
-        return self.client.xadd(self.stream_eligible, payload)

@@ -31,9 +31,6 @@ def manage_job_workflow(job_id: str, redis_handler=None, msg_id: str = None):
 
         updated_job = update_job(conn, job_id, update_fields)
 
-        if is_eligible and redis_handler:
-            redis_handler.push_to_eligible_stream(job_id)
-
         if redis_handler and msg_id:
             redis_handler.remove_job_from_process_stream(msg_id)
 
