@@ -29,7 +29,7 @@ export function JobGrid() {
             Eligible Opportunities
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Fetch and view AI-matched eligible jobs directly from Redis queue.
+            Fetch and view AI-matched eligible jobs.
           </p>
         </div>
 
