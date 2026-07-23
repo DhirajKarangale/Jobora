@@ -1,7 +1,7 @@
 import { type Browser } from "puppeteer-core";
 import { setTimeout as delay } from "node:timers/promises";
 import { extractJobData } from "./jobData.ts";
-import { INSTAHYRE_URL_JOB_SEARCH } from "../../utils/constants.ts";
+import { INSTAHYRE_URL_JOB_SEARCH, blacklistedCompanies } from "../../utils/constants.ts";
 
 export default async function instahyer(browser: Browser) {
   const page = await browser.newPage();
@@ -32,12 +32,15 @@ export default async function instahyer(browser: Browser) {
         break;
       }
 
-      console.log("Applying instahyer job...");
+      // console.log("Applying instahyer job...");
 
-      await page.evaluate((btn: any) => btn.click(), applyBtn);
-      await extractJobData(page);
+      const { companyName } = await extractJobData(page);
+
+      if (!companyName || !blacklistedCompanies.includes(companyName.toLowerCase())) {
+        await page.evaluate((btn: any) => btn.click(), applyBtn);
+        jobsApplied++;
+      }
       await delay(2000);
-      jobsApplied++;
     } catch (error) {
       console.log("No more jobs to apply for or timeout reached. Exiting loop.");
       break;

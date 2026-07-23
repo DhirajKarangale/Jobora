@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchProcessStatus, startProcess, startInstahyreProcess } from "@/lib/api";
+import { fetchAutomationStatus, startJobScraping, startInstahyreAutoApply } from "@/lib/api";
 
-export function useProcessStatus() {
+export function useAutomationStatus() {
   const queryClient = useQueryClient();
-  const [scrapingMessage, setScrapingMessage] = useState<string | null>(null);
+  const [jobScrapingMessage, setJobScrapingMessage] = useState<string | null>(null);
   const [autoApplyMessage, setAutoApplyMessage] = useState<string | null>(null);
 
   const {
@@ -13,34 +13,34 @@ export function useProcessStatus() {
     isRefetching,
     refetch,
   } = useQuery({
-    queryKey: ["processStatus"],
-    queryFn: fetchProcessStatus,
+    queryKey: ["automationStatus"],
+    queryFn: fetchAutomationStatus,
     staleTime: 0,
     gcTime: 0,
   });
 
-  const startScrapingMutation = useMutation({
-    mutationFn: startProcess,
+  const startJobScrapingMutation = useMutation({
+    mutationFn: startJobScraping,
     onSuccess: (res) => {
       if (typeof res === 'object' && res !== null && 'jobsFound' in res) {
-        setScrapingMessage(`Found ${res.jobsFound} jobs`);
+        setJobScrapingMessage(`Found ${res.jobsFound} jobs`);
       } else {
-        setScrapingMessage(res ? "Scraping completed successfully" : "Scraping already running");
+        setJobScrapingMessage(res ? "Job scraping completed successfully" : "Job scraping already running");
       }
-      queryClient.invalidateQueries({ queryKey: ["processStatus"] });
-      setTimeout(() => setScrapingMessage(null), 120000);
+      queryClient.invalidateQueries({ queryKey: ["automationStatus"] });
+      setTimeout(() => setJobScrapingMessage(null), 120000);
     },
     onError: () => {
-      setScrapingMessage("Failed to start scraping");
-      setTimeout(() => setScrapingMessage(null), 120000);
+      setJobScrapingMessage("Failed to start job scraping");
+      setTimeout(() => setJobScrapingMessage(null), 120000);
     },
   });
 
   const startAutoApplyMutation = useMutation({
-    mutationFn: startInstahyreProcess,
+    mutationFn: startInstahyreAutoApply,
     onSuccess: (res) => {
       setAutoApplyMessage(`Applied to ${res.jobsApplied} jobs`);
-      queryClient.invalidateQueries({ queryKey: ["processStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["automationStatus"] });
       setTimeout(() => setAutoApplyMessage(null), 120000);
     },
     onError: () => {
@@ -50,19 +50,19 @@ export function useProcessStatus() {
   });
 
   const handleRefresh = async () => {
-    setScrapingMessage(null);
+    setJobScrapingMessage(null);
     setAutoApplyMessage(null);
     await refetch();
   };
 
   return {
-    status: status || { isScrapingRunning: false, isAutoApplyRunning: false },
+    status: status || { isJobScraperRunning: false, isAutoApplyRunning: false },
     isLoading,
     isRefetching,
-    scrapingMessage,
+    jobScrapingMessage,
     autoApplyMessage,
-    startScraping: startScrapingMutation.mutate,
-    isScrapingStarting: startScrapingMutation.isPending,
+    startJobScraping: startJobScrapingMutation.mutate,
+    isJobScrapingStarting: startJobScrapingMutation.isPending,
     startAutoApply: startAutoApplyMutation.mutate,
     isAutoApplyStarting: startAutoApplyMutation.isPending,
     refreshStatus: handleRefresh,

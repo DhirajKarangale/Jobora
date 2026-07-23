@@ -2,7 +2,7 @@ import { type Page, Browser } from "puppeteer-core";
 import { saveJob } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
-import { DataJob, LINKEDIN_URL_JOB } from "../../utils/constants.ts";
+import { DataJob, LINKEDIN_URL_JOB, blacklistedCompanies } from "../../utils/constants.ts";
 
 const SELECTORS = {
   description: '[data-sdui-component="com.linkedin.sdui.generated.jobseeker.dsl.impl.aboutTheJob"]',
@@ -72,6 +72,7 @@ async function extractData(browser: Browser, jobId: string) {
   await page.close();
 
   if (!companyName || !link || !description) return;
+  if (blacklistedCompanies.includes(companyName.toLowerCase())) return;
 
   const data: DataJob = {
     id: null,

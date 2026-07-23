@@ -4,7 +4,7 @@ import { edge } from "../utils/browserManager.ts";
 import linkedin from "../job_portals/linkedin/index.ts";
 import instahyre from "../job_portals/instahyre/index.ts";
 
-let isScrapingRunning = false;
+let isJobScraperRunning = false;
 let isAutoApplyRunning = false;
 let globalBrowser: Browser | null = null;
 
@@ -22,20 +22,20 @@ async function getGlobalBrowser(): Promise<Browser> {
   return globalBrowser;
 }
 
-export async function getProcessStatus(_req: Request, res: Response): Promise<void> {
+export async function getAutomationStatus(_req: Request, res: Response): Promise<void> {
   res.json({
-    isScrapingRunning,
+    isJobScraperRunning,
     isAutoApplyRunning
   });
 }
 
-export async function startProcess(_req: Request, res: Response): Promise<void> {
-  if (isScrapingRunning) {
+export async function startJobScraping(_req: Request, res: Response): Promise<void> {
+  if (isJobScraperRunning) {
     res.json(true);
     return;
   }
 
-  isScrapingRunning = true;
+  isJobScraperRunning = true;
 
   (async () => {
     try {
@@ -46,12 +46,12 @@ export async function startProcess(_req: Request, res: Response): Promise<void> 
       console.error("LinkedIn process failed:", error);
       res.json(0);
     } finally {
-      isScrapingRunning = false;
+      isJobScraperRunning = false;
     }
   })();
 }
 
-export async function startInstahyreProcess(_req: Request, res: Response): Promise<void> {
+export async function startInstahyreAutoApply(_req: Request, res: Response): Promise<void> {
   if (isAutoApplyRunning) {
     res.status(400).json({ error: "Instahyre auto-apply process is already running" });
     return;
