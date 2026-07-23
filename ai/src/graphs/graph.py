@@ -149,7 +149,7 @@ def eligibility_node(state: JDState) -> JDState:
     if not profile_text:
         profile_text = load_candidate_profile()
 
-    prompt = get_eligibility_prompt(structured_data, profile_text, raw_text or cleaned_text)
+    prompt = get_eligibility_prompt(structured_data, profile_text)
     llm_res = run_llm_json_step(cleaned_text, prompt, ELIGIBILITY_MODELS)
 
     safety_check = verify_eligibility_rules(structured_data, candidate_exp=2)
@@ -162,8 +162,6 @@ def eligibility_node(state: JDState) -> JDState:
         
         if numbers and numbers[0] > 3:
             final_eligible = "NO"
-        elif numbers and numbers[0] <= 3:
-            final_eligible = "YES"
         else:
             raw_val = str(llm_res.get("Eligible") or llm_res.get("eligible") or "").upper()
             final_eligible = "YES" if "YES" in raw_val or ("ELIGIBLE" in raw_val and "INELIGIBLE" not in raw_val) else "NO"
