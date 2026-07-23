@@ -39,9 +39,9 @@ export function Combobox({ options, value, onChange, placeholder = "Select...", 
   const selectedLabel = normalizedOptions.find(opt => opt.value === value)?.label || value;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={false}>
       <PopoverTrigger 
-        className={cn(buttonVariants({ variant: "outline" }), "w-full justify-between font-normal text-left px-3 py-2 bg-background border-border text-sm h-auto")}
+        className={cn(buttonVariants({ variant: "outline" }), "w-full justify-between font-normal text-left px-3 py-2 bg-background border-border text-sm h-auto cursor-pointer")}
       >
         {selectedLabel || placeholder}
         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

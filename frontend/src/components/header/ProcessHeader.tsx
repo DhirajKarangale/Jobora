@@ -56,7 +56,7 @@ export function ProcessHeader() {
             <Button
               onClick={() => startProcess()}
               disabled={isStarting || isLoading}
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold shadow-md hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200"
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold shadow-md hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer disabled:cursor-not-allowed"
             >
               {isStarting ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
@@ -71,7 +71,7 @@ export function ProcessHeader() {
             variant="outline"
             onClick={refreshStatus}
             disabled={isRefetching}
-            className="border-border hover:bg-accent/80 transition-all duration-200"
+            className="border-border hover:bg-accent/80 transition-all duration-200 cursor-pointer disabled:cursor-not-allowed"
           >
             <RefreshCw className={`w-4 h-4 mr-1.5 ${isRefetching ? "animate-spin text-indigo-500" : ""}`} />
             Refresh

@@ -37,7 +37,7 @@ export function JobGrid() {
           size="lg"
           onClick={() => refetchJobs()}
           disabled={isFetching}
-          className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg hover:shadow-indigo-500/25 transition-all duration-200 shrink-0"
+          className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg hover:shadow-indigo-500/25 transition-all duration-200 shrink-0 cursor-pointer disabled:cursor-not-allowed"
         >
           <Download className={`w-4 h-4 mr-2 ${isFetching ? "animate-bounce" : ""}`} />
           {isFetching ? "Fetching Jobs..." : "Get Eligible Jobs"}

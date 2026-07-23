@@ -41,7 +41,7 @@ export function Analytics() {
 
       {/* Filters */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-card p-5 rounded-2xl border border-border shadow-xs">
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
             <Calendar className="w-4 h-4" /> Date Range
           </label>
@@ -66,7 +66,7 @@ export function Analytics() {
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
             <Filter className="w-4 h-4" /> Source Name
           </label>
@@ -78,7 +78,7 @@ export function Analytics() {
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
             <Search className="w-4 h-4" /> Company Name
           </label>
