@@ -6,6 +6,8 @@ export interface Job {
   link: string | null;
   isApplied?: boolean;
   addedDate?: string | null;
+  isExpired?: boolean;
+  portal_link?: string | null;
 }
 
 export interface ParsedJobData {
@@ -31,4 +33,10 @@ export interface ToggleAppliedResponse {
   success: boolean;
   jobId: string;
   isApplied: boolean;
+}
+
+export interface ToggleExpiredResponse {
+  success: boolean;
+  jobId: string;
+  isExpired: boolean;
 }

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchEligibleJobs, toggleJobApplied } from "@/lib/api";
+import { fetchEligibleJobs, toggleJobApplied, toggleJobExpired } from "@/lib/api";
 import type { Job } from "@/types";
 
 export function useJobs() {
@@ -22,6 +22,19 @@ export function useJobs() {
     },
   });
 
+  const toggleExpiredMutation = useMutation({
+    mutationFn: ({ jobId, targetState }: { jobId: string; targetState: boolean }) =>
+      toggleJobExpired(jobId, targetState),
+    onSuccess: (data) => {
+      queryClient.setQueryData<Job[] | null>(["eligibleJobs"], (old) => {
+        if (!old) return old;
+        // Do not remove from eligible jobs list when marked as expired
+        // just update the state so the UI reflects it
+        return old.map((j) => (j.id === data.jobId ? { ...j, isExpired: data.isExpired } : j));
+      });
+    },
+  });
+
   return {
     jobs: jobsQuery.data,
     isFetching: jobsQuery.isFetching,
@@ -30,5 +43,8 @@ export function useJobs() {
     toggleApplied: toggleAppliedMutation.mutate,
     toggleVariables: toggleAppliedMutation.variables,
     isToggling: toggleAppliedMutation.isPending,
+    toggleExpired: toggleExpiredMutation.mutate,
+    toggleExpiredVariables: toggleExpiredMutation.variables,
+    isTogglingExpired: toggleExpiredMutation.isPending,
   };
 }

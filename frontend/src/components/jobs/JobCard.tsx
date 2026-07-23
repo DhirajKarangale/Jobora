@@ -26,6 +26,7 @@ export function JobCard({
   const sourceShort = getSourceShortName(job.sourceName);
   const displayTitle = parsed.title || (job.description ? job.description.slice(0, 50) + "..." : "Software Engineer");
   const isApplied = Boolean(job.isApplied);
+  const isExpired = Boolean(job.isExpired);
 
   const handleToggle = () => {
     if (job.id) {
@@ -35,10 +36,13 @@ export function JobCard({
 
   return (
     <Card
-      className={`group relative flex flex-col justify-between border transition-all duration-300 rounded-xl shadow-xs hover:shadow-lg overflow-hidden min-w-0 ${isApplied
-        ? "border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/10"
-        : "border-border/60 hover:border-indigo-500/40 bg-card hover:bg-accent/20 hover:shadow-indigo-500/10"
-        }`}
+      className={`group relative flex flex-col justify-between border transition-all duration-300 rounded-xl shadow-xs hover:shadow-lg overflow-hidden min-w-0 ${
+        isApplied
+          ? "border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/10"
+          : isExpired
+          ? "border-red-500/30 bg-red-500/5 dark:bg-red-950/10 hover:border-red-500/50 hover:shadow-red-500/10 opacity-70 hover:opacity-100"
+          : "border-border/60 hover:border-indigo-500/40 bg-card hover:bg-accent/20 hover:shadow-indigo-500/10"
+      }`}
     >
       <CardHeader className="pt-4 pb-2 px-4 space-y-1">
         <div className="flex items-center justify-between w-full">

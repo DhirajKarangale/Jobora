@@ -6,6 +6,7 @@ import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, Di
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ApplyStatusButton } from "./ApplyStatusButton";
+import { ExpiredStatusButton } from "./ExpiredStatusButton";
 import { 
   ExternalLink, 
   Building2, 
@@ -26,12 +27,14 @@ interface JobDetailModalProps {
 }
 
 export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps) {
-  const { toggleApplied, isToggling, toggleVariables } = useJobs();
+  const { toggleApplied, isToggling, toggleVariables, toggleExpired, toggleExpiredVariables, isTogglingExpired } = useJobs();
   const [isAppliedState, setIsAppliedState] = useState(false);
+  const [isExpiredState, setIsExpiredState] = useState(false);
 
   useEffect(() => {
     if (job) {
       setIsAppliedState(Boolean(job.isApplied));
+      setIsExpiredState(Boolean(job.isExpired));
     }
   }, [job]);
 
@@ -52,9 +55,26 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
     }
   };
 
+  const isPendingExpired = isTogglingExpired && toggleExpiredVariables?.jobId === job.id;
+  const targetIsExpired = toggleExpiredVariables?.targetState ?? true;
+
+  const handleToggleExpired = () => {
+    if (job.id && !isPendingExpired) {
+      const targetState = !isExpiredState;
+      setIsExpiredState(targetState);
+      toggleExpired({ jobId: job.id, targetState });
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto flex flex-col gap-6 p-6">
+      <DialogContent className={`sm:max-w-[800px] max-h-[90vh] overflow-y-auto flex flex-col gap-6 p-6 transition-all duration-300 bg-background ${
+        isAppliedState
+          ? "border-2 border-emerald-500/50 shadow-[0_0_20px_-3px_rgba(16,185,129,0.15)]"
+          : isExpiredState
+          ? "border-2 border-red-500/50 shadow-[0_0_20px_-3px_rgba(239,68,68,0.15)]"
+          : "border border-border"
+      }`}>
         <DialogHeader>
           <DialogTitle className="text-xl sm:text-2xl font-bold text-foreground leading-snug pr-6">
             {jobTitle}
@@ -179,6 +199,14 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
           </div>
 
           <div className="flex items-center gap-2 ml-auto sm:ml-0">
+            <ExpiredStatusButton
+              isExpired={isExpiredState}
+              isPending={isPendingExpired}
+              targetIsExpired={targetIsExpired}
+              onToggle={handleToggleExpired}
+              variant="button"
+            />
+
             <ApplyStatusButton
               isApplied={isAppliedState}
               isPending={isPending}
@@ -186,6 +214,19 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
               onToggle={handleToggle}
               variant="button"
             />
+
+            {job.portal_link && (
+              <a href={job.portal_link} target="_blank" rel="noopener noreferrer">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-indigo-50/50 hover:bg-indigo-100/50 text-indigo-700 dark:bg-indigo-950/30 dark:hover:bg-indigo-900/50 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 font-semibold text-xs h-8"
+                >
+                  Portal Link
+                  <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
+                </Button>
+              </a>
+            )}
 
             {job.link && (
               <a href={job.link} target="_blank" rel="noopener noreferrer">

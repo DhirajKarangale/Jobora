@@ -72,9 +72,10 @@ export async function saveJob(data: DataJob): Promise<string> {
       jobId,
       description,
       link,
-      added_date
+      added_date,
+      portal_link
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     RETURNING id;
   `;
 
@@ -86,6 +87,7 @@ export async function saveJob(data: DataJob): Promise<string> {
     data.description,
     data.link,
     new Date(),
+    data.portal_link || null,
   ];
 
   const { rows } = await pool.query(query, values);
@@ -102,9 +104,10 @@ export async function saveEligibleAndAppliedJob(data: DataJob): Promise<string> 
       link,
       iseligible,
       added_date,
-      applied_date
+      applied_date,
+      portal_link
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING id;
   `;
 
@@ -118,6 +121,7 @@ export async function saveEligibleAndAppliedJob(data: DataJob): Promise<string> 
     true,
     new Date(),
     new Date(),
+    data.portal_link || null,
   ];
 
   const { rows } = await pool.query(query, values);
@@ -133,15 +137,18 @@ export interface DataJobFrontend {
   link: string | null;
   isApplied: boolean;
   addedDate: string | null;
+  isExpired: boolean;
+  portal_link: string | null;
 }
 
 export async function getAllEligibleJobs(): Promise<DataJobFrontend[]> {
   const query = `
-    SELECT id, source_name, company_name, description, link, (applied_date IS NOT NULL) AS isapplied, added_date
+    SELECT id, source_name, company_name, description, link, (applied_date IS NOT NULL) AS isapplied, added_date, isexpired, portal_link
     FROM jobs
     WHERE iseligible IS NOT NULL
       AND iseligible = true
       AND applied_date IS NULL
+      AND (isexpired IS NULL OR isexpired = false)
     ORDER BY id DESC
   `;
 
@@ -155,6 +162,8 @@ export async function getAllEligibleJobs(): Promise<DataJobFrontend[]> {
     link: r.link,
     isApplied: Boolean(r.isapplied),
     addedDate: r.added_date ? new Date(r.added_date).toISOString() : null,
+    isExpired: Boolean(r.isexpired),
+    portal_link: r.portal_link,
   }));
 }
 
@@ -180,6 +189,32 @@ export async function setJobAppliedStatus(jobId: string, isApplied: boolean): Pr
       WHERE source_jobid = $1 OR jobid = $1
     `;
     params = [jobId, appliedValue];
+  }
+
+  const { rowCount } = await pool.query(query, params);
+  return (rowCount ?? 0) > 0;
+}
+
+export async function setJobExpiredStatus(jobId: string, isExpired: boolean): Promise<boolean> {
+  if (!jobId) return false;
+
+  let query = "";
+  let params: any[] = [];
+
+  if (isUuid(jobId)) {
+    query = `
+      UPDATE jobs
+      SET isexpired = $2
+      WHERE id = $1::uuid OR source_jobid = $1::text OR jobid = $1::text
+    `;
+    params = [jobId, isExpired];
+  } else {
+    query = `
+      UPDATE jobs
+      SET isexpired = $2
+      WHERE source_jobid = $1 OR jobid = $1
+    `;
+    params = [jobId, isExpired];
   }
 
   const { rowCount } = await pool.query(query, params);

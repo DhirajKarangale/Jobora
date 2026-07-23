@@ -62,7 +62,8 @@ async function extractCompanyName(page: Page) {
 
 async function extractData(browser: Browser, jobId: string) {
   const page = await browser.newPage();
-  await page.goto(`${LINKEDIN_URL_JOB}${jobId}`, { waitUntil: "load" });
+  const applicationLink = `${LINKEDIN_URL_JOB}${jobId}`;
+  await page.goto(applicationLink, { waitUntil: "load" });
 
   await delay(1000);
   const companyName = (await extractCompanyName(page))?.trim();
@@ -82,6 +83,7 @@ async function extractData(browser: Browser, jobId: string) {
     jobId: null,
     description,
     link,
+    portal_link: applicationLink,
   };
 
   return await saveJob(data);
