@@ -109,7 +109,7 @@ export async function flushRedisDatabase() {
 async function run() {
     // await clearEntireRedisStream();
     // await clearConsumerGroupData();
-    await flushRedisDatabase();
+    // await flushRedisDatabase();
     process.exit(0);
 }
 run();
