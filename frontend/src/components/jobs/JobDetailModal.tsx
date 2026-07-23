@@ -54,27 +54,27 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogHeader onClose={() => onOpenChange(false)}>
-        <DialogTitle className="text-xl sm:text-2xl font-bold text-foreground leading-snug">
-          {jobTitle}
-        </DialogTitle>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1">
-          <DialogDescription className="text-xs sm:text-sm text-indigo-500 font-semibold flex items-center gap-1.5">
-            <Building2 className="w-4 h-4 shrink-0 text-indigo-500" />
-            {job.companyName || "Unknown Company"}
-          </DialogDescription>
-          {job.addedDate && (
-            <div className="text-xs text-muted-foreground/80 font-medium">
-              {new Date(job.addedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </div>
-          )}
-        </div>
-      </DialogHeader>
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto flex flex-col gap-6 p-6">
+        <DialogHeader>
+          <DialogTitle className="text-xl sm:text-2xl font-bold text-foreground leading-snug pr-6">
+            {jobTitle}
+          </DialogTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1">
+            <DialogDescription className="text-xs sm:text-sm text-indigo-500 font-semibold flex items-center gap-1.5">
+              <Building2 className="w-4 h-4 shrink-0 text-indigo-500" />
+              {job.companyName || "Unknown Company"}
+            </DialogDescription>
+            {job.addedDate && (
+              <div className="text-xs text-muted-foreground/80 font-medium">
+                {new Date(job.addedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </div>
+            )}
+          </div>
+        </DialogHeader>
 
-      <DialogContent>
         {parsed.isJson && data ? (
           <div className="space-y-5 text-sm">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-muted/40 p-3.5 rounded-xl border border-border/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-muted/40 p-4 rounded-xl border border-border/50">
               {data.location && (
                 <div className="flex items-start gap-2 text-xs">
                   <MapPin className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -127,12 +127,12 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
             </div>
 
             {data.skills && Array.isArray(data.skills) && data.skills.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-foreground/80">
                   <Wrench className="w-3.5 h-3.5 text-indigo-500" />
                   Required Skills ({data.skills.length})
                 </div>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {data.skills.map((skill, index) => (
                     <Badge
                       key={index}
@@ -147,14 +147,14 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
             )}
 
             {data.extra && Array.isArray(data.extra) && data.extra.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-foreground/80">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                   Key Highlights & Perks
                 </div>
-                <ul className="space-y-1.5 bg-muted/20 p-3 rounded-xl border border-border/40 text-xs">
+                <ul className="space-y-2 bg-muted/20 p-4 rounded-xl border border-border/40 text-xs">
                   {data.extra.map((item, index) => (
-                    <li key={index} className="flex items-start gap-2 text-muted-foreground leading-relaxed">
+                    <li key={index} className="flex items-start gap-2.5 text-muted-foreground leading-relaxed">
                       <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0 mt-1.5" />
                       <span>{item}</span>
                     </li>
@@ -168,39 +168,39 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
             {job.description || "No description provided."}
           </div>
         )}
+
+        <DialogFooter className="flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border/50 mt-2">
+          <div className="flex items-center gap-2 mr-auto text-xs">
+            <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-semibold px-2 py-0.5 text-[11px]">
+              <Globe className="w-3 h-3 mr-1 inline" />
+              {job.sourceName || "LinkedIn"}
+            </Badge>
+            <span className="text-muted-foreground font-mono text-[11px]">ID: {job.id}</span>
+          </div>
+
+          <div className="flex items-center gap-2 ml-auto sm:ml-0">
+            <ApplyStatusButton
+              isApplied={isAppliedState}
+              isPending={isPending}
+              targetIsApply={targetIsApply}
+              onToggle={handleToggle}
+              variant="button"
+            />
+
+            {job.link && (
+              <a href={job.link} target="_blank" rel="noopener noreferrer">
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-xs hover:shadow-indigo-500/20 text-xs h-8"
+                >
+                  Apply Now
+                  <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
+                </Button>
+              </a>
+            )}
+          </div>
+        </DialogFooter>
       </DialogContent>
-
-      <DialogFooter className="flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="flex items-center gap-2 mr-auto text-xs">
-          <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-semibold px-2 py-0.5 text-[11px]">
-            <Globe className="w-3 h-3 mr-1 inline" />
-            {job.sourceName || "LinkedIn"}
-          </Badge>
-          <span className="text-muted-foreground font-mono text-[11px]">ID: {job.id}</span>
-        </div>
-
-        <div className="flex items-center gap-2 ml-auto sm:ml-0">
-          <ApplyStatusButton
-            isApplied={isAppliedState}
-            isPending={isPending}
-            targetIsApply={targetIsApply}
-            onToggle={handleToggle}
-            variant="button"
-          />
-
-          {job.link && (
-            <a href={job.link} target="_blank" rel="noopener noreferrer">
-              <Button
-                size="sm"
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-xs hover:shadow-indigo-500/20 text-xs h-8"
-              >
-                Apply Now
-                <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
-              </Button>
-            </a>
-          )}
-        </div>
-      </DialogFooter>
     </Dialog>
   );
 }

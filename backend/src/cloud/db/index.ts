@@ -156,4 +156,122 @@ export async function setJobAppliedStatus(jobId: string, isApplied: boolean): Pr
 
 
 
+export interface AnalyticsFilter {
+  dateRange: string;
+  sourceName?: string;
+  companyName?: string;
+}
+
+export interface AnalyticsData {
+  summary: {
+    totalJobs: number;
+    eligibleJobs: number;
+    appliedJobs: number;
+  };
+  timeSeries: {
+    date: string;
+    totalJobs: number;
+    eligibleJobs: number;
+    appliedJobs: number;
+  }[];
+}
+
+export async function getAnalyticsData(filters: AnalyticsFilter): Promise<AnalyticsData> {
+  const { dateRange, sourceName, companyName } = filters;
+
+  let startDate = new Date();
+  switch (dateRange) {
+    case '1d': startDate.setDate(startDate.getDate() - 1); break;
+    case '2d': startDate.setDate(startDate.getDate() - 2); break;
+    case '3d': startDate.setDate(startDate.getDate() - 3); break;
+    case '1w': startDate.setDate(startDate.getDate() - 7); break;
+    case '2w': startDate.setDate(startDate.getDate() - 14); break;
+    case '1m': startDate.setMonth(startDate.getMonth() - 1); break;
+    case '2m': startDate.setMonth(startDate.getMonth() - 2); break;
+    case '3m': startDate.setMonth(startDate.getMonth() - 3); break;
+    case '6m': startDate.setMonth(startDate.getMonth() - 6); break;
+    case '1y': startDate.setFullYear(startDate.getFullYear() - 1); break;
+    case '1.5y': startDate.setMonth(startDate.getMonth() - 18); break;
+    case 'all':
+    default:
+      startDate = new Date(0); // Epoch
+      break;
+  }
+
+  const queryParams: any[] = [startDate];
+  let filterQuery = `WHERE added_date >= $1`;
+
+  let paramIndex = 2;
+  if (sourceName) {
+    filterQuery += ` AND source_name ILIKE $${paramIndex}`;
+    queryParams.push(`%${sourceName}%`);
+    paramIndex++;
+  }
+
+  if (companyName) {
+    filterQuery += ` AND company_name ILIKE $${paramIndex}`;
+    queryParams.push(`%${companyName}%`);
+    paramIndex++;
+  }
+
+  const summaryQuery = `
+    SELECT 
+      COUNT(*) as total_jobs,
+      COUNT(CASE WHEN iseligible = true THEN 1 END) as eligible_jobs,
+      COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END) as applied_jobs
+    FROM jobs
+    ${filterQuery}
+  `;
+
+  const timeSeriesQuery = `
+    SELECT 
+      DATE(added_date) as date,
+      COUNT(*) as total_jobs,
+      COUNT(CASE WHEN iseligible = true THEN 1 END) as eligible_jobs,
+      COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END) as applied_jobs
+    FROM jobs
+    ${filterQuery}
+    GROUP BY DATE(added_date)
+    ORDER BY date ASC
+  `;
+
+  const [summaryResult, timeSeriesResult] = await Promise.all([
+    pool.query(summaryQuery, queryParams),
+    pool.query(timeSeriesQuery, queryParams)
+  ]);
+
+  const summary = summaryResult.rows[0];
+  
+  const timeSeries = timeSeriesResult.rows.map(row => ({
+    date: new Date(row.date).toISOString().split('T')[0],
+    totalJobs: Number(row.total_jobs),
+    eligibleJobs: Number(row.eligible_jobs),
+    appliedJobs: Number(row.applied_jobs),
+  }));
+
+  return {
+    summary: {
+      totalJobs: Number(summary.total_jobs),
+      eligibleJobs: Number(summary.eligible_jobs),
+      appliedJobs: Number(summary.applied_jobs)
+    },
+    timeSeries
+  };
+}
+
+export async function getFilterOptions(): Promise<{ sources: string[], companies: string[] }> {
+  const sourcesQuery = `SELECT DISTINCT source_name FROM jobs WHERE source_name IS NOT NULL ORDER BY source_name ASC`;
+  const companiesQuery = `SELECT DISTINCT company_name FROM jobs WHERE company_name IS NOT NULL ORDER BY company_name ASC`;
+  
+  const [sourcesResult, companiesResult] = await Promise.all([
+    pool.query(sourcesQuery),
+    pool.query(companiesQuery)
+  ]);
+  
+  return {
+    sources: sourcesResult.rows.map(r => r.source_name),
+    companies: companiesResult.rows.map(r => r.company_name)
+  };
+}
+
 export default pool;
