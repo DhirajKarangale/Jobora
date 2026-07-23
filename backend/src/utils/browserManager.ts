@@ -19,7 +19,10 @@ export async function edge() {
 
   await delay(3000);
 
-  const browser = await puppeteer.connect({ browserURL: "http://127.0.0.1:9222", });
+  const browser = await puppeteer.connect({
+    browserURL: "http://127.0.0.1:9222",
+    protocolTimeout: 1200000,
+  });
 
   return browser;
 }

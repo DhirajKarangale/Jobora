@@ -17,6 +17,7 @@ export default async function instahyer(browser: Browser) {
     await page.click('.employer-row #employer-profile-opportunity');
     await delay(2000);
   } catch (error) {
+    await page.close();
     return 0;
   }
 
@@ -42,10 +43,11 @@ export default async function instahyer(browser: Browser) {
       }
       await delay(2000);
     } catch (error) {
-      console.log("No more jobs to apply for or timeout reached. Exiting loop.");
+      // console.log("No more jobs to apply on instahyer");
       break;
     }
   }
 
+  await page.close();
   return jobsApplied;
 }

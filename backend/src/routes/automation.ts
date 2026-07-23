@@ -31,7 +31,7 @@ export async function getAutomationStatus(_req: Request, res: Response): Promise
 
 export async function startJobScraping(_req: Request, res: Response): Promise<void> {
   if (isJobScraperRunning) {
-    res.json(true);
+    res.json(false);
     return;
   }
 
@@ -41,10 +41,10 @@ export async function startJobScraping(_req: Request, res: Response): Promise<vo
     try {
       const browser = await getGlobalBrowser();
       const linkedinJobs = await linkedin(browser);
-      res.json({ linkedinJobs });
+      res.json({ jobsFound: linkedinJobs.length, linkedinJobs });
     } catch (error) {
       console.error("LinkedIn process failed:", error);
-      res.json(0);
+      res.status(500).json({ error: "Failed to scrape jobs" });
     } finally {
       isJobScraperRunning = false;
     }
