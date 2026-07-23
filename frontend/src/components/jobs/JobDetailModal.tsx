@@ -58,10 +58,17 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
         <DialogTitle className="text-xl sm:text-2xl font-bold text-foreground leading-snug">
           {jobTitle}
         </DialogTitle>
-        <DialogDescription className="text-xs sm:text-sm text-indigo-500 font-semibold flex items-center gap-1.5 mt-1">
-          <Building2 className="w-4 h-4 shrink-0 text-indigo-500" />
-          {job.companyName || "Unknown Company"}
-        </DialogDescription>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1">
+          <DialogDescription className="text-xs sm:text-sm text-indigo-500 font-semibold flex items-center gap-1.5">
+            <Building2 className="w-4 h-4 shrink-0 text-indigo-500" />
+            {job.companyName || "Unknown Company"}
+          </DialogDescription>
+          {job.addedDate && (
+            <div className="text-xs text-muted-foreground/80 font-medium">
+              {new Date(job.addedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </div>
+          )}
+        </div>
       </DialogHeader>
 
       <DialogContent>

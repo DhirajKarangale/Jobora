@@ -72,9 +72,10 @@ export async function saveJob(data: DataJob): Promise<string> {
       company_name,
       jobId,
       description,
-      link
+      link,
+      added_date
     )
-    VALUES ($1, $2, $3, $4, $5, $6)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
     RETURNING id;
   `;
 
@@ -85,6 +86,7 @@ export async function saveJob(data: DataJob): Promise<string> {
     data.jobId,
     data.description,
     data.link,
+    new Date(),
   ];
 
   const { rows } = await pool.query(query, values);
@@ -98,15 +100,16 @@ export interface DataJobFrontend {
   description: string | null;
   link: string | null;
   isApplied: boolean;
+  addedDate: string | null;
 }
 
 export async function getAllEligibleJobs(): Promise<DataJobFrontend[]> {
   const query = `
-    SELECT id, source_name, company_name, description, link, COALESCE(isapplied, false) AS isapplied
+    SELECT id, source_name, company_name, description, link, (applied_date IS NOT NULL) AS isapplied, added_date
     FROM jobs
     WHERE iseligible IS NOT NULL
       AND iseligible = true
-      AND (isapplied IS NULL OR isapplied = false)
+      AND applied_date IS NULL
     ORDER BY id DESC
   `;
 
@@ -119,6 +122,7 @@ export async function getAllEligibleJobs(): Promise<DataJobFrontend[]> {
     description: r.description,
     link: r.link,
     isApplied: Boolean(r.isapplied),
+    addedDate: r.added_date ? new Date(r.added_date).toISOString() : null,
   }));
 }
 
@@ -128,20 +132,22 @@ export async function setJobAppliedStatus(jobId: string, isApplied: boolean): Pr
   let query = "";
   let params: any[] = [];
 
+  const appliedValue = isApplied ? new Date() : null;
+
   if (isUuid(jobId)) {
     query = `
       UPDATE jobs
-      SET isapplied = $2
+      SET applied_date = $2
       WHERE id = $1::uuid OR source_jobid = $1::text OR jobid = $1::text
     `;
-    params = [jobId, isApplied];
+    params = [jobId, appliedValue];
   } else {
     query = `
       UPDATE jobs
-      SET isapplied = $2
+      SET applied_date = $2
       WHERE source_jobid = $1 OR jobid = $1
     `;
-    params = [jobId, isApplied];
+    params = [jobId, appliedValue];
   }
 
   const { rowCount } = await pool.query(query, params);

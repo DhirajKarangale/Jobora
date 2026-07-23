@@ -5,6 +5,7 @@ export interface Job {
   description: string | null;
   link: string | null;
   isApplied?: boolean;
+  addedDate?: string | null;
 }
 
 export interface ParsedJobData {

@@ -35,25 +35,28 @@ export function JobCard({
 
   return (
     <Card
-      className={`group relative flex flex-col justify-between border transition-all duration-300 rounded-xl shadow-xs hover:shadow-lg overflow-hidden min-w-0 ${
-        isApplied
-          ? "border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/10"
-          : "border-border/60 hover:border-indigo-500/40 bg-card hover:bg-accent/20 hover:shadow-indigo-500/10"
-      }`}
+      className={`group relative flex flex-col justify-between border transition-all duration-300 rounded-xl shadow-xs hover:shadow-lg overflow-hidden min-w-0 ${isApplied
+        ? "border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/10"
+        : "border-border/60 hover:border-indigo-500/40 bg-card hover:bg-accent/20 hover:shadow-indigo-500/10"
+        }`}
     >
-      <div className="absolute top-3 right-3 z-10">
-        <Badge
-          variant="outline"
-          className="bg-muted/90 backdrop-blur-xs font-semibold text-[10px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400 border-indigo-500/20 px-2 py-0.5 rounded-full"
-        >
-          {sourceShort}
-        </Badge>
-      </div>
+      <CardHeader className="pt-4 pb-2 px-4 space-y-1">
+        <div className="flex items-center justify-between w-full">
+          <div className="text-[10px] text-muted-foreground/80 font-medium tracking-wide">
+            {job.addedDate ? new Date(job.addedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ""}
+          </div>
+          
+          <Badge
+            variant="outline"
+            className="bg-muted/90 backdrop-blur-xs font-semibold text-[8px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400 border-indigo-500/20 px-1.5 py-0 rounded-full"
+          >
+            {sourceShort}
+          </Badge>
+        </div>
 
-      <CardHeader className="pt-6 pb-2 px-4 text-center space-y-1">
-        <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground font-medium">
+        <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground font-medium pt-1">
           <Building2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-          <span className="truncate max-w-[140px]">
+          <span className="truncate max-w-[140px]" title={job.companyName || "Unknown Company"}>
             {job.companyName || "Unknown Company"}
           </span>
         </div>
