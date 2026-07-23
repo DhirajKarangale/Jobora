@@ -91,6 +91,39 @@ export async function saveJob(data: DataJob): Promise<string> {
   const { rows } = await pool.query(query, values);
   return rows[0].id;
 }
+export async function saveEligibleAndAppliedJob(data: DataJob): Promise<string> {
+  const query = `
+    INSERT INTO jobs (
+      source_name,
+      source_jobId,
+      company_name,
+      jobId,
+      description,
+      link,
+      iseligible,
+      added_date,
+      applied_date
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    RETURNING id;
+  `;
+
+  const values = [
+    data.sourceName,
+    data.sourceJobId,
+    data.companyName,
+    data.jobId,
+    data.description,
+    data.link,
+    true,
+    new Date(),
+    new Date(),
+  ];
+
+  const { rows } = await pool.query(query, values);
+  return rows[0].id;
+}
+
 
 export interface DataJobFrontend {
   id: string;

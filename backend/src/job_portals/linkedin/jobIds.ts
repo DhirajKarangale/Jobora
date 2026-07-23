@@ -1,14 +1,11 @@
 import { type Browser, Page } from "puppeteer-core";
-import { LINKEDIN_PAGES, LINKEDIN_URL_JOB_SEARCH } from "../../utils/constants.ts";
 import { filterExistingJobIds } from "../../cloud/db/index.ts";
+import { setTimeout as delay } from "node:timers/promises";
+import { LINKEDIN_PAGES, LINKEDIN_URL_JOB_SEARCH } from "../../utils/constants.ts";
 
 const MAX_RETRIES = 3;
 const JOB_SELECTOR = 'div[componentkey^="job-card-component-ref-"]';
 const NEXT_BUTTON_SELECTOR = '[data-testid="pagination-controls-next-button-visible"]';
-
-function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 async function extractJobIds(page: Page): Promise<string[]> {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {

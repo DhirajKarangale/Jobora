@@ -1,17 +1,14 @@
 import { type Page, Browser } from "puppeteer-core";
-import { DataJob, LINKEDIN_URL_JOB } from "../../utils/constants.ts";
 import { saveJob } from "../../cloud/db/index.ts";
+import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
+import { DataJob, LINKEDIN_URL_JOB } from "../../utils/constants.ts";
 
 const SELECTORS = {
   description: '[data-sdui-component="com.linkedin.sdui.generated.jobseeker.dsl.impl.aboutTheJob"]',
   applyLink: 'a[href*="/jobs/view/"][href*="/apply/"], a[href*="/safety/go/"]',
   companyName: '[aria-label^="Company,"]',
 };
-
-function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 async function extractDescription(page: Page) {
   const exists = await page.$(SELECTORS.description);

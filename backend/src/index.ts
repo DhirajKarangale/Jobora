@@ -28,7 +28,9 @@ try {
   await connectDb();
   await connectRedis();
   app.listen(PORT, () => {
+    console.log(`Server is successfully running on port ${PORT}`);
   });
 } catch (error) {
+  console.error("Server failed to start:", error);
   process.exit(1);
 }

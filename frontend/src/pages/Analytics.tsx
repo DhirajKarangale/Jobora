@@ -14,9 +14,9 @@ export function Analytics() {
   });
 
   const [filterOptions, setFilterOptions] = useState<{ sources: string[], companies: string[] }>({ sources: [], companies: [] });
-  
+
   useEffect(() => {
-    fetchFilterOptions().then(setFilterOptions).catch(() => {});
+    fetchFilterOptions().then(setFilterOptions).catch(() => { });
   }, []);
 
   const { data, isLoading, error } = useAnalytics(filters);
@@ -44,7 +44,7 @@ export function Analytics() {
           <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
             <Calendar className="w-4 h-4" /> Date Range
           </label>
-          <Combobox 
+          <Combobox
             options={[
               { value: '1d', label: 'Last Day' },
               { value: '2d', label: 'Last 2 Days' },
@@ -69,11 +69,11 @@ export function Analytics() {
           <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
             <Filter className="w-4 h-4" /> Source Name
           </label>
-          <Combobox 
-            options={filterOptions.sources} 
-            value={filters.sourceName || ''} 
+          <Combobox
+            options={filterOptions.sources}
+            value={filters.sourceName || ''}
             onChange={(val) => handleFilterChange('sourceName', val)}
-            placeholder="e.g. LinkedIn"
+            placeholder="All"
           />
         </div>
 
@@ -81,11 +81,11 @@ export function Analytics() {
           <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
             <Search className="w-4 h-4" /> Company Name
           </label>
-          <Combobox 
-            options={filterOptions.companies} 
-            value={filters.companyName || ''} 
+          <Combobox
+            options={filterOptions.companies}
+            value={filters.companyName || ''}
             onChange={(val) => handleFilterChange('companyName', val)}
-            placeholder="e.g. Google"
+            placeholder="All"
           />
         </div>
       </div>
@@ -149,18 +149,18 @@ export function Analytics() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={data.timeSeries} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
-                    <XAxis 
-                      dataKey="date" 
-                      tick={{ fontSize: 12 }} 
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 12 }}
                       tickFormatter={(val) => {
                         const date = new Date(val);
-                        return `${date.getMonth()+1}/${date.getDate()}`;
+                        return `${date.getMonth() + 1}/${date.getDate()}`;
                       }}
-                      stroke="currentColor" 
-                      opacity={0.5} 
+                      stroke="currentColor"
+                      opacity={0.5}
                     />
                     <YAxis tick={{ fontSize: 12 }} stroke="currentColor" opacity={0.5} />
-                    <Tooltip 
+                    <Tooltip
                       contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
                       labelStyle={{ fontWeight: 'bold', color: 'var(--foreground)', marginBottom: '8px' }}
                     />
@@ -181,18 +181,18 @@ export function Analytics() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.timeSeries} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
-                    <XAxis 
-                      dataKey="date" 
-                      tick={{ fontSize: 12 }} 
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 12 }}
                       tickFormatter={(val) => {
                         const date = new Date(val);
-                        return `${date.getMonth()+1}/${date.getDate()}`;
+                        return `${date.getMonth() + 1}/${date.getDate()}`;
                       }}
-                      stroke="currentColor" 
-                      opacity={0.5} 
+                      stroke="currentColor"
+                      opacity={0.5}
                     />
                     <YAxis tick={{ fontSize: 12 }} stroke="currentColor" opacity={0.5} allowDecimals={false} />
-                    <Tooltip 
+                    <Tooltip
                       contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
                       labelStyle={{ fontWeight: 'bold', color: 'var(--foreground)', marginBottom: '8px' }}
                       cursor={{ fill: 'var(--muted)', opacity: 0.4 }}

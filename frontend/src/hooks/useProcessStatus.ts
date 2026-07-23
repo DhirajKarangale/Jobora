@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchProcessStatus, startProcess } from "@/lib/api";
+import { fetchProcessStatus, startProcess, startInstahyreProcess } from "@/lib/api";
 
 export function useProcessStatus() {
   const queryClient = useQueryClient();
-  const [startMessage, setStartMessage] = useState<string | null>(null);
+  const [scrapingMessage, setScrapingMessage] = useState<string | null>(null);
+  const [autoApplyMessage, setAutoApplyMessage] = useState<string | null>(null);
 
   const {
-    data: isRunning,
+    data: status,
     isLoading,
     isRefetching,
     refetch,
@@ -18,31 +19,52 @@ export function useProcessStatus() {
     gcTime: 0,
   });
 
-  const startMutation = useMutation({
+  const startScrapingMutation = useMutation({
     mutationFn: startProcess,
-    onSuccess: (started) => {
-      setStartMessage(started ? "Process started successfully!" : "Process is already running.");
+    onSuccess: (res) => {
+      if (typeof res === 'object' && res !== null && 'jobsFound' in res) {
+        setScrapingMessage(`Found ${res.jobsFound} jobs`);
+      } else {
+        setScrapingMessage(res ? "Scraping completed successfully" : "Scraping already running");
+      }
       queryClient.invalidateQueries({ queryKey: ["processStatus"] });
-      setTimeout(() => setStartMessage(null), 4000);
+      setTimeout(() => setScrapingMessage(null), 120000);
     },
     onError: () => {
-      setStartMessage("Failed to start process.");
-      setTimeout(() => setStartMessage(null), 4000);
+      setScrapingMessage("Failed to start scraping");
+      setTimeout(() => setScrapingMessage(null), 120000);
+    },
+  });
+
+  const startAutoApplyMutation = useMutation({
+    mutationFn: startInstahyreProcess,
+    onSuccess: (res) => {
+      setAutoApplyMessage(`Applied to ${res.jobsApplied} jobs`);
+      queryClient.invalidateQueries({ queryKey: ["processStatus"] });
+      setTimeout(() => setAutoApplyMessage(null), 120000);
+    },
+    onError: () => {
+      setAutoApplyMessage("Failed to start auto-apply");
+      setTimeout(() => setAutoApplyMessage(null), 120000);
     },
   });
 
   const handleRefresh = async () => {
-    setStartMessage(null);
+    setScrapingMessage(null);
+    setAutoApplyMessage(null);
     await refetch();
   };
 
   return {
-    isRunning,
+    status: status || { isScrapingRunning: false, isAutoApplyRunning: false },
     isLoading,
     isRefetching,
-    startMessage,
-    startProcess: startMutation.mutate,
-    isStarting: startMutation.isPending,
+    scrapingMessage,
+    autoApplyMessage,
+    startScraping: startScrapingMutation.mutate,
+    isScrapingStarting: startScrapingMutation.isPending,
+    startAutoApply: startAutoApplyMutation.mutate,
+    isAutoApplyStarting: startAutoApplyMutation.isPending,
     refreshStatus: handleRefresh,
   };
 }
