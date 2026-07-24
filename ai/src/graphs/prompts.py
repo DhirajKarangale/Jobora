@@ -36,14 +36,13 @@ ANTI-HALLUCINATION & EXTRACTION RULES:
 FIELD SPECIFICATIONS & SCHEMA:
 Ensure your output strictly adheres to this JSON schema and data types:
 
-1. "title" (String): Extract the exact job title.
-2. "skills" (Array of Strings): Extract ONLY technical skills (languages, frameworks, tools, databases) explicitly present. Sort them so that primary/core technologies (e.g., mentioned in the title or "Requirements" section) are AT THE TOP. Do not include soft skills or non-technical jargon.
-3. "experience" (String): Extract the exact phrase regarding years of experience (e.g., "3-5 years", "8+ years"). If completely absent, output "Not provided".
-4. "education" (String): Extract degree requirements (e.g., "Bachelor's in CS"). If absent, output "Not provided".
-5. "salary" (String): Extract the exact salary range and currency explicitly stated. If stated in a foreign currency (e.g., USD, EUR), append a bracketed estimated conversion to INR LPA based on standard market rates (e.g., "$100k - $120k (Approx. 80-96 LPA)"). If completely absent, output "Not provided".
-6. "location" (String): Extract the job location(s) if explicitly stated. If absent, output "Not provided".
-7. "employment_type" (String): Extract explicit terms like "Full-time", "Contract", or "Intern". If not explicitly stated but the JD lists standard permanent employee benefits (e.g., PTO, health insurance), output "Full-time (Implied)". Otherwise, output "Not provided".
-8. "extra" (Array of Strings): Extract critical, non-fluff technical or operational details ONLY IF present (e.g., "Remote option", "On-call rotation", "Shift timings"). Default to an empty array [] if none exist.
+1. "skills" (Array of Strings): Extract ONLY technical skills (languages, frameworks, tools, databases) explicitly present. Sort them so that primary/core technologies (e.g., mentioned in the title or "Requirements" section) are AT THE TOP. Do not include soft skills or non-technical jargon.
+2. "experience" (String): Extract the exact phrase regarding years of experience (e.g., "3-5 years", "8+ years"). If completely absent, output "Not provided".
+3. "education" (String): Extract degree requirements (e.g., "Bachelor's in CS"). If absent, output "Not provided".
+4. "salary" (String): Extract the exact salary range and currency explicitly stated. If stated in a foreign currency (e.g., USD, EUR), append a bracketed estimated conversion to INR LPA based on standard market rates (e.g., "$100k - $120k (Approx. 80-96 LPA)"). If completely absent, output "Not provided".
+5. "location" (String): Extract the job location(s) if explicitly stated. If absent, output "Not provided".
+6. "employment_type" (String): Extract explicit terms like "Full-time", "Contract", or "Intern". If not explicitly stated but the JD lists standard permanent employee benefits (e.g., PTO, health insurance), output "Full-time (Implied)". Otherwise, output "Not provided".
+7. "extra" (Array of Strings): Extract critical, non-fluff technical or operational details ONLY IF present (e.g., "Remote option", "On-call rotation", "Shift timings"). Default to an empty array [] if none exist.
 
 OUTPUT FORMAT:
 You must output ONLY a valid JSON object matching the keys above. 
@@ -51,7 +50,6 @@ Do NOT wrap the output in markdown code blocks (e.g., do not use ```json or ```)
 Do NOT include any conversational filler before or after the JSON.
 
 {{
-  "title": "",
   "skills": [],
   "experience": "",
   "education": "",
@@ -89,8 +87,8 @@ ELIGIBILITY EVALUATION RULES:
    - Strict Full-Stack Rule: If the role is Full-Stack, the candidate MUST have matching experience in BOTH the specific frontend and the specific backend required. 
    - Full-Stack Example: If the JD requires a React frontend and a C# .NET backend, but the candidate only possesses React alongside Node.js or Java, this is a FAIL. Partial stack matches (matching frontend but failing backend) equal a FAIL.
 
-3. ROLE / TITLE:
-   - Compare the job title against the candidate's Target Roles or primary skill domain.
+3. ROLE:
+   - Compare the job role against the candidate's Target Roles or primary skill domain.
    - If the role requires a completely different domain specialization not matching the candidate's profile: FAIL.
    - Otherwise: PASS.
 

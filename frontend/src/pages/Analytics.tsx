@@ -25,7 +25,6 @@ export function Analytics() {
   useEffect(() => {
     fetchFilterOptions(filters.sourceName, filters.companyName).then(options => {
       setFilterOptions(options);
-      // Auto-update source if we selected a company and it only has one source
       if (filters.companyName && !filters.sourceName && options.sources.length === 1) {
         setFilters(prev => ({ ...prev, sourceName: options.sources[0] }));
       }
@@ -297,6 +296,7 @@ export function Analytics() {
                     <th className="px-6 py-4 font-semibold">Added Date</th>
                     <th className="px-6 py-4 font-semibold">Source</th>
                     <th className="px-6 py-4 font-semibold">Company</th>
+                    <th className="px-6 py-4 font-semibold">Role</th>
                     <th className="px-6 py-4 font-semibold">Status</th>
                     <th className="px-6 py-4 font-semibold text-right">Actions</th>
                   </tr>
@@ -318,6 +318,13 @@ export function Analytics() {
                           <Building2 className="w-4 h-4 text-emerald-500 shrink-0" />
                           <span className="truncate font-medium" title={job.companyName || ''}>
                             {job.companyName || 'Unknown'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 max-w-[200px]">
+                          <span className="truncate font-medium" title={job.role || ''}>
+                            {job.role || '-'}
                           </span>
                         </div>
                       </td>
@@ -347,7 +354,7 @@ export function Analytics() {
                   ))}
                   {data.jobsList.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                      <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
                         No jobs found matching the selected filters.
                       </td>
                     </tr>

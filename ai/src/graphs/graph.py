@@ -112,14 +112,14 @@ def verify_eligibility_rules(structured_data: Dict[str, Any], candidate_exp: int
                     "reason": f"Ineligible due to top skill mismatch: '{db.upper()}'."
                 }
 
-    title = str(structured_data.get("title", "")).lower()
+    role = str(structured_data.get("role", "")).lower()
     incompatible_roles = ["kotlin developer", "c# developer", ".net developer", "ios developer", "salesforce developer", "sap consultant"]
     for ir in incompatible_roles:
-        if ir in title:
+        if ir in role:
             return {
                 "override": True,
                 "eligible": "NO",
-                "reason": f"Ineligible due to target role mismatch: '{structured_data.get('title')}'."
+                "reason": f"Ineligible due to target role mismatch: '{structured_data.get('role')}'."
             }
 
     return {"override": False}
@@ -137,6 +137,11 @@ def structuring_node(state: JDState) -> JDState:
     raw_text = state.get("raw_text", "")
     prompt = get_structuring_prompt(text, raw_text)
     structured_dict = run_llm_json_step(text, prompt, STRUCTURING_MODELS)
+    
+    existing_role = state.get("structured_data", {}).get("role", "")
+    if existing_role:
+        structured_dict["role"] = existing_role
+        
     return {"structured_data": structured_dict}
 
 
@@ -193,10 +198,12 @@ def process_job_description(job_input: Any, job_id: str = "", source_jobid: str 
         raw_text = job_input.get("description", "")
         jid = str(job_input.get("id", job_id))
         sjid = str(job_input.get("source_jobid", source_jobid))
+        role = str(job_input.get("role", ""))
     else:
         raw_text = str(job_input or "")
         jid = job_id
         sjid = source_jobid
+        role = ""
 
     if not raw_text:
         return {"id": jid, "source_jobid": sjid, "eligible": "NO"}
@@ -205,7 +212,7 @@ def process_job_description(job_input: Any, job_id: str = "", source_jobid: str 
     initial_state = {
         "raw_text": raw_text,
         "current_text": raw_text,
-        "structured_data": {},
+        "structured_data": {"role": role} if role else {},
         "profile_data": profile_text,
         "eligibility_result": {}
     }

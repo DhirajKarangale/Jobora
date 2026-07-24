@@ -8,6 +8,7 @@ const SELECTORS = {
   description: '[data-sdui-component="com.linkedin.sdui.generated.jobseeker.dsl.impl.aboutTheJob"]',
   applyLink: 'a[href*="/jobs/view/"][href*="/apply/"], a[href*="/safety/go/"]',
   companyName: '[aria-label^="Company,"]',
+  role: 'div[data-display-contents="true"] p',
 };
 
 async function extractDescription(page: Page) {
@@ -60,6 +61,36 @@ async function extractCompanyName(page: Page) {
   }, SELECTORS.companyName);
 }
 
+async function extractRole(page: Page) {
+  return page.evaluate(() => {
+    const h1 = document.querySelector('.job-details-jobs-unified-top-card__job-title h1, h1.t-24, h1');
+    if (h1 && !h1.closest('header') && !h1.closest('#global-nav')) {
+      const text = h1.textContent?.trim();
+      if (text && text !== "Me") return text;
+    }
+
+    const elements = document.querySelectorAll('div[data-display-contents="true"] p');
+    for (const element of elements) {
+      if (element.closest('header') || element.closest('#global-nav') || element.closest('.global-nav')) {
+        continue;
+      }
+
+      let text = '';
+      for (const node of element.childNodes) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          text += node.textContent;
+        }
+      }
+      text = text.trim();
+
+      if (text && text.length > 2) {
+        return text;
+      }
+    }
+    return null;
+  });
+}
+
 async function extractData(browser: Browser, jobId: string) {
   const page = await browser.newPage();
   const applicationLink = `${LINKEDIN_URL_JOB}${jobId}`;
@@ -69,6 +100,7 @@ async function extractData(browser: Browser, jobId: string) {
   const companyName = (await extractCompanyName(page))?.trim();
   const link = (await extractLink(page, jobId))?.trim();
   const description = (await extractDescription(page))?.trim();
+  const role = (await extractRole(page))?.trim() || '';
   await delay(1000);
   await page.close();
 
@@ -84,9 +116,11 @@ async function extractData(browser: Browser, jobId: string) {
     description,
     link,
     portal_link: applicationLink,
+    role
   };
+  console.log("Role: ", role);
 
-  return await saveJob(data);
+  return await saveJob(data)
 }
 
 export async function getJobData(browser: Browser, jobIds: string[]) {

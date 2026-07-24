@@ -42,7 +42,7 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
 
   const parsed = parseJobDescription(job.description);
   const data = parsed.data;
-  const jobTitle = parsed.title || job.companyName || "Job Details";
+  const jobTitle = job.role || parsed.title || job.companyName || "Job Details";
 
   const isPending = isToggling && toggleVariables?.jobId === job.id;
   const targetIsApply = toggleVariables?.targetState ?? true;

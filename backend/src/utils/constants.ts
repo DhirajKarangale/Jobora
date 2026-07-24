@@ -14,4 +14,5 @@ export interface DataJob {
   description: string | null;
   link: string | null;
   portal_link: string | null;
+  role: string | null;
 }

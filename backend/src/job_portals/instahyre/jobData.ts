@@ -25,7 +25,6 @@ export async function extractJobData(page: Page): Promise<{ companyName: string 
     });
 
     const fullDescription = [
-      data.role ? `Role: ${data.role}` : "",
       data.experience ? `Experience: ${data.experience}` : "",
       data.location ? `Location: ${data.location}` : "",
       data.description || ""
@@ -40,6 +39,7 @@ export async function extractJobData(page: Page): Promise<{ companyName: string 
       description: fullDescription,
       link: data.companyLink,
       portal_link: null,
+      role: data.role
     };
 
     await saveEligibleAndAppliedJob(jobData);

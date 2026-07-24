@@ -73,9 +73,10 @@ export async function saveJob(data: DataJob): Promise<string> {
       description,
       link,
       added_date,
-      portal_link
+      portal_link, 
+      role
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     RETURNING id;
   `;
 
@@ -88,6 +89,7 @@ export async function saveJob(data: DataJob): Promise<string> {
     data.link,
     new Date(),
     data.portal_link || null,
+    data.role,
   ];
 
   const { rows } = await pool.query(query, values);
@@ -105,9 +107,10 @@ export async function saveEligibleAndAppliedJob(data: DataJob): Promise<string> 
       iseligible,
       added_date,
       applied_date,
-      portal_link
+      portal_link,
+      role
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     RETURNING id;
   `;
 
@@ -122,6 +125,7 @@ export async function saveEligibleAndAppliedJob(data: DataJob): Promise<string> 
     new Date(),
     new Date(),
     data.portal_link || null,
+    data.role,
   ];
 
   const { rows } = await pool.query(query, values);
@@ -139,11 +143,12 @@ export interface DataJobFrontend {
   addedDate: string | null;
   isExpired: boolean;
   portal_link: string | null;
+  role: string | null;
 }
 
 export async function getAllEligibleJobs(): Promise<DataJobFrontend[]> {
   const query = `
-    SELECT id, source_name, company_name, description, link, (applied_date IS NOT NULL) AS isapplied, added_date, isexpired, portal_link
+    SELECT id, source_name, company_name, description, link, (applied_date IS NOT NULL) AS isapplied, added_date, isexpired, portal_link, role
     FROM jobs
     WHERE iseligible IS NOT NULL
       AND iseligible = true
@@ -164,6 +169,7 @@ export async function getAllEligibleJobs(): Promise<DataJobFrontend[]> {
     addedDate: r.added_date ? new Date(r.added_date).toISOString() : null,
     isExpired: Boolean(r.isexpired),
     portal_link: r.portal_link,
+    role: r.role,
   }));
 }
 
@@ -330,7 +336,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
       id, source_name, company_name, description, link, 
       (applied_date IS NOT NULL) AS isapplied, 
       added_date, isexpired, portal_link,
-      iseligible, applied_date
+      iseligible, applied_date, role
     FROM jobs
     ${filterQuery}
     ORDER BY added_date DESC
@@ -346,7 +352,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
   ]);
 
   const summary = summaryResult.rows[0];
-  
+
   const timeSeries = timeSeriesResult.rows.map(row => ({
     date: new Date(row.date).toISOString().split('T')[0],
     totalJobs: Number(row.total_jobs),
@@ -373,6 +379,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     portal_link: r.portal_link,
     isEligible: r.iseligible !== null ? Boolean(r.iseligible) : undefined,
     appliedDate: r.applied_date ? new Date(r.applied_date).toISOString() : null,
+    role: r.role,
   }));
 
   return {
@@ -392,7 +399,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
 export async function getFilterOptions(sourceName?: string, companyName?: string): Promise<{ sources: string[], companies: string[] }> {
   let sourcesQuery = `SELECT DISTINCT source_name FROM jobs WHERE source_name IS NOT NULL`;
   let companiesQuery = `SELECT DISTINCT company_name FROM jobs WHERE company_name IS NOT NULL`;
-  
+
   const sourceParams: any[] = [];
   const companyParams: any[] = [];
 
@@ -407,12 +414,12 @@ export async function getFilterOptions(sourceName?: string, companyName?: string
     companyParams.push(`%${sourceName}%`);
   }
   companiesQuery += ` ORDER BY company_name ASC`;
-  
+
   const [sourcesResult, companiesResult] = await Promise.all([
     pool.query(sourcesQuery, sourceParams),
     pool.query(companiesQuery, companyParams)
   ]);
-  
+
   return {
     sources: sourcesResult.rows.map(r => r.source_name),
     companies: companiesResult.rows.map(r => r.company_name)

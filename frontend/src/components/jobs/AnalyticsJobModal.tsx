@@ -26,7 +26,7 @@ export function AnalyticsJobModal({ job, isOpen, onClose }: AnalyticsJobModalPro
 
   const parsed = parseJobDescription(job.description);
   const data = parsed.data;
-  const jobTitle = parsed.title || "Software Engineer Generic";
+  const jobTitle = job.role || parsed.title || "Software Engineer Generic";
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>

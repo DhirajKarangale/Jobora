@@ -10,6 +10,7 @@ export interface Job {
   portal_link?: string | null;
   isEligible?: boolean;
   appliedDate?: string | null;
+  role?: string | null;
 }
 
 export interface ParsedJobData {

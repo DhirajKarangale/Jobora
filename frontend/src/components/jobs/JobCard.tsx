@@ -24,7 +24,7 @@ export function JobCard({
 }: JobCardProps) {
   const parsed = parseJobDescription(job.description);
   const sourceShort = getSourceShortName(job.sourceName);
-  const displayTitle = parsed.title || (job.description ? job.description.slice(0, 50) + "..." : "Software Engineer");
+  const displayTitle = job.role || parsed.title || (job.description ? job.description.slice(0, 50) + "..." : "Software Engineer");
   const isApplied = Boolean(job.isApplied);
   const isExpired = Boolean(job.isExpired);
 
