@@ -44,12 +44,14 @@ def run_worker(worker_id: int = 1):
             is_busy = True
 
             if job_id:
+                print(f"[Worker {worker_id}] Picked up job: {job_id}")
                 redis_handler.acknowledge_job(msg_id)
 
                 try:
                     manage_job_workflow(job_id=job_id, redis_handler=redis_handler, msg_id=msg_id)
+                    print(f"[Worker {worker_id}] Successfully updated job: {job_id}")
                 except Exception as wf_err:
-                    pass
+                    print(f"[Worker {worker_id}] Failed on job {job_id}. Reason: {str(wf_err)}")
             else:
                 redis_handler.acknowledge_job(msg_id)
                 redis_handler.remove_job_from_process_stream(msg_id)

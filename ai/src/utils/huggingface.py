@@ -101,6 +101,7 @@ def invoke_llm(model_names: list[str], prompt: str, parse_as_json: bool = False)
 
                     if any(keyword in error_msg for keyword in limit_keywords):
                         _current_token_index = (_current_token_index + 1) % len(HF_TOKENS)
+                        print(f"[HuggingFace] Rate limit hit. Moved to token index: {_current_token_index}")
                         attempts_with_different_tokens += 1
                         break
                     else:

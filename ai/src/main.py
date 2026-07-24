@@ -32,6 +32,8 @@ def main():
             p.start()
             processes.append(p)
 
+        print(f"Successfully started {workers_count} worker(s).")
+
         for p in processes:
             p.join()
 
