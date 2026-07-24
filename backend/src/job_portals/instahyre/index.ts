@@ -2,17 +2,16 @@ import { type Browser, type Page } from "puppeteer-core";
 import { setTimeout as delay } from "node:timers/promises";
 import { extractJobData } from "./jobData.ts";
 import { INSTAHYRE_URL_JOB_SEARCH, blacklistedCompanies } from "../../utils/constants.ts";
+import { incrementJobsAutoApplied } from "../../utils/automationState.ts";
 
-async function applyJobs(page: Page): Promise<number> {
-  let jobsApplied = 0;
-
+async function applyJobs(page: Page): Promise<void> {
   while (true) {
     try {
       await page.waitForSelector('.apply button', { visible: true, timeout: 5000 });
       const applyBtn = await page.$('.apply button');
 
       if (!applyBtn) {
-        console.log("No apply button found. Exiting loop.");
+        // console.log("No apply button found. Exiting loop.");
         break;
       }
 
@@ -20,22 +19,18 @@ async function applyJobs(page: Page): Promise<number> {
 
       if (!companyName || !blacklistedCompanies.includes(companyName.toLowerCase())) {
         await page.evaluate((btn: any) => btn.click(), applyBtn);
-        jobsApplied++;
+        incrementJobsAutoApplied();
       }
       await delay(2000);
     } catch (error) {
       break;
     }
   }
-
-  return jobsApplied;
 }
 
-export default async function instahyer(browser: Browser) {
+export default async function instahyer(browser: Browser): Promise<void> {
   const page = await browser.newPage();
   await page.goto(INSTAHYRE_URL_JOB_SEARCH, { waitUntil: "load" });
-
-  let totalJobsApplied = 0;
 
   try {
     await delay(2000);
@@ -45,12 +40,12 @@ export default async function instahyer(browser: Browser) {
       await page.click('button#interested-btn');
       await delay(2000);
     } catch (e) {
-      console.log("No 'View »' button found on root page. Proceeding anyway.");
+      // console.log("No 'View »' button found on root page. Proceeding anyway.");
     }
 
-    totalJobsApplied += await applyJobs(page);
+    await applyJobs(page);
   } catch (error) {
-    console.error("Failed to apply on root page", error);
+    // console.error("Failed to apply on root page", error);
   }
 
   try {
@@ -78,11 +73,10 @@ export default async function instahyer(browser: Browser) {
     await page.click('.employer-row #employer-profile-opportunity');
     await delay(2000);
 
-    totalJobsApplied += await applyJobs(page);
+    await applyJobs(page);
   } catch (error) {
-    console.log("No search results found, or search took too long.");
+    // console.log("No search results found, or search took too long.");
   }
 
   await page.close();
-  return totalJobsApplied;
 }

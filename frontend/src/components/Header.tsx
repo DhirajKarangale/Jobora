@@ -1,24 +1,17 @@
 import { useAutomationStatus } from "@/api/queries";
-import { Button } from "@/components/ui/button";
-import { Play, RefreshCw, Loader2, Bot } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { Play, Loader2, Bot, CheckCircle2 } from "lucide-react";
 
 export function Header() {
   const {
     status,
     isLoading,
-    isRefetching,
-    jobScrapingMessage,
-    autoApplyMessage,
-    startJobScraping,
-    isJobScrapingStarting,
-    startAutoApply,
-    isAutoApplyStarting,
-    refreshStatus,
+    showStoppedUI,
+    stoppedStats,
+    startAutomation,
+    isStarting,
   } = useAutomationStatus();
 
-  const isJobScraperRunning = status.isJobScraperRunning;
-  const isAutoApplyRunning = status.isAutoApplyRunning;
+  const isRunning = status.isRunning;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl shadow-xs">
@@ -29,80 +22,39 @@ export function Header() {
           <div className="relative flex items-center">
             <div
               onClick={() => {
-                if (!isJobScraperRunning && !isJobScrapingStarting && !isLoading) startJobScraping();
+                if (!isRunning && !isStarting && !isLoading) startAutomation();
               }}
-              className={`flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-full border border-border/60 bg-muted/40 shadow-inner transition-colors ${!isJobScraperRunning && !isJobScrapingStarting && !isLoading ? 'cursor-pointer hover:bg-muted/80' : 'cursor-not-allowed opacity-80'}`}
-              title={!isJobScraperRunning ? "Click to start Job Scraping" : "Job Scraping in progress"}
+              className={`flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-full border border-border/60 bg-muted/40 shadow-inner transition-colors ${!isRunning && !isStarting && !isLoading ? 'cursor-pointer hover:bg-muted/80' : 'cursor-not-allowed opacity-80'}`}
+              title={!isRunning ? "Click to start finding jobs" : "Finding jobs in progress"}
             >
               <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:inline-block">
-                Job Scraper Status:
+                Job Finder:
               </span>
-              {isLoading || isRefetching || isJobScrapingStarting ? (
+              {isLoading || isStarting ? (
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground whitespace-nowrap">
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-500" />
-                  {isJobScrapingStarting ? "Running..." : "Checking..."}
+                  {isStarting ? "Starting..." : "Checking..."}
                 </span>
-              ) : isJobScraperRunning ? (
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+              ) : isRunning ? (
+                <span className="inline-flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                   <span className="relative flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                   </span>
-                  Running
+                  Running | Found: {status.jobsScraped} | Applied: {status.jobsAutoApplied}
                 </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 whitespace-nowrap">
-                  <Play className="w-3.5 h-3.5" />
-                  Start Scraping
-                </span>
-              )}
-            </div>
-
-            {jobScrapingMessage && (
-              <span className="absolute top-full mt-0.5 left-4 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 animate-in fade-in transition-all whitespace-nowrap z-50 bg-background px-2 py-1 rounded shadow-md border border-border">
-                {jobScrapingMessage}
-              </span>
-            )}
-          </div>
-
-          {/* INSTAHYRE AUTO APPLY STATUS WRAPPER */}
-          <div className="relative flex items-center">
-            <div
-              onClick={() => {
-                if (!isAutoApplyRunning && !isAutoApplyStarting && !isLoading) startAutoApply();
-              }}
-              className={`flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-full border border-border/60 bg-muted/40 shadow-inner transition-colors ${!isAutoApplyRunning && !isAutoApplyStarting && !isLoading ? 'cursor-pointer hover:bg-muted/80' : 'cursor-not-allowed opacity-80'}`}
-              title={!isAutoApplyRunning ? "Click to start Instahyre Auto Apply" : "Auto Apply in progress"}
-            >
-              <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:inline-block">
-                Auto Apply:
-              </span>
-              {isLoading || isRefetching || isAutoApplyStarting ? (
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground whitespace-nowrap">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-500" />
-                  {isAutoApplyStarting ? "Applying..." : "Checking..."}
-                </span>
-              ) : isAutoApplyRunning ? (
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                  </span>
-                  Running
+              ) : showStoppedUI ? (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                  <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                  Stopped | Found: {stoppedStats.scraped} | Applied: {stoppedStats.applied}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 whitespace-nowrap">
                   <Bot className="w-3.5 h-3.5" />
-                  Auto Apply
+                  Start Finding Jobs
                 </span>
               )}
             </div>
-
-            {autoApplyMessage && (
-              <span className="absolute top-full mt-0.5 left-4 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 animate-in fade-in transition-all whitespace-nowrap z-50 bg-background px-2 py-1 rounded shadow-md border border-border">
-                {autoApplyMessage}
-              </span>
-            )}
           </div>
         </div>
 
@@ -110,17 +62,9 @@ export function Header() {
           <div className="sm:hidden h-8 w-8 mr-auto rounded-lg bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white font-extrabold text-sm tracking-wider shrink-0">
             J
           </div>
-          <Button
-            variant="outline"
-            onClick={refreshStatus}
-            disabled={isRefetching}
-            className="border-border hover:bg-accent/80 transition-all duration-200 cursor-pointer disabled:cursor-not-allowed"
-          >
-            <RefreshCw className={`w-4 h-4 mr-1.5 ${isRefetching ? "animate-spin text-indigo-500" : ""}`} />
-            Refresh
-          </Button>
         </div>
       </div>
     </header>
   );
 }
+

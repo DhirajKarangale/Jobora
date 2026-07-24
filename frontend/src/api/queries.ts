@@ -35,8 +35,9 @@ export function getSourceShortName(source: string | null): string {
 }
 
 export interface AutomationStatus {
-  isJobScraperRunning: boolean;
-  isAutoApplyRunning: boolean;
+  jobsScraped: number;
+  jobsAutoApplied: number;
+  isRunning: boolean;
 }
 
 export async function fetchAutomationStatus(): Promise<AutomationStatus> {
@@ -44,20 +45,12 @@ export async function fetchAutomationStatus(): Promise<AutomationStatus> {
   return response.data;
 }
 
-export async function startJobScraping(): Promise<{ jobsFound?: number } | boolean> {
-  const response = await api.post<{ jobsFound?: number } | boolean>(ENDPOINTS.AUTOMATION_SCRAPER_START);
+export async function startAutomation(): Promise<{ success: boolean; message: string }> {
+  const response = await api.post<{ success: boolean; message: string }>(ENDPOINTS.AUTOMATION_START);
   return response.data;
 }
 
-export async function startInstahyreAutoApply(): Promise<{ jobsApplied: number }> {
-  const response = await api.post<{ jobsApplied: number }>(ENDPOINTS.AUTOMATION_AUTO_APPLY_START);
-  return response.data;
-}
 
-export async function stopProcess(): Promise<boolean> {
-  const response = await api.post<{ success: boolean; isRunning: boolean }>(ENDPOINTS.PROCESS_STOP);
-  return response.data.isRunning;
-}
 
 export async function fetchEligibleJobs(): Promise<Job[] | null> {
   const response = await api.get<Job[] | null>(ENDPOINTS.JOBS_ELIGIBLE);
@@ -162,69 +155,58 @@ export function useAnalytics(filters: AnalyticsFilter) {
   });
 }
 
+import React from "react";
+
 export function useAutomationStatus() {
   const queryClient = useQueryClient();
-  const [jobScrapingMessage, setJobScrapingMessage] = useState<string | null>(null);
-  const [autoApplyMessage, setAutoApplyMessage] = useState<string | null>(null);
+  const wasRunning = React.useRef(false);
+  const [showStoppedUI, setShowStoppedUI] = useState(false);
+  const [stoppedStats, setStoppedStats] = useState({ scraped: 0, applied: 0 });
 
   const {
-    data: status,
+    data: fetchedStatus,
     isLoading,
-    isRefetching,
-    refetch,
+    isError,
   } = useQuery({
     queryKey: ["automationStatus"],
     queryFn: fetchAutomationStatus,
-    staleTime: 0,
-    gcTime: 0,
+    refetchInterval: (query) => (!query.state.error && query.state.data?.isRunning ? 3000 : false),
+    retry: 1,
   });
 
-  const startJobScrapingMutation = useMutation({
-    mutationFn: startJobScraping,
-    onSuccess: (res) => {
-      if (typeof res === 'object' && res !== null && 'jobsFound' in res) {
-        setJobScrapingMessage(`Found ${res.jobsFound} jobs`);
-      } else {
-        setJobScrapingMessage(res ? "Job scraping completed successfully" : "Job scraping already running");
-      }
+  const status = isError 
+    ? { jobsScraped: 0, jobsAutoApplied: 0, isRunning: false } 
+    : (fetchedStatus || { jobsScraped: 0, jobsAutoApplied: 0, isRunning: false });
+
+  React.useEffect(() => {
+    if (status.isRunning) {
+      wasRunning.current = true;
+      setShowStoppedUI(false);
+    } else if (wasRunning.current && status && !status.isRunning) {
+      wasRunning.current = false;
+      setShowStoppedUI(true);
+      setStoppedStats({ scraped: status.jobsScraped, applied: status.jobsAutoApplied });
+      const timer = setTimeout(() => setShowStoppedUI(false), 120000); // 2 mins
+      return () => clearTimeout(timer);
+    }
+  }, [status?.isRunning, status?.jobsScraped, status?.jobsAutoApplied]);
+
+  const startAutomationMutation = useMutation({
+    mutationFn: startAutomation,
+    onMutate: () => {
+      setShowStoppedUI(false);
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["automationStatus"] });
-      setTimeout(() => setJobScrapingMessage(null), 120000);
-    },
-    onError: () => {
-      setJobScrapingMessage("Failed to start job scraping");
-      setTimeout(() => setJobScrapingMessage(null), 120000);
     },
   });
-
-  const startAutoApplyMutation = useMutation({
-    mutationFn: startInstahyreAutoApply,
-    onSuccess: (res) => {
-      setAutoApplyMessage(`Applied to ${res.jobsApplied} jobs`);
-      queryClient.invalidateQueries({ queryKey: ["automationStatus"] });
-      setTimeout(() => setAutoApplyMessage(null), 120000);
-    },
-    onError: () => {
-      setAutoApplyMessage("Failed to start auto-apply");
-      setTimeout(() => setAutoApplyMessage(null), 120000);
-    },
-  });
-
-  const handleRefresh = async () => {
-    setJobScrapingMessage(null);
-    setAutoApplyMessage(null);
-    await refetch();
-  };
 
   return {
-    status: status || { isJobScraperRunning: false, isAutoApplyRunning: false },
+    status: status || { jobsScraped: 0, jobsAutoApplied: 0, isRunning: false },
     isLoading,
-    isRefetching,
-    jobScrapingMessage,
-    autoApplyMessage,
-    startJobScraping: startJobScrapingMutation.mutate,
-    isJobScrapingStarting: startJobScrapingMutation.isPending,
-    startAutoApply: startAutoApplyMutation.mutate,
-    isAutoApplyStarting: startAutoApplyMutation.isPending,
-    refreshStatus: handleRefresh,
+    showStoppedUI,
+    stoppedStats,
+    startAutomation: startAutomationMutation.mutate,
+    isStarting: startAutomationMutation.isPending,
   };
 }

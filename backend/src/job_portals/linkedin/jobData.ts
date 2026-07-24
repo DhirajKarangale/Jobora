@@ -3,6 +3,7 @@ import { saveJob } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
 import { DataJob, LINKEDIN_URL_JOB, blacklistedCompanies } from "../../utils/constants.ts";
+import { incrementJobsScraped } from "../../utils/automationState.ts";
 
 const SELECTORS = {
   description: '[data-sdui-component="com.linkedin.sdui.generated.jobseeker.dsl.impl.aboutTheJob"]',
@@ -118,24 +119,19 @@ async function extractData(browser: Browser, jobId: string) {
     role
   };
 
-  console.log(companyName + "->", link);
-
   return await saveJob(data)
 }
 
 export async function getJobData(browser: Browser, jobIds: string[]) {
-  const savedJobs = [];
-
   for (const jobId of jobIds) {
     try {
       const id = await extractData(browser, jobId);
       if (id) {
-        savedJobs.push(id);
         await addToProcessStream({ id });
+        incrementJobsScraped();
       }
     } catch (err) {
     }
   }
-
-  return savedJobs;
 }
+

@@ -2,8 +2,7 @@ import { type Browser } from "puppeteer-core";
 import { getJobIds } from "./jobIds.ts";
 import { getJobData } from "./jobData.ts";
 
-export default async function linkedin(browser: Browser) {
+export default async function linkedin(browser: Browser): Promise<void> {
   const jobIds = await getJobIds(browser);
-  const savedJobs = await getJobData(browser, jobIds);
-  return savedJobs;
+  await getJobData(browser, jobIds);
 }

@@ -112,9 +112,10 @@ export async function saveEligibleAndAppliedJob(data: DataJob): Promise<string> 
       added_date,
       applied_date,
       portal_link,
-      role
+      role,
+      isautoapply
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     RETURNING id;
   `;
 
@@ -130,6 +131,7 @@ export async function saveEligibleAndAppliedJob(data: DataJob): Promise<string> 
     new Date(),
     data.portal_link || null,
     data.role,
+    true
   ];
 
   const { rows } = await pool.query(query, values);
