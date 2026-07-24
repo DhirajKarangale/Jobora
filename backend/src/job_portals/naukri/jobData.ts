@@ -140,7 +140,7 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
         continue;
       }
 
-      if (blacklistedCompanies.includes(companyName.toLowerCase())) {
+      if (blacklistedCompanies.some(company => companyName.toLowerCase().includes(company))) {
         await delay(WAIT_TIME);
         await page.close();
         continue;

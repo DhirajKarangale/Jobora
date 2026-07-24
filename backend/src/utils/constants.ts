@@ -16,7 +16,7 @@ export const NAUKRI_URL_JOB_SEARCH = "https://www.naukri.com/software-engineer-s
 export const CURSHORT_URL_JOB = "https://cutshort.io/profile/all-jobs?matchesfor=65749e03eb780500f05b3e86&minsal=1500000&salaryCurrency=INR&minexp=0&maxexp=2&roletype=full_time";
 export const CURSHORT_URL_JOB_SEARCH = "https://cutshort.io/job/"
 
-export const blacklistedCompanies = ["infosys", "tcs"];
+export const blacklistedCompanies = ["infosys", "tcs", "tata consultancy services"];
 
 export interface DataJob {
   id: string | null;

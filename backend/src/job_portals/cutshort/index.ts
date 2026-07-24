@@ -79,7 +79,7 @@ export default async function cutshort(browser: Browser): Promise<void> {
 
       if (!jobData || !jobData.jobId) continue;
 
-      if (jobData.company && blacklistedCompanies.includes(jobData.company.toLowerCase())) {
+      if (jobData.company && blacklistedCompanies.some(company => jobData.company.toLowerCase().includes(company))) {
         continue;
       }
 
@@ -138,13 +138,11 @@ export default async function cutshort(browser: Browser): Promise<void> {
         await saveEligibleAndAppliedJob(dataToSave);
         incrementJobsAutoApplied();
       } else {
-        incrementJobsScraped();
-
-        // const id = await saveJob(dataToSave);
-        // if (id) {
-        //   await addToProcessStream({ id });
-        //   incrementJobsScraped();
-        // }
+        const id = await saveJob(dataToSave);
+        if (id) {
+          await addToProcessStream({ id });
+          incrementJobsScraped();
+        }
       }
     }
   } catch (error) {

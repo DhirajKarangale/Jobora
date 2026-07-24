@@ -105,7 +105,7 @@ async function extractData(browser: Browser, jobId: string) {
   await page.close();
 
   if (!companyName || !link || !description) return;
-  if (blacklistedCompanies.includes(companyName.toLowerCase())) return;
+  if (blacklistedCompanies.some(company => companyName.toLowerCase().includes(company))) return;
 
   const data: DataJob = {
     id: null,

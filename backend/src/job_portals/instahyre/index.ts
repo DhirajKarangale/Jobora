@@ -17,7 +17,7 @@ async function applyJobs(page: Page): Promise<void> {
 
       const { companyName } = await extractJobData(page);
 
-      if (!companyName || !blacklistedCompanies.includes(companyName.toLowerCase())) {
+      if (!companyName || !blacklistedCompanies.some(company => companyName.toLowerCase().includes(company))) {
         await page.evaluate((btn: any) => btn.click(), applyBtn);
         incrementJobsAutoApplied();
       }
