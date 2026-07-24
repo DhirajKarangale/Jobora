@@ -5,7 +5,7 @@ import type { AnalyticsFilter } from "@/api/queries";
 interface AnalyticsFiltersProps {
   filters: AnalyticsFilter;
   filterOptions: { sources: string[]; companies: string[] };
-  onFilterChange: (key: keyof AnalyticsFilter, value: string) => void;
+  onFilterChange: (key: keyof AnalyticsFilter, value: string | number) => void;
 }
 
 export function AnalyticsFilters({ filters, filterOptions, onFilterChange }: AnalyticsFiltersProps) {

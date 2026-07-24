@@ -3,12 +3,14 @@ import { getAnalyticsData } from "../cloud/db/index.ts";
 
 export async function getAnalytics(req: Request, res: Response): Promise<void> {
   try {
-    const { dateRange, sourceName, companyName } = req.query;
+    const { dateRange, sourceName, companyName, page, limit } = req.query;
 
     const filters = {
       dateRange: (dateRange as string) || "all",
       sourceName: sourceName as string | undefined,
       companyName: companyName as string | undefined,
+      page: page ? parseInt(page as string, 10) : 1,
+      limit: limit ? parseInt(limit as string, 10) : 10,
     };
 
     const analyticsData = await getAnalyticsData(filters);

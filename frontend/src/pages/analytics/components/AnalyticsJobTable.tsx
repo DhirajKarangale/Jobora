@@ -1,19 +1,28 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Globe, Building2, Eye } from "lucide-react";
+import { Globe, Building2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Job } from "@/types";
 
 interface AnalyticsJobTableProps {
   jobsList: any[];
+  pagination?: { total: number; page: number; limit: number };
+  onPageChange?: (page: number) => void;
   onSelectJob: (job: Job) => void;
 }
 
-export function AnalyticsJobTable({ jobsList, onSelectJob }: AnalyticsJobTableProps) {
+export function AnalyticsJobTable({ jobsList, pagination, onPageChange, onSelectJob }: AnalyticsJobTableProps) {
+  const totalPages = pagination ? Math.ceil(pagination.total / pagination.limit) : 1;
+  const currentPage = pagination?.page || 1;
+
   return (
     <div className="bg-card rounded-2xl border border-border shadow-xs overflow-hidden mt-6">
       <div className="p-5 sm:p-6 border-b border-border space-y-1">
         <h3 className="text-lg font-bold">Filtered Jobs</h3>
-        <p className="text-xs text-muted-foreground">List of up to 100 recent jobs matching your current filters</p>
+        <p className="text-xs text-muted-foreground">
+          {pagination 
+            ? `Showing ${(currentPage - 1) * pagination.limit + 1} to ${Math.min(currentPage * pagination.limit, pagination.total)} of ${pagination.total} jobs`
+            : "List of recent jobs matching your current filters"}
+        </p>
       </div>
 
       <div className="overflow-x-auto">
@@ -89,6 +98,30 @@ export function AnalyticsJobTable({ jobsList, onSelectJob }: AnalyticsJobTablePr
           </tbody>
         </table>
       </div>
+
+      {pagination && totalPages > 1 && (
+        <div className="p-4 border-t border-border flex items-center justify-between">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange?.(currentPage - 1)}
+            disabled={currentPage <= 1}
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange?.(currentPage + 1)}
+            disabled={currentPage >= totalPages}
+          >
+            Next <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

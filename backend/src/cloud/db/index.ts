@@ -239,11 +239,15 @@ export interface AnalyticsFilter {
   dateRange: string;
   sourceName?: string;
   companyName?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface AnalyticsData {
   summary: {
     totalJobs: number;
+    pendingAiJobs: number;
+    notEligibleJobs: number;
     eligibleJobs: number;
     appliedJobs: number;
     autoAppliedJobs: number;
@@ -255,14 +259,19 @@ export interface AnalyticsData {
     eligibleJobs: number;
     appliedJobs: number;
   }[];
+  actionableJobsBySource: { name: string; toApply: number; applied: number }[];
   jobsBySource: { name: string; count: number }[];
-  jobsByCompany: { name: string; count: number }[];
   statusBreakdown: { name: string; value: number }[];
   jobsList: any[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+  };
 }
 
 export async function getAnalyticsData(filters: AnalyticsFilter): Promise<AnalyticsData> {
-  const { dateRange, sourceName, companyName } = filters;
+  const { dateRange, sourceName, companyName, page = 1, limit = 10 } = filters;
 
   let startDate = new Date();
   switch (dateRange) {
@@ -305,7 +314,8 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
       COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END) as applied_jobs,
       COUNT(CASE WHEN applied_date IS NOT NULL AND is_auto_apply = true THEN 1 END) as auto_applied_jobs,
       COUNT(CASE WHEN applied_date IS NOT NULL AND (is_auto_apply IS NULL OR is_auto_apply = false) THEN 1 END) as manual_applied_jobs,
-      COUNT(CASE WHEN applied_date IS NULL AND (is_eligible IS NULL OR is_eligible = false) THEN 1 END) as not_eligible_jobs,
+      COUNT(CASE WHEN applied_date IS NULL AND is_eligible IS NULL AND (is_expired IS NULL OR is_expired = false) THEN 1 END) as pending_ai_jobs,
+      COUNT(CASE WHEN is_eligible = false THEN 1 END) as not_eligible_jobs,
       COUNT(CASE WHEN applied_date IS NULL AND is_eligible = true AND is_expired = true THEN 1 END) as expired_jobs,
       COUNT(CASE WHEN applied_date IS NULL AND is_eligible = true AND (is_expired IS NULL OR is_expired = false) THEN 1 END) as active_jobs
     FROM jobs
@@ -332,14 +342,24 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     ORDER BY count DESC
   `;
 
-  const jobsByCompanyQuery = `
-    SELECT company as name, COUNT(*) as count
+  const actionableJobsBySourceQuery = `
+    SELECT 
+      source as name, 
+      COUNT(CASE WHEN applied_date IS NULL THEN 1 END) as to_apply,
+      COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END) as applied
     FROM jobs
-    ${filterQuery} AND company IS NOT NULL
-    GROUP BY company
-    ORDER BY count DESC
-    LIMIT 10
+    ${filterQuery} AND source IS NOT NULL AND is_eligible = true
+    GROUP BY source
+    ORDER BY (COUNT(CASE WHEN applied_date IS NULL THEN 1 END) + COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END)) DESC
   `;
+
+  const totalJobsListQuery = `
+    SELECT COUNT(*) as count
+    FROM jobs
+    ${filterQuery}
+  `;
+
+  const offset = (page - 1) * limit;
 
   const jobsListQuery = `
     SELECT 
@@ -350,15 +370,18 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     FROM jobs
     ${filterQuery}
     ORDER BY added_date DESC
-    LIMIT 100
+    LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
   `;
+  
+  const listQueryParams = [...queryParams, limit, offset];
 
-  const [summaryResult, timeSeriesResult, sourceResult, companyResult, jobsListResult] = await Promise.all([
+  const [summaryResult, timeSeriesResult, sourceResult, actionableSourceResult, totalJobsListResult, jobsListResult] = await Promise.all([
     pool.query(summaryQuery, queryParams),
     pool.query(timeSeriesQuery, queryParams),
     pool.query(jobsBySourceQuery, queryParams),
-    pool.query(jobsByCompanyQuery, queryParams),
-    pool.query(jobsListQuery, queryParams)
+    pool.query(actionableJobsBySourceQuery, queryParams),
+    pool.query(totalJobsListQuery, queryParams),
+    pool.query(jobsListQuery, listQueryParams)
   ]);
 
   const summary = summaryResult.rows[0];
@@ -371,10 +394,10 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
   }));
 
   const statusBreakdown = [
-    { name: 'Active (To Apply)', value: Number(summary.active_jobs) },
+    { name: 'Pending AI', value: Number(summary.pending_ai_jobs) },
     { name: 'Not Eligible', value: Number(summary.not_eligible_jobs) },
-    { name: 'Auto Applied', value: Number(summary.auto_applied_jobs) },
-    { name: 'Manual Applied', value: Number(summary.manual_applied_jobs) },
+    { name: 'Open (To Apply)', value: Number(summary.active_jobs) },
+    { name: 'Applied', value: Number(summary.applied_jobs) },
     { name: 'Expired', value: Number(summary.expired_jobs) }
   ].filter(item => item.value > 0);
 
@@ -396,16 +419,23 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
   return {
     summary: {
       totalJobs: Number(summary.total_jobs),
+      pendingAiJobs: Number(summary.pending_ai_jobs),
+      notEligibleJobs: Number(summary.not_eligible_jobs),
       eligibleJobs: Number(summary.active_jobs),
       appliedJobs: Number(summary.applied_jobs),
       autoAppliedJobs: Number(summary.auto_applied_jobs),
       manualAppliedJobs: Number(summary.manual_applied_jobs)
     },
     timeSeries,
+    actionableJobsBySource: actionableSourceResult.rows.map(r => ({ name: r.name, toApply: Number(r.to_apply), applied: Number(r.applied) })),
     jobsBySource: sourceResult.rows.map(r => ({ name: r.name, count: Number(r.count) })),
-    jobsByCompany: companyResult.rows.map(r => ({ name: r.name, count: Number(r.count) })),
     statusBreakdown,
-    jobsList
+    jobsList,
+    pagination: {
+      total: Number(totalJobsListResult.rows[0].count),
+      page,
+      limit
+    }
   };
 }
 

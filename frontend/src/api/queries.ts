@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useState } from "react";
 import type { Job, ParsedJobData, ParsedDescriptionResult, ToggleAppliedResponse, ToggleExpiredResponse } from "@/types";
 import { BASE_URL, ENDPOINTS } from "./constants";
@@ -71,15 +71,18 @@ export interface AnalyticsFilter {
   dateRange: string;
   sourceName?: string;
   companyName?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface AnalyticsData {
-  summary: { totalJobs: number; eligibleJobs: number; appliedJobs: number; autoAppliedJobs: number; manualAppliedJobs: number; };
+  summary: { totalJobs: number; pendingAiJobs: number; notEligibleJobs: number; eligibleJobs: number; appliedJobs: number; autoAppliedJobs: number; manualAppliedJobs: number; };
   timeSeries: { date: string; totalJobs: number; eligibleJobs: number; appliedJobs: number; }[];
+  actionableJobsBySource: { name: string; toApply: number; applied: number }[];
   jobsBySource: { name: string; count: number }[];
-  jobsByCompany: { name: string; count: number }[];
   statusBreakdown: { name: string; value: number }[];
   jobsList: any[];
+  pagination: { total: number; page: number; limit: number; };
 }
 
 export async function fetchAnalytics(filters: AnalyticsFilter): Promise<AnalyticsData> {
@@ -87,6 +90,8 @@ export async function fetchAnalytics(filters: AnalyticsFilter): Promise<Analytic
   if (filters.dateRange) params.append('dateRange', filters.dateRange);
   if (filters.sourceName) params.append('sourceName', filters.sourceName);
   if (filters.companyName) params.append('companyName', filters.companyName);
+  if (filters.page) params.append('page', filters.page.toString());
+  if (filters.limit) params.append('limit', filters.limit.toString());
 
   const response = await api.get<AnalyticsData>(`${ENDPOINTS.ANALYTICS}?${params.toString()}`);
   return response.data;
@@ -152,6 +157,7 @@ export function useAnalytics(filters: AnalyticsFilter) {
   return useQuery<AnalyticsData, Error>({
     queryKey: ["analytics", filters],
     queryFn: () => fetchAnalytics(filters),
+    placeholderData: keepPreviousData,
   });
 }
 

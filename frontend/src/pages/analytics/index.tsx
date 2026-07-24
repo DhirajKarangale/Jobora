@@ -15,7 +15,9 @@ export function Analytics() {
   const [filters, setFilters] = useState<AnalyticsFilter>({
     dateRange: '1w',
     sourceName: '',
-    companyName: ''
+    companyName: '',
+    page: 1,
+    limit: 10
   });
 
   const [filterOptions, setFilterOptions] = useState<{ sources: string[], companies: string[] }>({ sources: [], companies: [] });
@@ -30,10 +32,14 @@ export function Analytics() {
     }).catch(() => { });
   }, [filters.sourceName, filters.companyName]);
 
-  const { data, isLoading, error } = useAnalytics(filters);
+  const { data, isLoading, isFetching, error } = useAnalytics(filters);
 
-  const handleFilterChange = (key: keyof AnalyticsFilter, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+  const handleFilterChange = (key: keyof AnalyticsFilter, value: string | number) => {
+    if (key === 'page') {
+      setFilters(prev => ({ ...prev, page: value as number }));
+    } else {
+      setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+    }
   };
 
   return (
@@ -65,7 +71,14 @@ export function Analytics() {
         <>
           <AnalyticsSummaryCards summary={data.summary} />
           <AnalyticsCharts data={data} />
-          <AnalyticsJobTable jobsList={data.jobsList} onSelectJob={setSelectedJob} />
+          <div className={`transition-opacity duration-200 ${isFetching && !isLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+            <AnalyticsJobTable 
+              jobsList={data.jobsList} 
+              pagination={data.pagination}
+              onPageChange={(page) => handleFilterChange('page', page)}
+              onSelectJob={setSelectedJob} 
+            />
+          </div>
         </>
       )}
 
