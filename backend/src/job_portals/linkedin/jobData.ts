@@ -120,8 +120,7 @@ async function extractData(browser: Browser, jobId: string) {
 
   console.log(companyName + "->", link);
 
-  // return await saveJob(data)
-  return null
+  return await saveJob(data)
 }
 
 export async function getJobData(browser: Browser, jobIds: string[]) {
@@ -131,15 +130,12 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
     try {
       const id = await extractData(browser, jobId);
       if (id) {
-        // savedJobs.push(id);
-        // await addToProcessStream({ id });
+        savedJobs.push(id);
+        await addToProcessStream({ id });
       }
     } catch (err) {
     }
   }
 
-  savedJobs.push(1);
-  savedJobs.push(2);
-  savedJobs.push(3);
   return savedJobs;
 }

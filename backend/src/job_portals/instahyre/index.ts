@@ -9,6 +9,13 @@ export default async function instahyer(browser: Browser) {
 
   try {
     await delay(2000);
+
+    const searchPanelHeading = await page.$('.job-search-heading');
+    if (searchPanelHeading) {
+      await searchPanelHeading.click();
+      await delay(1000);
+    }
+
     await page.waitForSelector('li#search-dk', { timeout: 5000 });
     await page.click('li#search-dk');
     await delay(2000);
