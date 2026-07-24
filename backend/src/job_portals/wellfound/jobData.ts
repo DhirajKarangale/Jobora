@@ -2,7 +2,7 @@ import { type Browser, Page } from "puppeteer-core";
 import { saveJob, saveEligibleAndAppliedJob } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
-import { DataJob, WELLFOUND_URL_JOB, blacklistedCompanies } from "../../utils/constants.ts";
+import { DataJob, WELLFOUND_URL_JOB, blacklistedCompanies, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/automationState.ts";
 
 async function extractData(page: Page, jobId: string) {
@@ -50,7 +50,7 @@ async function extractData(page: Page, jobId: string) {
 
 async function tryApplyJob(page: Page): Promise<boolean> {
   try {
-    await delay(2000);
+    await delay(WAIT_TIME);
 
     const submitBtnSelector = 'button[data-test="JobDescriptionSlideIn--SubmitButton"]';
     const applyBtn = await page.$(submitBtnSelector);
@@ -62,7 +62,7 @@ async function tryApplyJob(page: Page): Promise<boolean> {
 
     await page.evaluate((btn) => (btn as HTMLButtonElement).click(), applyBtn);
 
-    await delay(2000);
+    await delay(WAIT_TIME);
 
     try {
       await page.waitForFunction(() => {
@@ -72,10 +72,10 @@ async function tryApplyJob(page: Page): Promise<boolean> {
         }
         return document.body.textContent?.includes('Congrats! Your application has been submitted.') || false;
       }, { timeout: 7000 });
-      await delay(2000);
+      await delay(WAIT_TIME);
       return true;
     } catch {
-      await delay(2000);
+      await delay(WAIT_TIME);
       return false;
     }
   } catch (error) {
@@ -89,21 +89,21 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
       const page = await browser.newPage();
       const applicationLink = `${WELLFOUND_URL_JOB}${jobId}`;
       await page.goto(applicationLink, { waitUntil: "load" });
-      await delay(2000);
+      await delay(WAIT_TIME);
 
       const data = await extractData(page, jobId);
-      await delay(2000);
+      await delay(WAIT_TIME);
 
       const { role, companyName, salary, experience, location, skills, about } = data;
 
       if (!companyName || !about) {
-        await delay(2000);
+        await delay(WAIT_TIME);
         await page.close();
         continue;
       }
 
       if (blacklistedCompanies.includes(companyName.toLowerCase())) {
-        await delay(2000);
+        await delay(WAIT_TIME);
         await page.close();
         continue;
       }
@@ -141,7 +141,7 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
         }
       }
 
-      await delay(2000);
+      await delay(WAIT_TIME);
       await page.close();
     } catch (err) {
     }

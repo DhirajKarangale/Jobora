@@ -1,7 +1,7 @@
 import { type Browser, Page } from "puppeteer-core";
 import { filterExistingJobIds } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
-import { JOB_PORTAL_PAGINATATION, NAUKRI_URL_JOB_SEARCH } from "../../utils/constants.ts";
+import { JOB_PORTAL_PAGINATATION, NAUKRI_URL_JOB_SEARCH, WAIT_TIME } from "../../utils/constants.ts";
 
 const JOB_LINK_SELECTOR = 'a.title';
 
@@ -27,14 +27,14 @@ async function extractJobIds(page: Page): Promise<string[]> {
 export async function getJobIds(browser: Browser): Promise<string[]> {
   const page = await browser.newPage();
   await page.goto(NAUKRI_URL_JOB_SEARCH, { waitUntil: "load" });
-  await delay(2000);
+  await delay(WAIT_TIME);
 
   let pageCount = JOB_PORTAL_PAGINATATION;
   const jobIds = new Set<string>();
 
   while (pageCount-- > 0) {
     const currentJobIds = await extractJobIds(page);
-    await delay(2000);
+    await delay(WAIT_TIME);
 
     if (currentJobIds.length === 0) {
       break;
@@ -55,7 +55,7 @@ export async function getJobIds(browser: Browser): Promise<string[]> {
       
       if (nextBtn) {
         await (nextBtn as any).click();
-        await delay(3000);
+        await delay(WAIT_TIME);
       } else {
         break;
       }
@@ -64,7 +64,7 @@ export async function getJobIds(browser: Browser): Promise<string[]> {
     }
   }
 
-  await delay(2000);
+  await delay(WAIT_TIME);
   await page.close();
   const uniqueJobIds = await filterExistingJobIds(jobIds);
   return uniqueJobIds;

@@ -2,7 +2,7 @@ import { type Browser, Page } from "puppeteer-core";
 import { saveJob, saveEligibleAndAppliedJob } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
-import { DataJob, NAUKRI_URL_JOB, blacklistedCompanies } from "../../utils/constants.ts";
+import { DataJob, NAUKRI_URL_JOB, blacklistedCompanies, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/automationState.ts";
 
 async function extractData(page: Page, jobId: string) {
@@ -55,7 +55,7 @@ async function extractData(page: Page, jobId: string) {
 
 async function handleApply(browser: Browser, page: Page, currentUrl: string): Promise<{ applied: boolean, applyLink: string }> {
   try {
-    await delay(2000);
+    await delay(WAIT_TIME);
 
     const companySiteBtn = await page.$('#company-site-button');
     if (companySiteBtn) {
@@ -67,13 +67,13 @@ async function handleApply(browser: Browser, page: Page, currentUrl: string): Pr
 
         let newPageUrl = null;
         for (let i = 0; i < 10; i++) {
-          await delay(1000);
+          await delay(WAIT_TIME);
           const currentPages = await browser.pages();
           const newPages = currentPages.filter(p => !initialPages.includes(p) && p !== page);
 
           if (newPages.length > 0) {
             const newPage = newPages[0];
-            await delay(2000);
+            await delay(WAIT_TIME);
             newPageUrl = newPage.url();
             await newPage.close();
             break;
@@ -96,7 +96,7 @@ async function handleApply(browser: Browser, page: Page, currentUrl: string): Pr
 
     await page.evaluate((btn) => (btn as HTMLButtonElement).click(), applyBtn);
 
-    await delay(2000);
+    await delay(WAIT_TIME);
 
     try {
       const isApplied = await page.waitForFunction(() => {
@@ -108,11 +108,11 @@ async function handleApply(browser: Browser, page: Page, currentUrl: string): Pr
       }, { timeout: 7000 });
 
       if (isApplied) {
-        await delay(2000);
+        await delay(WAIT_TIME);
         return { applied: true, applyLink: currentUrl };
       }
     } catch {
-      await delay(2000);
+      await delay(WAIT_TIME);
       return { applied: false, applyLink: currentUrl };
     }
   } catch (error) {
@@ -127,21 +127,21 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
       const page = await browser.newPage();
       const applicationLink = `${NAUKRI_URL_JOB}${jobId}`;
       await page.goto(applicationLink, { waitUntil: "load" });
-      await delay(2000);
+      await delay(WAIT_TIME);
 
       const data = await extractData(page, jobId);
-      await delay(2000);
+      await delay(WAIT_TIME);
 
       const { role, companyName, salary, experience, location, skills, about } = data;
 
       if (!companyName || !about) {
-        await delay(2000);
+        await delay(WAIT_TIME);
         await page.close();
         continue;
       }
 
       if (blacklistedCompanies.includes(companyName.toLowerCase())) {
-        await delay(2000);
+        await delay(WAIT_TIME);
         await page.close();
         continue;
       }
@@ -172,16 +172,14 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
         await saveEligibleAndAppliedJob(jobData);
         incrementJobsAutoApplied();
       } else {
-        incrementJobsScraped();
-
-        // const id = await saveJob(jobData);
-        // if (id) {
-        //   await addToProcessStream({ id });
-        // incrementJobsScraped();
-        // }
+        const id = await saveJob(jobData);
+        if (id) {
+          await addToProcessStream({ id });
+          incrementJobsScraped();
+        }
       }
 
-      await delay(2000);
+      await delay(WAIT_TIME);
       await page.close();
     } catch (err) {
     }

@@ -1,7 +1,7 @@
 import { type Browser, type Page } from "puppeteer-core";
 import { setTimeout as delay } from "node:timers/promises";
 import { extractJobData } from "./jobData.ts";
-import { INSTAHYRE_URL_JOB_SEARCH, blacklistedCompanies } from "../../utils/constants.ts";
+import { INSTAHYRE_URL_JOB_SEARCH, blacklistedCompanies, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsAutoApplied } from "../../utils/automationState.ts";
 
 async function applyJobs(page: Page): Promise<void> {
@@ -21,7 +21,7 @@ async function applyJobs(page: Page): Promise<void> {
         await page.evaluate((btn: any) => btn.click(), applyBtn);
         incrementJobsAutoApplied();
       }
-      await delay(2000);
+      await delay(WAIT_TIME);
     } catch (error) {
       break;
     }
@@ -33,12 +33,12 @@ export default async function instahyer(browser: Browser): Promise<void> {
   await page.goto(INSTAHYRE_URL_JOB_SEARCH, { waitUntil: "load" });
 
   try {
-    await delay(2000);
+    await delay(WAIT_TIME);
 
     try {
       await page.waitForSelector('button#interested-btn', { visible: true, timeout: 5000 });
       await page.click('button#interested-btn');
-      await delay(2000);
+      await delay(WAIT_TIME);
     } catch (e) {
       // console.log("No 'View »' button found on root page. Proceeding anyway.");
     }
@@ -61,17 +61,17 @@ export default async function instahyer(browser: Browser): Promise<void> {
       const searchPanelHeading = await page.$('.job-search-heading');
       if (searchPanelHeading) {
         await searchPanelHeading.click();
-        await delay(1000);
+        await delay(WAIT_TIME);
       }
     }
 
     await page.waitForSelector('li#search-dk', { visible: true, timeout: 5000 });
     await page.click('li#search-dk');
-    await delay(2000);
+    await delay(WAIT_TIME);
 
     await page.waitForSelector('.employer-row #employer-profile-opportunity', { timeout: 10000 });
     await page.click('.employer-row #employer-profile-opportunity');
-    await delay(2000);
+    await delay(WAIT_TIME);
 
     await applyJobs(page);
   } catch (error) {

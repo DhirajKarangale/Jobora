@@ -1,3 +1,4 @@
+import { WAIT_TIME } from "./constants.ts";
 import puppeteer, { type Browser } from "puppeteer-core";
 import { spawn } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
@@ -17,7 +18,7 @@ export async function edge() {
     }
   ).unref();
 
-  await delay(3000);
+  await delay(WAIT_TIME);
 
   const browser = await puppeteer.connect({
     browserURL: "http://127.0.0.1:9222",

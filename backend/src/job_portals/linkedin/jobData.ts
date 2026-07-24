@@ -2,7 +2,7 @@ import { type Page, Browser } from "puppeteer-core";
 import { saveJob } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
-import { DataJob, LINKEDIN_URL_JOB, blacklistedCompanies } from "../../utils/constants.ts";
+import { DataJob, LINKEDIN_URL_JOB, blacklistedCompanies, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped } from "../../utils/automationState.ts";
 
 const SELECTORS = {
@@ -96,12 +96,12 @@ async function extractData(browser: Browser, jobId: string) {
   const applicationLink = `${LINKEDIN_URL_JOB}${jobId}`;
   await page.goto(applicationLink, { waitUntil: "load" });
 
-  await delay(1000);
+  await delay(WAIT_TIME);
   const companyName = (await extractCompanyName(page))?.trim();
   const link = (await extractLink(page, jobId))?.trim();
   const description = (await extractDescription(page))?.trim();
   const role = (await extractRole(page))?.trim() || '';
-  await delay(1000);
+  await delay(WAIT_TIME);
   await page.close();
 
   if (!companyName || !link || !description) return;
