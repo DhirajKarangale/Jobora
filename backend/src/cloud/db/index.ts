@@ -246,6 +246,8 @@ export interface AnalyticsData {
     totalJobs: number;
     eligibleJobs: number;
     appliedJobs: number;
+    autoAppliedJobs: number;
+    manualAppliedJobs: number;
   };
   timeSeries: {
     date: string;
@@ -301,6 +303,8 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     SELECT 
       COUNT(*) as total_jobs,
       COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END) as applied_jobs,
+      COUNT(CASE WHEN applied_date IS NOT NULL AND isautoapply = true THEN 1 END) as auto_applied_jobs,
+      COUNT(CASE WHEN applied_date IS NOT NULL AND (isautoapply IS NULL OR isautoapply = false) THEN 1 END) as manual_applied_jobs,
       COUNT(CASE WHEN applied_date IS NULL AND (iseligible IS NULL OR iseligible = false) THEN 1 END) as not_eligible_jobs,
       COUNT(CASE WHEN applied_date IS NULL AND iseligible = true AND isexpired = true THEN 1 END) as expired_jobs,
       COUNT(CASE WHEN applied_date IS NULL AND iseligible = true AND (isexpired IS NULL OR isexpired = false) THEN 1 END) as active_jobs
@@ -369,7 +373,8 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
   const statusBreakdown = [
     { name: 'Active (To Apply)', value: Number(summary.active_jobs) },
     { name: 'Not Eligible', value: Number(summary.not_eligible_jobs) },
-    { name: 'Applied', value: Number(summary.applied_jobs) },
+    { name: 'Auto Applied', value: Number(summary.auto_applied_jobs) },
+    { name: 'Manual Applied', value: Number(summary.manual_applied_jobs) },
     { name: 'Expired', value: Number(summary.expired_jobs) }
   ].filter(item => item.value > 0);
 
@@ -392,7 +397,9 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     summary: {
       totalJobs: Number(summary.total_jobs),
       eligibleJobs: Number(summary.active_jobs),
-      appliedJobs: Number(summary.applied_jobs)
+      appliedJobs: Number(summary.applied_jobs),
+      autoAppliedJobs: Number(summary.auto_applied_jobs),
+      manualAppliedJobs: Number(summary.manual_applied_jobs)
     },
     timeSeries,
     jobsBySource: sourceResult.rows.map(r => ({ name: r.name, count: Number(r.count) })),

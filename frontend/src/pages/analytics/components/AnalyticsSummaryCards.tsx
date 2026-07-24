@@ -1,4 +1,4 @@
-import { Briefcase, CheckCircle2, Send } from "lucide-react";
+import { Briefcase, CheckCircle2, Send, Bot, User } from "lucide-react";
 import type { AnalyticsData } from "@/api/queries";
 
 interface AnalyticsSummaryCardsProps {
@@ -7,7 +7,7 @@ interface AnalyticsSummaryCardsProps {
 
 export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
       <div className="bg-card p-6 rounded-2xl border border-border shadow-xs flex items-center gap-4 hover:shadow-md transition-shadow">
         <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
           <Briefcase className="w-6 h-6" />
@@ -35,6 +35,25 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
         <div>
           <p className="text-sm font-semibold text-muted-foreground">Jobs Applied</p>
           <p className="text-3xl font-black">{summary.appliedJobs.toLocaleString()}</p>
+        </div>
+      </div>
+      <div className="bg-card p-6 rounded-2xl border border-border shadow-xs flex items-center gap-4 hover:shadow-md transition-shadow">
+        <div className="h-12 w-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
+          <Bot className="w-6 h-6" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-muted-foreground">Auto Applied</p>
+          <p className="text-3xl font-black">{summary.autoAppliedJobs.toLocaleString()}</p>
+        </div>
+      </div>
+
+      <div className="bg-card p-6 rounded-2xl border border-border shadow-xs flex items-center gap-4 hover:shadow-md transition-shadow">
+        <div className="h-12 w-12 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-500 shrink-0">
+          <User className="w-6 h-6" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-muted-foreground">Manual Applied</p>
+          <p className="text-3xl font-black">{summary.manualAppliedJobs.toLocaleString()}</p>
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import type { AnalyticsData } from "@/api/queries";
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
-const STATUS_COLORS = ['#3b82f6', '#10b981', '#ef4444']; // Active, Applied, Expired
+const STATUS_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#ef4444'];
 
 interface AnalyticsChartsProps {
   data: AnalyticsData;

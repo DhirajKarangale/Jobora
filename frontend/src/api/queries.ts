@@ -74,7 +74,7 @@ export interface AnalyticsFilter {
 }
 
 export interface AnalyticsData {
-  summary: { totalJobs: number; eligibleJobs: number; appliedJobs: number; };
+  summary: { totalJobs: number; eligibleJobs: number; appliedJobs: number; autoAppliedJobs: number; manualAppliedJobs: number; };
   timeSeries: { date: string; totalJobs: number; eligibleJobs: number; appliedJobs: number; }[];
   jobsBySource: { name: string; count: number }[];
   jobsByCompany: { name: string; count: number }[];
