@@ -53,39 +53,72 @@ async function extractData(page: Page, jobId: string) {
   });
 }
 
-async function tryApplyJob(page: Page): Promise<boolean> {
+async function handleApply(browser: Browser, page: Page, currentUrl: string): Promise<{ applied: boolean, applyLink: string }> {
   try {
     await delay(2000);
+
+    const companySiteBtn = await page.$('#company-site-button');
+    if (companySiteBtn) {
+      const initialPages = await browser.pages();
+
+      const isDisabled = await page.evaluate((btn) => (btn as HTMLButtonElement).disabled, companySiteBtn);
+      if (!isDisabled) {
+        await page.evaluate((btn) => (btn as HTMLButtonElement).click(), companySiteBtn);
+
+        let newPageUrl = null;
+        for (let i = 0; i < 10; i++) {
+          await delay(1000);
+          const currentPages = await browser.pages();
+          const newPages = currentPages.filter(p => !initialPages.includes(p) && p !== page);
+
+          if (newPages.length > 0) {
+            const newPage = newPages[0];
+            await delay(2000);
+            newPageUrl = newPage.url();
+            await newPage.close();
+            break;
+          }
+        }
+
+        if (newPageUrl) {
+          return { applied: false, applyLink: newPageUrl };
+        }
+      }
+    }
 
     const submitBtnSelector = '#apply-button';
     const applyBtn = await page.$(submitBtnSelector);
 
-    if (!applyBtn) return false;
+    if (!applyBtn) return { applied: false, applyLink: currentUrl };
 
     const isDisabled = await page.evaluate((btn) => (btn as HTMLButtonElement).disabled, applyBtn);
-    if (isDisabled) return false;
+    if (isDisabled) return { applied: false, applyLink: currentUrl };
 
     await page.evaluate((btn) => (btn as HTMLButtonElement).click(), applyBtn);
 
     await delay(2000);
 
     try {
-      await page.waitForFunction(() => {
+      const isApplied = await page.waitForFunction(() => {
         const successDiv = document.querySelector('.applied-job-content');
         if (successDiv) {
           return true;
         }
         return document.body.textContent?.includes('Applied to') || false;
       }, { timeout: 7000 });
-      await delay(2000);
-      return true;
+
+      if (isApplied) {
+        await delay(2000);
+        return { applied: true, applyLink: currentUrl };
+      }
     } catch {
       await delay(2000);
-      return false;
+      return { applied: false, applyLink: currentUrl };
     }
   } catch (error) {
-    return false;
+    return { applied: false, applyLink: currentUrl };
   }
+  return { applied: false, applyLink: currentUrl };
 }
 
 export async function getJobData(browser: Browser, jobIds: string[]) {
@@ -121,6 +154,8 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
         about ? `About:\n${about}` : ""
       ].filter(Boolean).join("\n\n");
 
+      const { applied, applyLink } = await handleApply(browser, page, applicationLink);
+
       const jobData: DataJob = {
         id: null,
         sourceName: "Naukri",
@@ -129,11 +164,9 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
         jobId: null,
         description: fullDescription,
         link: applicationLink,
-        portal_link: applicationLink,
+        portal_link: applyLink,
         role
       };
-
-      const applied = await tryApplyJob(page);
 
       if (applied) {
         await saveEligibleAndAppliedJob(jobData);

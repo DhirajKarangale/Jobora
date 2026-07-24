@@ -54,8 +54,8 @@ export async function startAutomationProcess(_req: Request, res: Response): Prom
       const portals = [
         // async () => { await linkedin(browser); },
         // async () => { await instahyre(browser); },
-        // async () => { await wellfound(browser); },
-        async () => { await naukri(browser); }
+        async () => { await wellfound(browser); },
+        // async () => { await naukri(browser); }
       ];
       await runWithConcurrency(portals, MAX_CONCURRENT_PORTALS);
     } catch (error) {
