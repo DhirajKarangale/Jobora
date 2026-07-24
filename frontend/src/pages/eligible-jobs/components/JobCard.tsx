@@ -1,6 +1,6 @@
 import React from "react";
 import type { Job } from "@/types";
-import { parseJobDescription, getSourceShortName } from "@/lib/api";
+import { parseJobDescription, getSourceShortName } from "@/api/queries";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

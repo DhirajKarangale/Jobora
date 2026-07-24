@@ -118,8 +118,6 @@ async function extractData(browser: Browser, jobId: string) {
     portal_link: applicationLink,
     role
   };
-  console.log("Role: ", role);
-
   return await saveJob(data)
 }
 

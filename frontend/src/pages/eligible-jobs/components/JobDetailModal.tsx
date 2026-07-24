@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Job } from "@/types";
-import { parseJobDescription } from "@/lib/api";
-import { useJobs } from "@/hooks/useJobs";
+import { parseJobDescription, useJobs } from "@/api/queries";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

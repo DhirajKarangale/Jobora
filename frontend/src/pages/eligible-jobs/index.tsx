@@ -1,8 +1,8 @@
 import { useState } from "react";
 import type { Job } from "@/types";
-import { useJobs } from "@/hooks/useJobs";
-import { JobCard } from "./JobCard";
-import { JobDetailModal } from "./JobDetailModal";
+import { useJobs } from "@/api/queries";
+import { JobCard } from "./components/JobCard";
+import { JobDetailModal } from "./components/JobDetailModal";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Download, Sparkles, AlertCircle } from "lucide-react";
 

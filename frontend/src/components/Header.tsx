@@ -1,4 +1,4 @@
-import { useAutomationStatus } from "@/hooks/useAutomationStatus";
+import { useAutomationStatus } from "@/api/queries";
 import { Button } from "@/components/ui/button";
 import { Play, RefreshCw, Loader2, Bot } from "lucide-react";
 import { useLocation } from "react-router-dom";

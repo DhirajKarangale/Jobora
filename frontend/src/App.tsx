@@ -1,10 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Header } from "@/components/header/Header";
-import { JobGrid } from "@/components/jobs/JobGrid";
-import { Footer } from "@/components/footer/Footer";
-import { Analytics } from "@/pages/Analytics";
-import { Sidebar } from "@/components/sidebar/Sidebar";
+import { Header } from "@/components/Header";
+import { JobGrid } from "@/pages/eligible-jobs";
+import { Footer } from "@/components/Footer";
+import { Analytics } from "@/pages/analytics";
+import { Sidebar } from "@/components/Sidebar";
 
 const queryClient = new QueryClient({
   defaultOptions: {

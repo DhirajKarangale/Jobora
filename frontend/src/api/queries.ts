@@ -1,0 +1,230 @@
+import axios from "axios";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import type { Job, ParsedJobData, ParsedDescriptionResult, ToggleAppliedResponse, ToggleExpiredResponse } from "@/types";
+import { BASE_URL, ENDPOINTS } from "./constants";
+
+export const api = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export type { Job, ParsedJobData, ParsedDescriptionResult, ToggleAppliedResponse, ToggleExpiredResponse };
+
+export function parseJobDescription(description: string | null): ParsedDescriptionResult {
+  if (!description) return { isJson: false, data: null, raw: "", title: "" };
+  try {
+    const trimmed = description.trim();
+    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+      const parsed = JSON.parse(trimmed) as ParsedJobData;
+      return { isJson: true, data: parsed, raw: description, title: parsed.title || "" };
+    }
+  } catch {}
+  return { isJson: false, data: null, raw: description, title: "" };
+}
+
+export function getSourceShortName(source: string | null): string {
+  if (!source) return "LinkedIn";
+  const upper = source.toUpperCase();
+  if (upper.includes("LINKEDIN")) return "LinkedIn";
+  if (upper.includes("INDEED")) return "Indeed";
+  if (upper.includes("GLASSDOOR")) return "Glassdoor";
+  return source;
+}
+
+export interface AutomationStatus {
+  isJobScraperRunning: boolean;
+  isAutoApplyRunning: boolean;
+}
+
+export async function fetchAutomationStatus(): Promise<AutomationStatus> {
+  const response = await api.get<AutomationStatus>(`${ENDPOINTS.AUTOMATION_STATUS}?t=${Date.now()}`);
+  return response.data;
+}
+
+export async function startJobScraping(): Promise<{ jobsFound?: number } | boolean> {
+  const response = await api.post<{ jobsFound?: number } | boolean>(ENDPOINTS.AUTOMATION_SCRAPER_START);
+  return response.data;
+}
+
+export async function startInstahyreAutoApply(): Promise<{ jobsApplied: number }> {
+  const response = await api.post<{ jobsApplied: number }>(ENDPOINTS.AUTOMATION_AUTO_APPLY_START);
+  return response.data;
+}
+
+export async function stopProcess(): Promise<boolean> {
+  const response = await api.post<{ success: boolean; isRunning: boolean }>(ENDPOINTS.PROCESS_STOP);
+  return response.data.isRunning;
+}
+
+export async function fetchEligibleJobs(): Promise<Job[] | null> {
+  const response = await api.get<Job[] | null>(ENDPOINTS.JOBS_ELIGIBLE);
+  return response.data;
+}
+
+export async function toggleJobApplied(jobId: string, isApplied: boolean): Promise<ToggleAppliedResponse> {
+  const response = await api.post<ToggleAppliedResponse>(ENDPOINTS.JOBS_APPLY, { jobId, isApplied });
+  return response.data;
+}
+
+export async function toggleJobExpired(jobId: string, isExpired: boolean): Promise<ToggleExpiredResponse> {
+  const response = await api.post<ToggleExpiredResponse>(ENDPOINTS.JOBS_EXPIRED, { jobId, isExpired });
+  return response.data;
+}
+
+export interface AnalyticsFilter {
+  dateRange: string;
+  sourceName?: string;
+  companyName?: string;
+}
+
+export interface AnalyticsData {
+  summary: { totalJobs: number; eligibleJobs: number; appliedJobs: number; };
+  timeSeries: { date: string; totalJobs: number; eligibleJobs: number; appliedJobs: number; }[];
+  jobsBySource: { name: string; count: number }[];
+  jobsByCompany: { name: string; count: number }[];
+  statusBreakdown: { name: string; value: number }[];
+  jobsList: any[];
+}
+
+export async function fetchAnalytics(filters: AnalyticsFilter): Promise<AnalyticsData> {
+  const params = new URLSearchParams();
+  if (filters.dateRange) params.append('dateRange', filters.dateRange);
+  if (filters.sourceName) params.append('sourceName', filters.sourceName);
+  if (filters.companyName) params.append('companyName', filters.companyName);
+
+  const response = await api.get<AnalyticsData>(`${ENDPOINTS.ANALYTICS}?${params.toString()}`);
+  return response.data;
+}
+
+export async function fetchFilterOptions(sourceName?: string, companyName?: string): Promise<{ sources: string[], companies: string[] }> {
+  const params = new URLSearchParams();
+  if (sourceName) params.append('sourceName', sourceName);
+  if (companyName) params.append('companyName', companyName);
+  
+  const response = await api.get<{ sources: string[], companies: string[] }>(`${ENDPOINTS.ANALYTICS_FILTERS}?${params.toString()}`);
+  return response.data;
+}
+
+// React Query Hooks
+
+export function useJobs() {
+  const queryClient = useQueryClient();
+
+  const jobsQuery = useQuery<Job[] | null>({
+    queryKey: ["eligibleJobs"],
+    queryFn: fetchEligibleJobs,
+    enabled: false,
+  });
+
+  const toggleAppliedMutation = useMutation({
+    mutationFn: ({ jobId, targetState }: { jobId: string; targetState: boolean }) =>
+      toggleJobApplied(jobId, targetState),
+    onSuccess: (data) => {
+      queryClient.setQueryData<Job[] | null>(["eligibleJobs"], (old) => {
+        if (!old) return old;
+        return old.map((j) => (j.id === data.jobId ? { ...j, isApplied: data.isApplied } : j));
+      });
+    },
+  });
+
+  const toggleExpiredMutation = useMutation({
+    mutationFn: ({ jobId, targetState }: { jobId: string; targetState: boolean }) =>
+      toggleJobExpired(jobId, targetState),
+    onSuccess: (data) => {
+      queryClient.setQueryData<Job[] | null>(["eligibleJobs"], (old) => {
+        if (!old) return old;
+        return old.map((j) => (j.id === data.jobId ? { ...j, isExpired: data.isExpired } : j));
+      });
+    },
+  });
+
+  return {
+    jobs: jobsQuery.data,
+    isFetching: jobsQuery.isFetching,
+    error: jobsQuery.error,
+    refetchJobs: jobsQuery.refetch,
+    toggleApplied: toggleAppliedMutation.mutate,
+    toggleVariables: toggleAppliedMutation.variables,
+    isToggling: toggleAppliedMutation.isPending,
+    toggleExpired: toggleExpiredMutation.mutate,
+    toggleExpiredVariables: toggleExpiredMutation.variables,
+    isTogglingExpired: toggleExpiredMutation.isPending,
+  };
+}
+
+export function useAnalytics(filters: AnalyticsFilter) {
+  return useQuery<AnalyticsData, Error>({
+    queryKey: ["analytics", filters],
+    queryFn: () => fetchAnalytics(filters),
+  });
+}
+
+export function useAutomationStatus() {
+  const queryClient = useQueryClient();
+  const [jobScrapingMessage, setJobScrapingMessage] = useState<string | null>(null);
+  const [autoApplyMessage, setAutoApplyMessage] = useState<string | null>(null);
+
+  const {
+    data: status,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useQuery({
+    queryKey: ["automationStatus"],
+    queryFn: fetchAutomationStatus,
+    staleTime: 0,
+    gcTime: 0,
+  });
+
+  const startJobScrapingMutation = useMutation({
+    mutationFn: startJobScraping,
+    onSuccess: (res) => {
+      if (typeof res === 'object' && res !== null && 'jobsFound' in res) {
+        setJobScrapingMessage(`Found ${res.jobsFound} jobs`);
+      } else {
+        setJobScrapingMessage(res ? "Job scraping completed successfully" : "Job scraping already running");
+      }
+      queryClient.invalidateQueries({ queryKey: ["automationStatus"] });
+      setTimeout(() => setJobScrapingMessage(null), 120000);
+    },
+    onError: () => {
+      setJobScrapingMessage("Failed to start job scraping");
+      setTimeout(() => setJobScrapingMessage(null), 120000);
+    },
+  });
+
+  const startAutoApplyMutation = useMutation({
+    mutationFn: startInstahyreAutoApply,
+    onSuccess: (res) => {
+      setAutoApplyMessage(`Applied to ${res.jobsApplied} jobs`);
+      queryClient.invalidateQueries({ queryKey: ["automationStatus"] });
+      setTimeout(() => setAutoApplyMessage(null), 120000);
+    },
+    onError: () => {
+      setAutoApplyMessage("Failed to start auto-apply");
+      setTimeout(() => setAutoApplyMessage(null), 120000);
+    },
+  });
+
+  const handleRefresh = async () => {
+    setJobScrapingMessage(null);
+    setAutoApplyMessage(null);
+    await refetch();
+  };
+
+  return {
+    status: status || { isJobScraperRunning: false, isAutoApplyRunning: false },
+    isLoading,
+    isRefetching,
+    jobScrapingMessage,
+    autoApplyMessage,
+    startJobScraping: startJobScrapingMutation.mutate,
+    isJobScrapingStarting: startJobScrapingMutation.isPending,
+    startAutoApply: startAutoApplyMutation.mutate,
+    isAutoApplyStarting: startAutoApplyMutation.isPending,
+    refreshStatus: handleRefresh,
+  };
+}

@@ -1,5 +1,5 @@
 import type { Job } from "@/types";
-import { parseJobDescription } from "@/lib/api";
+import { parseJobDescription } from "@/api/queries";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import {
