@@ -4,6 +4,7 @@ import { edge } from "../utils/browserManager.ts";
 import linkedin from "../job_portals/linkedin/index.ts";
 import instahyre from "../job_portals/instahyre/index.ts";
 import wellfound from "../job_portals/wellfound/index.ts";
+import naukri from "../job_portals/naukri/index.ts";
 import { getProcessState, resetProcessState, setProcessStarted } from "../utils/automationState.ts";
 import { MAX_CONCURRENT_PORTALS } from "../utils/constants.ts";
 
@@ -51,9 +52,10 @@ export async function startAutomationProcess(_req: Request, res: Response): Prom
       const browser = await getGlobalBrowser();
 
       const portals = [
-        async () => { await linkedin(browser); },
-        async () => { await instahyre(browser); },
-        async () => { await wellfound(browser); }
+        // async () => { await linkedin(browser); },
+        // async () => { await instahyre(browser); },
+        // async () => { await wellfound(browser); },
+        async () => { await naukri(browser); }
       ];
       await runWithConcurrency(portals, MAX_CONCURRENT_PORTALS);
     } catch (error) {

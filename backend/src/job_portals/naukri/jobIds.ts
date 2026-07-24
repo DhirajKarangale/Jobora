@@ -1,0 +1,71 @@
+import { type Browser, Page } from "puppeteer-core";
+import { filterExistingJobIds } from "../../cloud/db/index.ts";
+import { setTimeout as delay } from "node:timers/promises";
+import { JOB_PORTAL_PAGINATATION, NAUKRI_URL_JOB_SEARCH } from "../../utils/constants.ts";
+
+const JOB_LINK_SELECTOR = 'a.title';
+
+async function extractJobIds(page: Page): Promise<string[]> {
+  try {
+    await page.waitForSelector(JOB_LINK_SELECTOR, { visible: true, timeout: 10000 });
+    const ids = await page.$$eval(JOB_LINK_SELECTOR, links => {
+      return links
+        .map(link => link.getAttribute("href"))
+        .filter(href => href && href.includes("/job-listings-"))
+        .map(href => {
+          const url = new URL(href!);
+          const path = url.pathname;
+          return path.replace("/job-listings-", "");
+        });
+    });
+    return ids;
+  } catch (error) {
+    return [];
+  }
+}
+
+export async function getJobIds(browser: Browser): Promise<string[]> {
+  const page = await browser.newPage();
+  await page.goto(NAUKRI_URL_JOB_SEARCH, { waitUntil: "load" });
+  await delay(2000);
+
+  let pageCount = JOB_PORTAL_PAGINATATION;
+  const jobIds = new Set<string>();
+
+  while (pageCount-- > 0) {
+    const currentJobIds = await extractJobIds(page);
+    await delay(2000);
+
+    if (currentJobIds.length === 0) {
+      break;
+    }
+
+    const initialSize = jobIds.size;
+    currentJobIds.forEach(id => jobIds.add(id));
+
+    if (jobIds.size === initialSize) {
+      break;
+    }
+
+    try {
+      const nextBtn = await page.evaluateHandle(() => {
+        const spans = Array.from(document.querySelectorAll('a.styles_btn-secondary__2AsIP span'));
+        return spans.find(span => span.textContent?.trim() === 'Next')?.parentElement;
+      });
+      
+      if (nextBtn) {
+        await (nextBtn as any).click();
+        await delay(3000);
+      } else {
+        break;
+      }
+    } catch (err) {
+      break;
+    }
+  }
+
+  await delay(2000);
+  await page.close();
+  const uniqueJobIds = await filterExistingJobIds(jobIds);
+  return uniqueJobIds;
+}

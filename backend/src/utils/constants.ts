@@ -9,6 +9,9 @@ export const INSTAHYRE_URL_JOB_SEARCH = "https://www.instahyre.com/candidate/opp
 export const WELLFOUND_URL_JOB = "https://wellfound.com/jobs?job_listing_slug=";
 export const WELLFOUND_URL_JOB_SEARCH = "https://wellfound.com/jobs";
 
+export const NAUKRI_URL_JOB = "https://www.naukri.com/job-listings-";
+export const NAUKRI_URL_JOB_SEARCH = "https://www.naukri.com/software-engineer-software-developer-full-stack-developer-software-development-software-engineering-backend-developer-backend-engineer-frontend-developer-frontend-engineer-web-developer-javascript-developer-typescript-developer-react-developer-node-dot-js-developer-jobs?k=software%20engineer%2C%20software%20developer%2C%20full%20stack%20developer%2C%20software%20development%2C%20software%20engineering%2C%20backend%20developer%2C%20backend%20engineer%2C%20frontend%20developer%2C%20frontend%20engineer%2C%20web%20developer%2C%20javascript%20developer%2C%20typescript%20developer%2C%20react%20developer%2C%20node.js%20developer&nignbevent_src=jobsearchDeskGNB&experience=2&ctcFilter=100to500&ctcFilter=75to100&ctcFilter=50to75&ctcFilter=25to50&ctcFilter=15to25&ugTypeGid=12&ugTypeGid=9502&glbl_qcrc=1028&jobAge=7";
+
 export const blacklistedCompanies = ["infosys", "tcs"];
 
 export interface DataJob {
