@@ -193,20 +193,20 @@ jd_cleaner_graph = builder.compile()
 from utils.parser import sanitize_data
 
 
-def process_job_description(job_input: Any, job_id: str = "", source_jobid: str = "") -> Dict[str, Any]:
+def process_job_description(job_input: Any, job_id: str = "", source_job_id: str = "") -> Dict[str, Any]:
     if isinstance(job_input, dict):
         raw_text = job_input.get("description", "")
         jid = str(job_input.get("id", job_id))
-        sjid = str(job_input.get("source_jobid", source_jobid))
+        sjid = str(job_input.get("source_job_id", source_job_id))
         role = str(job_input.get("role", ""))
     else:
         raw_text = str(job_input or "")
         jid = job_id
-        sjid = source_jobid
+        sjid = source_job_id
         role = ""
 
     if not raw_text:
-        return {"id": jid, "source_jobid": sjid, "eligible": "NO"}
+        return {"id": jid, "source_job_id": sjid, "eligible": "NO"}
 
     profile_text = load_candidate_profile()
     initial_state = {
@@ -223,7 +223,7 @@ def process_job_description(job_input: Any, job_id: str = "", source_jobid: str 
 
     return {
         "id": jid,
-        "source_jobid": sjid,
+        "source_job_id": sjid,
         "eligible": eligible_val,
         "cleaned_description": final_state.get("current_text", ""),
         "structured_data": final_state.get("structured_data", {})

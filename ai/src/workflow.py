@@ -25,7 +25,7 @@ def manage_job_workflow(job_id: str, redis_handler=None, msg_id: str = None):
 
         update_fields = {
             "description": structured_json,
-            "iseligible": is_eligible
+            "is_eligible": is_eligible
         }
 
         updated_job = update_job(conn, job_id, update_fields)

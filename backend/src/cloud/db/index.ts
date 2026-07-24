@@ -48,11 +48,11 @@ export async function filterExistingJobIds(jobIds: Set<string>): Promise<string[
 
   const ids = [...jobIds];
 
-  const { rows } = await pool.query<{ source_jobid: string; jobid: string }>(
+  const { rows } = await pool.query<{ source_job_id: string; external_job_id: string }>(
     `
-    SELECT source_jobid, jobid
+    SELECT source_job_id, external_job_id
     FROM jobs
-    WHERE source_jobid = ANY($1::text[]) OR jobid = ANY($1::text[])
+    WHERE source_job_id = ANY($1::text[]) OR external_job_id = ANY($1::text[])
     `,
     [ids]
   );
@@ -60,8 +60,8 @@ export async function filterExistingJobIds(jobIds: Set<string>): Promise<string[
   const existingIds = new Set<string>();
 
   for (const row of rows) {
-    if (row.source_jobid) existingIds.add(row.source_jobid);
-    if (row.jobid) existingIds.add(row.jobid);
+    if (row.source_job_id) existingIds.add(row.source_job_id);
+    if (row.external_job_id) existingIds.add(row.external_job_id);
   }
 
   return ids.filter(id => !existingIds.has(id));
@@ -70,12 +70,12 @@ export async function filterExistingJobIds(jobIds: Set<string>): Promise<string[
 export async function saveJob(data: DataJob): Promise<string> {
   const query = `
     INSERT INTO jobs (
-      source_name,
-      source_jobId,
-      company_name,
-      jobId,
+      source,
+      source_job_id,
+      company,
+      external_job_id,
       description,
-      link,
+      apply_link,
       added_date,
       portal_link, 
       role
@@ -102,18 +102,18 @@ export async function saveJob(data: DataJob): Promise<string> {
 export async function saveEligibleAndAppliedJob(data: DataJob): Promise<string> {
   const query = `
     INSERT INTO jobs (
-      source_name,
-      source_jobId,
-      company_name,
-      jobId,
+      source,
+      source_job_id,
+      company,
+      external_job_id,
       description,
-      link,
-      iseligible,
+      apply_link,
+      is_eligible,
       added_date,
       applied_date,
       portal_link,
       role,
-      isautoapply
+      is_auto_apply
     )
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     RETURNING id;
@@ -154,12 +154,12 @@ export interface DataJobFrontend {
 
 export async function getAllEligibleJobs(): Promise<DataJobFrontend[]> {
   const query = `
-    SELECT id, source_name, company_name, description, link, (applied_date IS NOT NULL) AS isapplied, added_date, isexpired, portal_link, role
+    SELECT id, source, company, description, apply_link, (applied_date IS NOT NULL) AS isapplied, added_date, is_expired, portal_link, role
     FROM jobs
-    WHERE iseligible IS NOT NULL
-      AND iseligible = true
+    WHERE is_eligible IS NOT NULL
+      AND is_eligible = true
       AND applied_date IS NULL
-      AND (isexpired IS NULL OR isexpired = false)
+      AND (is_expired IS NULL OR is_expired = false)
     ORDER BY id DESC
   `;
 
@@ -167,13 +167,13 @@ export async function getAllEligibleJobs(): Promise<DataJobFrontend[]> {
 
   return rows.map(r => ({
     id: String(r.id),
-    sourceName: r.source_name,
-    companyName: r.company_name,
+    sourceName: r.source,
+    companyName: r.company,
     description: r.description,
-    link: r.link,
+    link: r.apply_link,
     isApplied: Boolean(r.isapplied),
     addedDate: r.added_date ? new Date(r.added_date).toISOString() : null,
-    isExpired: Boolean(r.isexpired),
+    isExpired: Boolean(r.is_expired),
     portal_link: r.portal_link,
     role: r.role,
   }));
@@ -191,14 +191,14 @@ export async function setJobAppliedStatus(jobId: string, isApplied: boolean): Pr
     query = `
       UPDATE jobs
       SET applied_date = $2
-      WHERE id = $1::uuid OR source_jobid = $1::text OR jobid = $1::text
+      WHERE id = $1::uuid OR source_job_id = $1::text OR external_job_id = $1::text
     `;
     params = [jobId, appliedValue];
   } else {
     query = `
       UPDATE jobs
       SET applied_date = $2
-      WHERE source_jobid = $1 OR jobid = $1
+      WHERE source_job_id = $1 OR external_job_id = $1
     `;
     params = [jobId, appliedValue];
   }
@@ -216,15 +216,15 @@ export async function setJobExpiredStatus(jobId: string, isExpired: boolean): Pr
   if (isUuid(jobId)) {
     query = `
       UPDATE jobs
-      SET isexpired = $2
-      WHERE id = $1::uuid OR source_jobid = $1::text OR jobid = $1::text
+      SET is_expired = $2
+      WHERE id = $1::uuid OR source_job_id = $1::text OR external_job_id = $1::text
     `;
     params = [jobId, isExpired];
   } else {
     query = `
       UPDATE jobs
-      SET isexpired = $2
-      WHERE source_jobid = $1 OR jobid = $1
+      SET is_expired = $2
+      WHERE source_job_id = $1 OR external_job_id = $1
     `;
     params = [jobId, isExpired];
   }
@@ -288,13 +288,13 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
 
   let paramIndex = 2;
   if (sourceName) {
-    filterQuery += ` AND source_name ILIKE $${paramIndex}`;
+    filterQuery += ` AND source ILIKE $${paramIndex}`;
     queryParams.push(`%${sourceName}%`);
     paramIndex++;
   }
 
   if (companyName) {
-    filterQuery += ` AND company_name ILIKE $${paramIndex}`;
+    filterQuery += ` AND company ILIKE $${paramIndex}`;
     queryParams.push(`%${companyName}%`);
     paramIndex++;
   }
@@ -303,11 +303,11 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     SELECT 
       COUNT(*) as total_jobs,
       COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END) as applied_jobs,
-      COUNT(CASE WHEN applied_date IS NOT NULL AND isautoapply = true THEN 1 END) as auto_applied_jobs,
-      COUNT(CASE WHEN applied_date IS NOT NULL AND (isautoapply IS NULL OR isautoapply = false) THEN 1 END) as manual_applied_jobs,
-      COUNT(CASE WHEN applied_date IS NULL AND (iseligible IS NULL OR iseligible = false) THEN 1 END) as not_eligible_jobs,
-      COUNT(CASE WHEN applied_date IS NULL AND iseligible = true AND isexpired = true THEN 1 END) as expired_jobs,
-      COUNT(CASE WHEN applied_date IS NULL AND iseligible = true AND (isexpired IS NULL OR isexpired = false) THEN 1 END) as active_jobs
+      COUNT(CASE WHEN applied_date IS NOT NULL AND is_auto_apply = true THEN 1 END) as auto_applied_jobs,
+      COUNT(CASE WHEN applied_date IS NOT NULL AND (is_auto_apply IS NULL OR is_auto_apply = false) THEN 1 END) as manual_applied_jobs,
+      COUNT(CASE WHEN applied_date IS NULL AND (is_eligible IS NULL OR is_eligible = false) THEN 1 END) as not_eligible_jobs,
+      COUNT(CASE WHEN applied_date IS NULL AND is_eligible = true AND is_expired = true THEN 1 END) as expired_jobs,
+      COUNT(CASE WHEN applied_date IS NULL AND is_eligible = true AND (is_expired IS NULL OR is_expired = false) THEN 1 END) as active_jobs
     FROM jobs
     ${filterQuery}
   `;
@@ -316,7 +316,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     SELECT 
       DATE(added_date) as date,
       COUNT(*) as total_jobs,
-      COUNT(CASE WHEN iseligible = true AND applied_date IS NULL AND (isexpired IS NULL OR isexpired = false) THEN 1 END) as eligible_jobs,
+      COUNT(CASE WHEN is_eligible = true AND applied_date IS NULL AND (is_expired IS NULL OR is_expired = false) THEN 1 END) as eligible_jobs,
       COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END) as applied_jobs
     FROM jobs
     ${filterQuery}
@@ -325,28 +325,28 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
   `;
 
   const jobsBySourceQuery = `
-    SELECT source_name as name, COUNT(*) as count
+    SELECT source as name, COUNT(*) as count
     FROM jobs
-    ${filterQuery} AND source_name IS NOT NULL
-    GROUP BY source_name
+    ${filterQuery} AND source IS NOT NULL
+    GROUP BY source
     ORDER BY count DESC
   `;
 
   const jobsByCompanyQuery = `
-    SELECT company_name as name, COUNT(*) as count
+    SELECT company as name, COUNT(*) as count
     FROM jobs
-    ${filterQuery} AND company_name IS NOT NULL
-    GROUP BY company_name
+    ${filterQuery} AND company IS NOT NULL
+    GROUP BY company
     ORDER BY count DESC
     LIMIT 10
   `;
 
   const jobsListQuery = `
     SELECT 
-      id, source_name, company_name, description, link, 
+      id, source, company, description, apply_link, 
       (applied_date IS NOT NULL) AS isapplied, 
-      added_date, isexpired, portal_link,
-      iseligible, applied_date, role
+      added_date, is_expired, portal_link,
+      is_eligible, applied_date, role
     FROM jobs
     ${filterQuery}
     ORDER BY added_date DESC
@@ -380,15 +380,15 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
 
   const jobsList = jobsListResult.rows.map(r => ({
     id: String(r.id),
-    sourceName: r.source_name,
-    companyName: r.company_name,
+    sourceName: r.source,
+    companyName: r.company,
     description: r.description,
-    link: r.link,
+    link: r.apply_link,
     isApplied: Boolean(r.isapplied),
     addedDate: r.added_date ? new Date(r.added_date).toISOString() : null,
-    isExpired: Boolean(r.isexpired),
+    isExpired: Boolean(r.is_expired),
     portal_link: r.portal_link,
-    isEligible: r.iseligible !== null ? Boolean(r.iseligible) : undefined,
+    isEligible: r.is_eligible !== null ? Boolean(r.is_eligible) : undefined,
     appliedDate: r.applied_date ? new Date(r.applied_date).toISOString() : null,
     role: r.role,
   }));
@@ -410,23 +410,23 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
 }
 
 export async function getFilterOptions(sourceName?: string, companyName?: string): Promise<{ sources: string[], companies: string[] }> {
-  let sourcesQuery = `SELECT DISTINCT source_name FROM jobs WHERE source_name IS NOT NULL`;
-  let companiesQuery = `SELECT DISTINCT company_name FROM jobs WHERE company_name IS NOT NULL`;
+  let sourcesQuery = `SELECT DISTINCT source FROM jobs WHERE source IS NOT NULL`;
+  let companiesQuery = `SELECT DISTINCT company FROM jobs WHERE company IS NOT NULL`;
 
   const sourceParams: any[] = [];
   const companyParams: any[] = [];
 
   if (companyName) {
-    sourcesQuery += ` AND company_name ILIKE $1`;
+    sourcesQuery += ` AND company ILIKE $1`;
     sourceParams.push(`%${companyName}%`);
   }
-  sourcesQuery += ` ORDER BY source_name ASC`;
+  sourcesQuery += ` ORDER BY source ASC`;
 
   if (sourceName) {
-    companiesQuery += ` AND source_name ILIKE $1`;
+    companiesQuery += ` AND source ILIKE $1`;
     companyParams.push(`%${sourceName}%`);
   }
-  companiesQuery += ` ORDER BY company_name ASC`;
+  companiesQuery += ` ORDER BY company ASC`;
 
   const [sourcesResult, companiesResult] = await Promise.all([
     pool.query(sourcesQuery, sourceParams),
@@ -434,8 +434,8 @@ export async function getFilterOptions(sourceName?: string, companyName?: string
   ]);
 
   return {
-    sources: sourcesResult.rows.map(r => r.source_name),
-    companies: companiesResult.rows.map(r => r.company_name)
+    sources: sourcesResult.rows.map(r => r.source),
+    companies: companiesResult.rows.map(r => r.company)
   };
 }
 
