@@ -66,14 +66,17 @@ WORKERS=4                 # Number of concurrent worker processes to spawn (adju
 HF_TOKENS=your_hf_token_1,your_hf_token_2 
 ```
 
-### 3. Run the Test Workflow
+### 3. Configure Candidate Profile
+The AI pipeline evaluates job eligibility against a specific candidate's profile. You must update the [`Dhiraj_Karangale_Profile.md`](file:///e:/FullStack/Jobora/ai/Dhiraj_Karangale_Profile.md) file in this directory with your own experience, skills, target roles, and preferences before running the processor.
+
+### 4. Run the Test Workflow
 Before starting the full worker pool, you can run the test script to verify that the AI pipeline can successfully process a sample job. This is useful for debugging changes to the prompts or logic.
 
 ```bash
 E:\FullStack\Jobora\ai> python .\src\test_workflow.py
 ```
 
-### 4. Run the Entire Project
+### 5. Run the Entire Project
 To start the worker processes and begin polling jobs from the Redis queue in the background, run the main entry point:
 
 ```bash
