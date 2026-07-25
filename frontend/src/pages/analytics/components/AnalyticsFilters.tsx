@@ -17,7 +17,8 @@ export function AnalyticsFilters({ filters, filterOptions, onFilterChange }: Ana
         </label>
         <Combobox
           options={[
-            { value: '1d', label: 'Last Day' },
+            { value: 'today', label: 'Today' },
+            { value: '1d', label: 'Yesterday' },
             { value: '2d', label: 'Last 2 Days' },
             { value: '3d', label: 'Last 3 Days' },
             { value: '1w', label: 'Last Week' },

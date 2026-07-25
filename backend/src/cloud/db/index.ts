@@ -275,6 +275,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
 
   let startDate = new Date();
   switch (dateRange) {
+    case 'today': startDate.setHours(0, 0, 0, 0); break;
     case '1d': startDate.setDate(startDate.getDate() - 1); break;
     case '2d': startDate.setDate(startDate.getDate() - 2); break;
     case '3d': startDate.setDate(startDate.getDate() - 3); break;
@@ -326,7 +327,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     SELECT 
       DATE(added_date) as date,
       COUNT(*) as total_jobs,
-      COUNT(CASE WHEN is_eligible = true AND applied_date IS NULL AND (is_expired IS NULL OR is_expired = false) THEN 1 END) as eligible_jobs,
+      COUNT(CASE WHEN is_eligible = true OR (applied_date IS NOT NULL AND is_eligible IS NULL) THEN 1 END) as eligible_jobs,
       COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END) as applied_jobs
     FROM jobs
     ${filterQuery}
