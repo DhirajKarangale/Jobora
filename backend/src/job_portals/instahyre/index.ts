@@ -30,53 +30,56 @@ async function applyJobs(page: Page): Promise<void> {
 
 export default async function instahyer(browser: Browser): Promise<void> {
   const page = await browser.newPage();
-  await page.goto(INSTAHYRE_URL_JOB_SEARCH, { waitUntil: "load" });
 
   try {
-    await delay(WAIT_TIME);
+    await page.goto(INSTAHYRE_URL_JOB_SEARCH, { waitUntil: "load" });
 
     try {
-      await page.waitForSelector('button#interested-btn', { visible: true, timeout: 5000 });
-      await page.click('button#interested-btn');
       await delay(WAIT_TIME);
-    } catch (e) {
-      // console.log("No 'View »' button found on root page. Proceeding anyway.");
-    }
 
-    await applyJobs(page);
-  } catch (error) {
-    // console.error("Failed to apply on root page", error);
-  }
-
-  try {
-    let isSearchDkVisible = false;
-    try {
-      await page.waitForSelector('li#search-dk', { visible: true, timeout: 1000 });
-      isSearchDkVisible = true;
-    } catch (e) {
-      isSearchDkVisible = false;
-    }
-
-    if (!isSearchDkVisible) {
-      const searchPanelHeading = await page.$('.job-search-heading');
-      if (searchPanelHeading) {
-        await searchPanelHeading.click();
+      try {
+        await page.waitForSelector('button#interested-btn', { visible: true, timeout: 5000 });
+        await page.click('button#interested-btn');
         await delay(WAIT_TIME);
+      } catch (e) {
+        // console.log("No 'View »' button found on root page. Proceeding anyway.");
       }
+
+      await applyJobs(page);
+    } catch (error) {
+      // console.error("Failed to apply on root page", error);
     }
 
-    await page.waitForSelector('li#search-dk', { visible: true, timeout: 5000 });
-    await page.click('li#search-dk');
-    await delay(WAIT_TIME);
+    try {
+      let isSearchDkVisible = false;
+      try {
+        await page.waitForSelector('li#search-dk', { visible: true, timeout: 1000 });
+        isSearchDkVisible = true;
+      } catch (e) {
+        isSearchDkVisible = false;
+      }
 
-    await page.waitForSelector('.employer-row #employer-profile-opportunity', { timeout: 10000 });
-    await page.click('.employer-row #employer-profile-opportunity');
-    await delay(WAIT_TIME);
+      if (!isSearchDkVisible) {
+        const searchPanelHeading = await page.$('.job-search-heading');
+        if (searchPanelHeading) {
+          await searchPanelHeading.click();
+          await delay(WAIT_TIME);
+        }
+      }
 
-    await applyJobs(page);
-  } catch (error) {
-    // console.log("No search results found, or search took too long.");
+      await page.waitForSelector('li#search-dk', { visible: true, timeout: 5000 });
+      await page.click('li#search-dk');
+      await delay(WAIT_TIME);
+
+      await page.waitForSelector('.employer-row #employer-profile-opportunity', { timeout: 10000 });
+      await page.click('.employer-row #employer-profile-opportunity');
+      await delay(WAIT_TIME);
+
+      await applyJobs(page);
+    } catch (error) {
+      // console.log("No search results found, or search took too long.");
+    }
+  } finally {
+    await page.close();
   }
-
-  await page.close();
 }
