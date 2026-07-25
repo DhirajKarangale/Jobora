@@ -67,7 +67,7 @@ export function AnalyticsJobModal({ job, isOpen, onClose }: AnalyticsJobModalPro
               <div className="flex items-center gap-2 ml-auto">
                 {job.isApplied ? (
                   <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 px-2 py-0.5 text-xs">
-                    Applied: {job.appliedDate ? new Date(job.appliedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Yes'}
+                    {job.isAutoApply ? 'Auto Applied' : 'Manual Applied'}: {job.appliedDate ? new Date(job.appliedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                   </Badge>
                 ) : (
                   <>

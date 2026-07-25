@@ -367,7 +367,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
       id, source, company, description, apply_link, 
       (applied_date IS NOT NULL) AS isapplied, 
       added_date, is_expired, portal_link,
-      is_eligible, applied_date, role
+      is_eligible, applied_date, role, is_auto_apply
     FROM jobs
     ${filterQuery}
     ORDER BY added_date DESC
@@ -415,6 +415,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     isEligible: r.is_eligible !== null ? Boolean(r.is_eligible) : undefined,
     appliedDate: r.applied_date ? new Date(r.applied_date).toISOString() : null,
     role: r.role,
+    isAutoApply: r.is_auto_apply !== null ? Boolean(r.is_auto_apply) : undefined,
   }));
 
   return {

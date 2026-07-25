@@ -11,6 +11,7 @@ export interface Job {
   isEligible?: boolean;
   appliedDate?: string | null;
   role?: string | null;
+  isAutoApply?: boolean;
 }
 
 export interface ParsedJobData {
