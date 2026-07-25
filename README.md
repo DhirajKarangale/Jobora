@@ -4,8 +4,35 @@
   <em>An autonomous full-stack job application and analytics platform.</em>
 </p>
 
+<p align="center">
+  <img src="./assets/GIF.gif" alt="Jobora Demo" width="800"/>
+</p>
+
 ## 📖 What is this?
 Jobora is an intelligent, end-to-end automation system designed to take the hassle out of finding and applying for jobs. It automatically scrapes various job portals, cleans and processes the job descriptions using AI (LLMs), evaluates them against a personal profile, and presents the eligible matches on a beautiful, interactive dashboard along with detailed application analytics.
+
+## 📸 Screenshots
+
+### Analytics Dashboard
+<p align="center">
+  <img src="./assets/Analytics%20Cards.png" alt="Analytics Cards" width="800"/>
+</p>
+<p align="center">
+  <img src="./assets/Analytics%20Chart.png" alt="Analytics Chart" width="800"/>
+</p>
+
+### Job Table & Details
+<p align="center">
+  <img src="./assets/Analytics%20Job%20Table.png" alt="Analytics Job Table" width="800"/>
+</p>
+<p align="center">
+  <img src="./assets/Job%20Modal.png" alt="Job Modal" width="800"/>
+</p>
+
+### Eligible Opportunities
+<p align="center">
+  <img src="./assets/Eligible%20Opportunities.png" alt="Eligible Opportunities" width="800"/>
+</p>
 
 ## 🗂️ Project Structure
 
