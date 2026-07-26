@@ -172,6 +172,15 @@ applications.
 
 ## Projects
 
+### Jobora (Dec 2026)
+
+-   Built an Agentic AI job automation platform that discovers jobs across multiple platforms, evaluates candidate fit using LLMs, and automatically applies to eligible roles.
+-   Developed browser automation pipelines using Puppeteer to scrape job postings and submit applications.
+-   Designed a distributed processing pipeline with Node.js, Python, PostgreSQL, Redis, and LangGraph to clean, structure, and evaluate job data.
+-   Built a React-based analytics dashboard to track eligible opportunities, application status, and job insights through interactive visualizations.
+
+-   GitHub: https://github.com/DhirajKarangale/Jobora
+
 ### SatyaMark (Dec 2025)
 
 Open-source multi-modal content verification infrastructure providing
