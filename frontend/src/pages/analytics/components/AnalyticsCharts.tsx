@@ -125,6 +125,64 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
         </div>
       </div>
 
+      {/* Top 10 Companies */}
+      <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-xs space-y-6 min-w-0">
+        <div className="space-y-1">
+          <h3 className="text-lg font-bold">Top 10 Companies</h3>
+          <p className="text-xs text-muted-foreground">Companies with the most jobs available</p>
+        </div>
+        <div className="h-72 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data.topCompanies} layout="vertical" margin={{ top: 5, right: 20, bottom: 5, left: 40 }}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.2} horizontal={true} vertical={false} />
+              <XAxis type="number" tick={{ fontSize: 12 }} stroke="currentColor" opacity={0.5} allowDecimals={false} />
+              <YAxis 
+                dataKey="name" 
+                type="category" 
+                tick={{ fontSize: 12 }} 
+                stroke="currentColor" 
+                opacity={0.5} 
+                width={120}
+                tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
+              />
+              <Tooltip
+                contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
+                labelStyle={{ fontWeight: 'bold', color: 'var(--foreground)', marginBottom: '8px' }}
+                cursor={{ fill: 'var(--muted)', opacity: 0.4 }}
+              />
+              <Bar dataKey="count" name="Jobs" fill="#3b82f6" radius={[0, 4, 4, 0]} maxBarSize={40} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Jobs by Portal */}
+      <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-xs space-y-6 min-w-0">
+        <div className="space-y-1">
+          <h3 className="text-lg font-bold">Jobs by Portal</h3>
+          <p className="text-xs text-muted-foreground">Distribution of jobs across different sources</p>
+        </div>
+        <div className="h-72 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data.jobsBySource} margin={{ top: 20, right: 20, bottom: 25, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="currentColor" opacity={0.5} />
+              <YAxis tick={{ fontSize: 12 }} stroke="currentColor" opacity={0.5} allowDecimals={false} />
+              <Tooltip
+                contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
+                labelStyle={{ fontWeight: 'bold', color: 'var(--foreground)', marginBottom: '8px' }}
+                cursor={{ fill: 'var(--muted)', opacity: 0.4 }}
+              />
+              <Bar dataKey="count" name="Jobs" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={60} label={{ position: 'top', fill: 'var(--foreground)', fontSize: 12, fontWeight: 'bold' }}>
+                {data.jobsBySource.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
     </div>
   );
 }

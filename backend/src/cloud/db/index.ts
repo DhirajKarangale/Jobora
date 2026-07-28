@@ -239,6 +239,7 @@ export interface AnalyticsFilter {
   dateRange: string;
   sourceName?: string;
   companyName?: string;
+  status?: string;
   page?: number;
   limit?: number;
 }
@@ -261,6 +262,7 @@ export interface AnalyticsData {
   }[];
   actionableJobsBySource: { name: string; toApply: number; applied: number }[];
   jobsBySource: { name: string; count: number }[];
+  topCompanies: { name: string; count: number }[];
   statusBreakdown: { name: string; value: number }[];
   jobsList: any[];
   pagination: {
@@ -271,7 +273,7 @@ export interface AnalyticsData {
 }
 
 export async function getAnalyticsData(filters: AnalyticsFilter): Promise<AnalyticsData> {
-  const { dateRange, sourceName, companyName, page = 1, limit = 10 } = filters;
+  const { dateRange, sourceName, companyName, status, page = 1, limit = 10 } = filters;
 
   let startDate = new Date();
   switch (dateRange) {
@@ -308,6 +310,27 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     queryParams.push(`%${companyName}%`);
     paramIndex++;
   }
+
+  if (status) {
+    if (status === 'applied') {
+      filterQuery += ` AND applied_date IS NOT NULL`;
+    } else if (status === 'eligible') {
+      filterQuery += ` AND applied_date IS NULL AND is_eligible = true AND (is_expired IS NULL OR is_expired = false)`;
+    } else if (status === 'pending_ai') {
+      filterQuery += ` AND applied_date IS NULL AND is_eligible IS NULL AND (is_expired IS NULL OR is_expired = false)`;
+    } else if (status === 'expired') {
+      filterQuery += ` AND applied_date IS NULL AND is_eligible = true AND is_expired = true`;
+    }
+  }
+
+  const topCompaniesQuery = `
+    SELECT company as name, COUNT(*) as count
+    FROM jobs
+    ${filterQuery} AND company IS NOT NULL
+    GROUP BY company
+    ORDER BY count DESC
+    LIMIT 10
+  `;
 
   const summaryQuery = `
     SELECT 
@@ -376,13 +399,14 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
   
   const listQueryParams = [...queryParams, limit, offset];
 
-  const [summaryResult, timeSeriesResult, sourceResult, actionableSourceResult, totalJobsListResult, jobsListResult] = await Promise.all([
+  const [summaryResult, timeSeriesResult, sourceResult, actionableSourceResult, totalJobsListResult, jobsListResult, topCompaniesResult] = await Promise.all([
     pool.query(summaryQuery, queryParams),
     pool.query(timeSeriesQuery, queryParams),
     pool.query(jobsBySourceQuery, queryParams),
     pool.query(actionableJobsBySourceQuery, queryParams),
     pool.query(totalJobsListQuery, queryParams),
-    pool.query(jobsListQuery, listQueryParams)
+    pool.query(jobsListQuery, listQueryParams),
+    pool.query(topCompaniesQuery, queryParams)
   ]);
 
   const summary = summaryResult.rows[0];
@@ -431,6 +455,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     timeSeries,
     actionableJobsBySource: actionableSourceResult.rows.map(r => ({ name: r.name, toApply: Number(r.to_apply), applied: Number(r.applied) })),
     jobsBySource: sourceResult.rows.map(r => ({ name: r.name, count: Number(r.count) })),
+    topCompanies: topCompaniesResult.rows.map(r => ({ name: r.name, count: Number(r.count) })),
     statusBreakdown,
     jobsList,
     pagination: {

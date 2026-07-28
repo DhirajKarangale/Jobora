@@ -1,5 +1,5 @@
 import { Combobox } from "@/components/ui/combobox";
-import { Calendar, Filter, Search } from "lucide-react";
+import { Calendar, Filter, Search, Activity } from "lucide-react";
 import type { AnalyticsFilter } from "@/api/queries";
 
 interface AnalyticsFiltersProps {
@@ -10,7 +10,7 @@ interface AnalyticsFiltersProps {
 
 export function AnalyticsFilters({ filters, filterOptions, onFilterChange }: AnalyticsFiltersProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-card p-5 rounded-2xl border border-border shadow-xs">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-card p-5 rounded-2xl border border-border shadow-xs">
       <div className="flex flex-col gap-2">
         <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
           <Calendar className="w-4 h-4" /> Date Range
@@ -28,11 +28,10 @@ export function AnalyticsFilters({ filters, filterOptions, onFilterChange }: Ana
             { value: '3m', label: 'Last 3 Months' },
             { value: '6m', label: 'Last 6 Months' },
             { value: '1y', label: 'Last 1 Year' },
-            { value: '1.5y', label: 'Last 1.5 Years' },
-            { value: 'all', label: 'All Time' }
+            { value: '1.5y', label: 'Last 1.5 Years' }
           ]}
           value={filters.dateRange || '1w'}
-          onChange={(val) => onFilterChange('dateRange', val || 'all')}
+          onChange={(val) => onFilterChange('dateRange', val || '1w')}
           placeholder="Select Date Range"
         />
       </div>
@@ -58,6 +57,23 @@ export function AnalyticsFilters({ filters, filterOptions, onFilterChange }: Ana
           value={filters.companyName || ''}
           onChange={(val) => onFilterChange('companyName', val)}
           placeholder="All Companies"
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+          <Activity className="w-4 h-4" /> Job Status
+        </label>
+        <Combobox
+          options={[
+            { value: 'applied', label: 'Applied' },
+            { value: 'eligible', label: 'Only Eligible' },
+            { value: 'pending_ai', label: 'Scrapped Not Scanned' },
+            { value: 'expired', label: 'Expired' }
+          ]}
+          value={filters.status || ''}
+          onChange={(val) => onFilterChange('status', val)}
+          placeholder="All Statuses"
         />
       </div>
     </div>

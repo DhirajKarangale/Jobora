@@ -71,6 +71,7 @@ export interface AnalyticsFilter {
   dateRange: string;
   sourceName?: string;
   companyName?: string;
+  status?: string;
   page?: number;
   limit?: number;
 }
@@ -80,6 +81,7 @@ export interface AnalyticsData {
   timeSeries: { date: string; totalJobs: number; eligibleJobs: number; appliedJobs: number; }[];
   actionableJobsBySource: { name: string; toApply: number; applied: number }[];
   jobsBySource: { name: string; count: number }[];
+  topCompanies: { name: string; count: number }[];
   statusBreakdown: { name: string; value: number }[];
   jobsList: any[];
   pagination: { total: number; page: number; limit: number; };
@@ -90,6 +92,7 @@ export async function fetchAnalytics(filters: AnalyticsFilter): Promise<Analytic
   if (filters.dateRange) params.append('dateRange', filters.dateRange);
   if (filters.sourceName) params.append('sourceName', filters.sourceName);
   if (filters.companyName) params.append('companyName', filters.companyName);
+  if (filters.status) params.append('status', filters.status);
   if (filters.page) params.append('page', filters.page.toString());
   if (filters.limit) params.append('limit', filters.limit.toString());
 
