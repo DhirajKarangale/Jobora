@@ -50,6 +50,41 @@ export async function startAutomation(): Promise<{ success: boolean; message: st
   return response.data;
 }
 
+export async function stopAutomation(): Promise<{ success: boolean; message: string }> {
+  const response = await api.post<{ success: boolean; message: string }>(ENDPOINTS.AUTOMATION_STOP);
+  return response.data;
+}
+
+export interface PendingJob {
+  messageId: string;
+  dbId: string;
+  role: string;
+  companyName: string;
+  sourceName: string;
+  link?: string;
+  portalLink?: string;
+}
+
+export async function fetchPendingJobs(): Promise<PendingJob[]> {
+  const response = await api.get<PendingJob[]>(ENDPOINTS.PENDING_JOBS);
+  return response.data;
+}
+
+export async function removePendingJob(messageId: string, dbId: string): Promise<{ success: boolean; messageId: string }> {
+  const response = await api.delete(`${ENDPOINTS.PENDING_JOBS}/${messageId}`, { data: { dbId } });
+  return response.data;
+}
+
+export async function markPendingJobApplied(messageId: string, dbId: string): Promise<{ success: boolean; messageId: string }> {
+  const response = await api.post(`${ENDPOINTS.PENDING_JOBS}/${messageId}/apply`, { dbId });
+  return response.data;
+}
+
+export async function clearAllPendingJobs(): Promise<{ success: boolean }> {
+  const response = await api.delete(ENDPOINTS.CLEAR_PENDING_JOBS);
+  return response.data;
+}
+
 
 
 export async function fetchEligibleJobs(): Promise<Job[] | null> {
@@ -181,6 +216,7 @@ export function useAutomationStatus() {
     queryFn: fetchAutomationStatus,
     refetchInterval: (query) => (!query.state.error && query.state.data?.isRunning ? 3000 : false),
     retry: 1,
+    placeholderData: keepPreviousData,
   });
 
   const status = isError 
@@ -210,6 +246,13 @@ export function useAutomationStatus() {
     },
   });
 
+  const stopAutomationMutation = useMutation({
+    mutationFn: stopAutomation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["automationStatus"] });
+    },
+  });
+
   return {
     status: status || { jobsScraped: 0, jobsAutoApplied: 0, isRunning: false },
     isLoading,
@@ -217,5 +260,60 @@ export function useAutomationStatus() {
     stoppedStats,
     startAutomation: startAutomationMutation.mutate,
     isStarting: startAutomationMutation.isPending,
+    stopAutomation: stopAutomationMutation.mutate,
+    isStopping: stopAutomationMutation.isPending,
+  };
+}
+
+export function usePendingJobs() {
+  const queryClient = useQueryClient();
+
+  const { data: jobs, isLoading, isError, refetch } = useQuery<PendingJob[]>({
+    queryKey: ["pendingJobs"],
+    queryFn: fetchPendingJobs,
+    refetchInterval: 3000,
+    placeholderData: keepPreviousData,
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: ({ messageId, dbId }: { messageId: string; dbId: string }) => removePendingJob(messageId, dbId),
+    onSuccess: (data) => {
+      queryClient.setQueryData<PendingJob[]>(["pendingJobs"], (old) => {
+        if (!old) return old;
+        return old.filter((j) => j.messageId !== data.messageId);
+      });
+    },
+  });
+
+  const applyMutation = useMutation({
+    mutationFn: ({ messageId, dbId }: { messageId: string; dbId: string }) => markPendingJobApplied(messageId, dbId),
+    onSuccess: (data) => {
+      queryClient.setQueryData<PendingJob[]>(["pendingJobs"], (old) => {
+        if (!old) return old;
+        return old.filter((j) => j.messageId !== data.messageId);
+      });
+    },
+  });
+
+  const clearAllMutation = useMutation({
+    mutationFn: clearAllPendingJobs,
+    onSuccess: () => {
+      queryClient.setQueryData<PendingJob[]>(["pendingJobs"], []);
+    },
+  });
+
+  return {
+    jobs: jobs || [],
+    isLoading,
+    isError,
+    refetch,
+    removeJob: removeMutation.mutate,
+    isRemoving: removeMutation.isPending,
+    removingId: removeMutation.variables?.messageId,
+    applyJob: applyMutation.mutate,
+    isApplying: applyMutation.isPending,
+    applyingId: applyMutation.variables?.messageId,
+    clearAll: clearAllMutation.mutate,
+    isClearingAll: clearAllMutation.isPending,
   };
 }

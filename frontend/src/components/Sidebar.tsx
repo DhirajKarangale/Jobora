@@ -1,12 +1,13 @@
 import { Link, useLocation } from "react-router-dom";
-import { Briefcase, BarChart3, Settings } from "lucide-react";
+import { Briefcase, BarChart3, Settings, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
   const location = useLocation();
 
   const navItems = [
-    { name: "Eligible Opportunities", path: "/", icon: Briefcase },
+    { name: "Job Finder", path: "/", icon: Bot },
+    { name: "Eligible Opportunities", path: "/eligible", icon: Briefcase },
     { name: "Analytics", path: "/analytics", icon: BarChart3 },
   ];
 

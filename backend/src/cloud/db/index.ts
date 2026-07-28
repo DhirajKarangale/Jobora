@@ -482,6 +482,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
 }
 
 export async function getFilterOptions(sourceName?: string, companyName?: string): Promise<{ sources: string[], companies: string[] }> {
+  // ... existing code ...
   let sourcesQuery = `SELECT DISTINCT source FROM jobs WHERE source IS NOT NULL`;
   let companiesQuery = `SELECT DISTINCT company FROM jobs WHERE company IS NOT NULL`;
 
@@ -509,6 +510,51 @@ export async function getFilterOptions(sourceName?: string, companyName?: string
     sources: sourcesResult.rows.map(r => r.source),
     companies: companiesResult.rows.map(r => r.company)
   };
+}
+
+export async function setJobsIneligibleStatus(jobIds: string[]): Promise<boolean> {
+  if (!jobIds || jobIds.length === 0) return false;
+  
+  const uuidIds = jobIds.filter(id => isUuid(id));
+  if (uuidIds.length === 0) return false;
+  
+  const query = `
+    UPDATE jobs
+    SET is_eligible = false
+    WHERE id = ANY($1::uuid[])
+  `;
+  
+  const { rowCount } = await pool.query(query, [uuidIds]);
+  return (rowCount ?? 0) > 0;
+}
+
+export async function getJobsByIds(jobIds: string[]): Promise<any[]> {
+  if (!jobIds || jobIds.length === 0) return [];
+  
+  const uuidIds = jobIds.filter(id => isUuid(id));
+  if (uuidIds.length === 0) return [];
+
+  const query = `
+    SELECT id, role, company, source, apply_link AS link, portal_link
+    FROM jobs
+    WHERE id = ANY($1::uuid[])
+  `;
+  
+  const { rows } = await pool.query(query, [uuidIds]);
+  return rows;
+}
+
+export async function setJobAppliedFromPending(jobId: string): Promise<boolean> {
+  if (!isUuid(jobId)) return false;
+  
+  const query = `
+    UPDATE jobs
+    SET applied_date = CURRENT_DATE, is_eligible = true
+    WHERE id = $1
+  `;
+  
+  const { rowCount } = await pool.query(query, [jobId]);
+  return (rowCount ?? 0) > 0;
 }
 
 export default pool;

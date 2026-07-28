@@ -8,6 +8,10 @@ import naukri from "../job_portals/naukri/index.ts";
 import cutshort from "../job_portals/cutshort/index.ts";
 import { getProcessState, resetProcessState, setProcessStarted } from "../utils/automationState.ts";
 import { MAX_CONCURRENT_PORTALS } from "../utils/constants.ts";
+import { redis, connectRedis } from "../cloud/redis/config.ts";
+import { getJobsByIds, setJobsIneligibleStatus, setJobAppliedFromPending } from "../cloud/db/index.ts";
+
+const GLOBAL_STREAM_KEY = process.env.REDIS_CONSUMER_PROCESS;
 
 let globalBrowser: Browser | null = null;
 
@@ -65,4 +69,144 @@ export async function startAutomationProcess(_req: Request, res: Response): Prom
       setProcessStarted(false);
     }
   })();
+}
+
+export async function stopAutomationProcess(_req: Request, res: Response): Promise<void> {
+  setProcessStarted(false);
+  if (globalBrowser) {
+    try {
+      await globalBrowser.close();
+    } catch (e) {
+      // ignore
+    }
+    globalBrowser = null;
+  }
+  res.json({ success: true, message: "Automation stopped" });
+}
+
+export async function getPendingJobs(_req: Request, res: Response): Promise<void> {
+  try {
+    await connectRedis();
+    if (!GLOBAL_STREAM_KEY) {
+      res.json([]);
+      return;
+    }
+    const items = await redis.xrange(GLOBAL_STREAM_KEY, '-', '+') as any[];
+    
+    if (items.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    const dbIdMap = new Map<string, string>(); // messageId -> dbId
+    
+    for (const item of items) {
+      const messageId = item[0];
+      const fields = item[1];
+      for (let i = 0; i < fields.length; i += 2) {
+        if (fields[i] === 'id') {
+          dbIdMap.set(messageId, fields[i + 1]);
+          break;
+        }
+      }
+    }
+
+    const dbIds = Array.from(dbIdMap.values());
+    const jobsData = await getJobsByIds(dbIds);
+    
+    const results = [];
+    for (const [messageId, dbId] of dbIdMap.entries()) {
+      const jobDbData = jobsData.find(j => String(j.id) === dbId);
+      if (jobDbData) {
+        results.push({
+          messageId,
+          dbId,
+          role: jobDbData.role || "Unknown Role",
+          companyName: jobDbData.company || "Unknown Company",
+          sourceName: jobDbData.source || "Unknown Portal",
+          link: jobDbData.link || null,
+          portalLink: jobDbData.portal_link || null
+        });
+      }
+    }
+    
+    res.json(results);
+  } catch (error) {
+    console.error("Error in getPendingJobs:", error);
+    res.status(500).json({ error: "Failed to fetch pending jobs", details: String(error) });
+  }
+}
+
+export async function removePendingJob(req: Request, res: Response): Promise<void> {
+  try {
+    const { messageId } = req.params;
+    const { dbId } = req.body;
+    
+    if (!messageId || !dbId || !GLOBAL_STREAM_KEY) {
+      res.status(400).json({ error: "Missing required parameters" });
+      return;
+    }
+    
+    await connectRedis();
+    await redis.xdel(GLOBAL_STREAM_KEY, messageId);
+    await setJobsIneligibleStatus([dbId]);
+    
+    res.json({ success: true, messageId });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to remove pending job" });
+  }
+}
+
+export async function markPendingJobApplied(req: Request, res: Response): Promise<void> {
+  try {
+    const { messageId } = req.params;
+    const { dbId } = req.body;
+    
+    if (!messageId || !dbId || !GLOBAL_STREAM_KEY) {
+      res.status(400).json({ error: "Missing required parameters" });
+      return;
+    }
+    
+    await connectRedis();
+    await redis.xdel(GLOBAL_STREAM_KEY, messageId);
+    await setJobAppliedFromPending(dbId);
+    
+    res.json({ success: true, messageId });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to mark pending job as applied" });
+  }
+}
+
+export async function clearAllPendingJobs(_req: Request, res: Response): Promise<void> {
+  try {
+    await connectRedis();
+    if (!GLOBAL_STREAM_KEY) {
+      res.status(400).json({ error: "No stream key configured" });
+      return;
+    }
+    
+    const items = await redis.xrange(GLOBAL_STREAM_KEY, '-', '+') as any[];
+    
+    if (items.length > 0) {
+      const dbIds: string[] = [];
+      for (const item of items) {
+        const fields = item[1];
+        for (let i = 0; i < fields.length; i += 2) {
+          if (fields[i] === 'id') {
+            dbIds.push(fields[i + 1]);
+            break;
+          }
+        }
+      }
+      
+      if (dbIds.length > 0) {
+        await setJobsIneligibleStatus(dbIds);
+      }
+    }
+    
+    await redis.del(GLOBAL_STREAM_KEY);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to clear pending jobs" });
+  }
 }
