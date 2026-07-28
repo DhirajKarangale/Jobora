@@ -28,4 +28,5 @@ export interface DataJob {
   link: string | null;
   portal_link: string | null;
   role: string | null;
+  isEligible?: boolean;
 }

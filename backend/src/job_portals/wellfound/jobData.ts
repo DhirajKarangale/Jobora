@@ -125,7 +125,8 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
         description: fullDescription,
         link: applicationLink,
         portal_link: applicationLink,
-        role
+        role,
+        isEligible: true
       };
 
       const applied = await tryApplyJob(page);
@@ -136,7 +137,6 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
       } else {
         const id = await saveJob(jobData);
         if (id) {
-          await addToProcessStream({ id });
           incrementJobsScraped();
         }
       }
