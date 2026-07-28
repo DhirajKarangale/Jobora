@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 import dotenv from "dotenv";
-import { DataJob } from "../../utils/constants.ts";
+import type { DataJob } from "../../utils/constants.ts";
 
 dotenv.config();
 

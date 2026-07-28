@@ -1,4 +1,5 @@
 import { redis, connectRedis } from "./config.ts";
+import { pool } from "../db/index.ts";
 
 const GLOBAL_STREAM_KEY = process.env.REDIS_CONSUMER_PROCESS;
 const GLOBAL_GROUP_NAME = process.env.REDIS_CONSUMER_PROCESS;
@@ -106,10 +107,107 @@ export async function flushRedisDatabase() {
     }
 }
 
+export async function getConsumerGroupInfo(streamKey: string | undefined = GLOBAL_STREAM_KEY, groupName: string | undefined = GLOBAL_GROUP_NAME) {
+    if (!streamKey || !groupName) {
+        throw new Error("Missing streamKey or groupName");
+    }
+
+    try {
+        await connectRedis();
+        console.log(`\n--- Fetching info for consumer group: ${groupName} ---`);
+
+        // Check pending items for the consumer group
+        try {
+            const pendingInfo = await redis.xpending(streamKey, groupName) as any[];
+            const totalPending = pendingInfo[0];
+
+            console.log(`Total pending items in group: ${totalPending}`);
+
+            if (totalPending > 0) {
+                const pendingMessages = await redis.xpending(streamKey, groupName, '-', '+', totalPending) as any[];
+
+                console.log(`Pending Items Details:`);
+                for (const msg of pendingMessages) {
+                    const messageId = msg[0];
+                    const itemData = await redis.xrange(streamKey, messageId, messageId) as any[];
+
+                    if (itemData && itemData.length > 0) {
+                        const fields = itemData[0][1];
+                        let dbId = null;
+                        let companyName = "Unknown";
+                        for (let i = 0; i < fields.length; i += 2) {
+                            if (fields[i] === 'id') {
+                                dbId = fields[i + 1];
+                                break;
+                            }
+                        }
+                        
+                        if (dbId) {
+                            try {
+                                const res = await pool.query(`SELECT company FROM jobs WHERE id = $1`, [dbId]);
+                                if (res.rows.length > 0) {
+                                    companyName = res.rows[0].company;
+                                }
+                            } catch (e) {
+                                companyName = "Error fetching from DB";
+                            }
+                        }
+                        
+                        console.log(`- ID: ${messageId} | DB ID: ${dbId} | Company: ${companyName}`);
+                    }
+                }
+            }
+        } catch (err: any) {
+            if (err.message && err.message.includes("NOGROUP")) {
+                console.log(`Consumer group '${groupName}' does not exist yet. Skipping pending items check.`);
+            } else {
+                throw err;
+            }
+        }
+
+        // Also fetch all items in the stream just to give a complete picture
+        console.log(`\n--- Fetching info for entire stream: ${streamKey} ---`);
+        const items = await redis.xrange(streamKey, '-', '+') as any[];
+
+        console.log(`Total items in stream: ${items.length}`);
+        for (const item of items) {
+            const id = item[0];
+            const fields = item[1];
+
+            let dbId = null;
+            let companyName = "Unknown";
+            for (let i = 0; i < fields.length; i += 2) {
+                if (fields[i] === 'id') {
+                    dbId = fields[i + 1];
+                    break;
+                }
+            }
+            
+            if (dbId) {
+                try {
+                    const res = await pool.query(`SELECT company FROM jobs WHERE id = $1`, [dbId]);
+                    if (res.rows.length > 0) {
+                        companyName = res.rows[0].company;
+                    }
+                } catch (e) {
+                    companyName = "Error fetching from DB";
+                }
+            }
+            
+            console.log(`- ID: ${id} | DB ID: ${dbId} | Company: ${companyName}`);
+        }
+
+    } catch (error) {
+        console.error(`Error fetching consumer group info:`, error);
+    }
+}
+
 async function run() {
     // await clearEntireRedisStream();
     // await clearConsumerGroupData();
     // await flushRedisDatabase();
+    await getConsumerGroupInfo();
+
     process.exit(0);
 }
 run();
