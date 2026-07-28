@@ -321,14 +321,14 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     } else if (status === 'pending_ai') {
       filterQuery += ` AND applied_date IS NULL AND is_eligible IS NULL AND (is_expired IS NULL OR is_expired = false)`;
     } else if (status === 'expired') {
-      filterQuery += ` AND applied_date IS NULL AND is_eligible = true AND is_expired = true`;
+      filterQuery += ` AND is_expired = true`;
     }
   }
 
   const topCompaniesQuery = `
     SELECT company as name, COUNT(*) as count
     FROM jobs
-    ${filterQuery} AND company IS NOT NULL
+    ${filterQuery} AND company IS NOT NULL AND (is_eligible = true OR applied_date IS NOT NULL)
     GROUP BY company
     ORDER BY count DESC
     LIMIT 10
@@ -342,21 +342,34 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
       COUNT(CASE WHEN applied_date IS NOT NULL AND (is_auto_apply IS NULL OR is_auto_apply = false) THEN 1 END) as manual_applied_jobs,
       COUNT(CASE WHEN applied_date IS NULL AND is_eligible IS NULL AND (is_expired IS NULL OR is_expired = false) THEN 1 END) as pending_ai_jobs,
       COUNT(CASE WHEN is_eligible = false THEN 1 END) as not_eligible_jobs,
-      COUNT(CASE WHEN applied_date IS NULL AND is_eligible = true AND is_expired = true THEN 1 END) as expired_jobs,
+      COUNT(CASE WHEN is_expired = true THEN 1 END) as expired_jobs,
       COUNT(CASE WHEN applied_date IS NULL AND is_eligible = true AND (is_expired IS NULL OR is_expired = false) THEN 1 END) as active_jobs
     FROM jobs
     ${filterQuery}
   `;
 
   const timeSeriesQuery = `
+    WITH date_series AS (
+      SELECT DATE(added_date) as date, 
+             1 as is_added, 
+             CASE WHEN is_eligible = true OR (applied_date IS NOT NULL AND is_eligible IS NULL) THEN 1 ELSE 0 END as is_eligible,
+             0 as is_applied 
+      FROM jobs ${filterQuery}
+      UNION ALL
+      SELECT DATE(applied_date) as date, 
+             0 as is_added, 
+             0 as is_eligible,
+             1 as is_applied 
+      FROM jobs ${filterQuery} AND applied_date IS NOT NULL
+    )
     SELECT 
-      DATE(added_date) as date,
-      COUNT(*) as total_jobs,
-      COUNT(CASE WHEN is_eligible = true OR (applied_date IS NOT NULL AND is_eligible IS NULL) THEN 1 END) as eligible_jobs,
-      COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END) as applied_jobs
-    FROM jobs
-    ${filterQuery}
-    GROUP BY DATE(added_date)
+      date,
+      SUM(is_added) as total_jobs,
+      SUM(is_eligible) as eligible_jobs,
+      SUM(is_applied) as applied_jobs
+    FROM date_series
+    WHERE date IS NOT NULL
+    GROUP BY date
     ORDER BY date ASC
   `;
 

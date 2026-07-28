@@ -10,13 +10,20 @@ async function extractJobIds(page: Page): Promise<string[]> {
     await page.waitForSelector(JOB_LINK_SELECTOR, { visible: true, timeout: 10000 });
     const ids = await page.$$eval(JOB_LINK_SELECTOR, links => {
       return links
-        .map(link => link.getAttribute("href"))
+        .map(link => (link as HTMLAnchorElement).href)
         .filter(href => href && href.includes("/job-listings-"))
         .map(href => {
-          const url = new URL(href!);
-          const path = url.pathname;
-          return path.replace("/job-listings-", "");
-        });
+          try {
+            const url = new URL(href);
+            const path = url.pathname;
+            const slug = path.replace("/job-listings-", "");
+            const match = slug.match(/-([0-9a-zA-Z]+)$/);
+            return match ? match[1] : slug;
+          } catch {
+            return "";
+          }
+        })
+        .filter(id => id !== "");
     });
     return ids;
   } catch (error) {
@@ -52,7 +59,7 @@ export async function getJobIds(browser: Browser): Promise<string[]> {
         const spans = Array.from(document.querySelectorAll('a.styles_btn-secondary__2AsIP span'));
         return spans.find(span => span.textContent?.trim() === 'Next')?.parentElement;
       });
-      
+
       if (nextBtn) {
         await (nextBtn as any).click();
         await delay(WAIT_TIME);
