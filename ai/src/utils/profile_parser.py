@@ -25,15 +25,13 @@ def parse_candidate_profile() -> Dict[str, Any]:
     profile_text = load_candidate_profile_text()
     rules_config = load_rules_config()
     
-    # 1. Dynamic Experience Calculation
-    candidate_exp = 2 # Default fallback
+    candidate_exp = 2
     exp_match = re.search(r'(\d+)\+?\s*years(?:\s*of)?\s*(?:full-time)?\s*experience', profile_text, re.IGNORECASE)
     if not exp_match:
         exp_match = re.search(r'Professional Experience\s*\(\s*(\d+)\s*years?\s*\)', profile_text, re.IGNORECASE)
     if exp_match:
         candidate_exp = int(exp_match.group(1))
 
-    # 2. Dynamic Target Roles Parsing
     target_roles: Set[str] = set()
     in_roles_section = False
     for line in profile_text.splitlines():
@@ -49,7 +47,6 @@ def parse_candidate_profile() -> Dict[str, Any]:
             if role_text:
                 target_roles.add(role_text)
                 
-    # Add common variations/short forms of candidate target roles
     expanded_target_roles: Set[str] = set(target_roles)
     for r in target_roles:
         if "full-stack" in r or "full stack" in r:
@@ -63,7 +60,6 @@ def parse_candidate_profile() -> Dict[str, Any]:
         if "agentic ai" in r or "ai engineer" in r:
             expanded_target_roles.update(["agentic ai engineer", "ai engineer", "ai developer", "llm engineer"])
 
-    # 3. Dynamic Skills Parsing
     raw_skills: Set[str] = set()
     in_skills_section = False
     for line in profile_text.splitlines():
@@ -79,7 +75,6 @@ def parse_candidate_profile() -> Dict[str, Any]:
             if skill_text:
                 raw_skills.add(skill_text)
 
-    # Expand candidate skills with configured aliases
     skill_aliases = rules_config.get("skill_aliases", {})
     expanded_skills: Set[str] = set(raw_skills)
     for raw in raw_skills:
@@ -89,7 +84,6 @@ def parse_candidate_profile() -> Dict[str, Any]:
                 expanded_skills.update(aliases)
                 expanded_skills.add(canon)
 
-    # Add core common skills from Dhiraj's profile explicitly
     default_profile_skills = {
         "react", "react.js", "reactjs", "typescript", "ts", "javascript", "js",
         "node", "node.js", "nodejs", "express", "express.js", "expressjs",
