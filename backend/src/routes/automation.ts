@@ -68,6 +68,10 @@ export async function startAutomationProcess(_req: Request, res: Response): Prom
     } catch (error) {
     } finally {
       setProcessStarted(false);
+      if (globalBrowser) {
+        await globalBrowser.close();
+        globalBrowser = null;
+      }
     }
   })();
 }
@@ -93,14 +97,14 @@ export async function getPendingJobs(_req: Request, res: Response): Promise<void
       return;
     }
     const items = await redis.xrange(GLOBAL_STREAM_KEY, '-', '+') as any[];
-    
+
     if (items.length === 0) {
       res.json([]);
       return;
     }
 
-    const dbIdMap = new Map<string, string>(); // messageId -> dbId
-    
+    const dbIdMap = new Map<string, string>();
+
     for (const item of items) {
       const messageId = item[0];
       const fields = item[1];
@@ -114,7 +118,7 @@ export async function getPendingJobs(_req: Request, res: Response): Promise<void
 
     const dbIds = Array.from(dbIdMap.values());
     const jobsData = await getJobsByIds(dbIds);
-    
+
     const results = [];
     for (const [messageId, dbId] of dbIdMap.entries()) {
       const jobDbData = jobsData.find(j => String(j.id) === dbId);
@@ -130,7 +134,7 @@ export async function getPendingJobs(_req: Request, res: Response): Promise<void
         });
       }
     }
-    
+
     res.json(results);
   } catch (error) {
     console.error("Error in getPendingJobs:", error);
@@ -142,16 +146,16 @@ export async function removePendingJob(req: Request, res: Response): Promise<voi
   try {
     const messageId = String(req.params.messageId);
     const { dbId } = req.body;
-    
+
     if (!messageId || !dbId || !GLOBAL_STREAM_KEY) {
       res.status(400).json({ error: "Missing required parameters" });
       return;
     }
-    
+
     await connectRedis();
     await redis.xdel(GLOBAL_STREAM_KEY, messageId);
     await setJobsIneligibleStatus([dbId]);
-    
+
     res.json({ success: true, messageId });
   } catch (error) {
     res.status(500).json({ error: "Failed to remove pending job" });
@@ -162,16 +166,16 @@ export async function markPendingJobApplied(req: Request, res: Response): Promis
   try {
     const messageId = String(req.params.messageId);
     const { dbId } = req.body;
-    
+
     if (!messageId || !dbId || !GLOBAL_STREAM_KEY) {
       res.status(400).json({ error: "Missing required parameters" });
       return;
     }
-    
+
     await connectRedis();
     await redis.xdel(GLOBAL_STREAM_KEY, messageId);
     await setJobAppliedFromPending(dbId);
-    
+
     res.json({ success: true, messageId });
   } catch (error) {
     res.status(500).json({ error: "Failed to mark pending job as applied" });
@@ -185,9 +189,9 @@ export async function clearAllPendingJobs(_req: Request, res: Response): Promise
       res.status(400).json({ error: "No stream key configured" });
       return;
     }
-    
+
     const items = await redis.xrange(GLOBAL_STREAM_KEY, '-', '+') as any[];
-    
+
     if (items.length > 0) {
       const dbIds: string[] = [];
       for (const item of items) {
@@ -199,12 +203,12 @@ export async function clearAllPendingJobs(_req: Request, res: Response): Promise
           }
         }
       }
-      
+
       if (dbIds.length > 0) {
         await setJobsIneligibleStatus(dbIds);
       }
     }
-    
+
     await redis.del(GLOBAL_STREAM_KEY);
     res.json({ success: true });
   } catch (error) {
@@ -215,15 +219,15 @@ export async function clearAllPendingJobs(_req: Request, res: Response): Promise
 export async function undoPendingJob(req: Request, res: Response): Promise<void> {
   try {
     const { dbId } = req.body;
-    
+
     if (!dbId || !GLOBAL_STREAM_KEY) {
       res.status(400).json({ error: "Missing required parameters" });
       return;
     }
-    
+
     await resetPendingJobStatus(dbId);
     const newMessageId = await addToProcessStream({ id: dbId });
-    
+
     res.json({ success: true, messageId: newMessageId, dbId });
   } catch (error) {
     console.error("Error in undoPendingJob:", error);
