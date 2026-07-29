@@ -557,4 +557,17 @@ export async function setJobAppliedFromPending(jobId: string): Promise<boolean> 
   return (rowCount ?? 0) > 0;
 }
 
+export async function resetPendingJobStatus(jobId: string): Promise<boolean> {
+  if (!isUuid(jobId)) return false;
+  
+  const query = `
+    UPDATE jobs
+    SET applied_date = NULL, is_eligible = NULL, is_auto_apply = NULL
+    WHERE id = $1
+  `;
+  
+  const { rowCount } = await pool.query(query, [jobId]);
+  return (rowCount ?? 0) > 0;
+}
+
 export default pool;

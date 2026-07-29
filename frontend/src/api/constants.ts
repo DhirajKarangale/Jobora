@@ -11,6 +11,7 @@ export const ENDPOINTS = {
   ANALYTICS_FILTERS: "/api/analytics/filters",
   PENDING_JOBS: "/api/automation/pending-jobs",
   CLEAR_PENDING_JOBS: "/api/automation/pending-jobs/clear",
+  PENDING_JOBS_UNDO: "/api/automation/pending-jobs/undo",
 };
 
 export const getApiUrl = (endpoint: string) => `${BASE_URL}${endpoint}`;

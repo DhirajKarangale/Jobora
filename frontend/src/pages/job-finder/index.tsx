@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAutomationStatus, usePendingJobs } from "@/api/queries";
-import { Play, Loader2, Bot, CheckCircle2, Trash2, ShieldAlert, CheckSquare, ExternalLink, ChevronLeft, ChevronRight, Globe } from "lucide-react";
+import { Play, Loader2, Bot, CheckCircle2, Trash2, ShieldAlert, CheckSquare, ExternalLink, ChevronLeft, ChevronRight, Globe, RotateCcw } from "lucide-react";
 import { getSourceShortName } from "@/api/queries";
 
 export function JobFinder() {
@@ -24,18 +24,44 @@ export function JobFinder() {
     applyJob,
     isApplying,
     applyingId,
+    undoJob,
+    isUndoing,
     clearAll,
     isClearingAll,
   } = usePendingJobs();
 
+  const [actionStates, setActionStates] = useState<Record<string, "applied" | "removed">>({});
+  const [allJobsMap, setAllJobsMap] = useState<Record<string, any>>({});
+  const [busyDbId, setBusyDbId] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (jobs && jobs.length > 0) {
+      setAllJobsMap((prev) => {
+        const next = { ...prev };
+        for (const j of jobs) {
+          next[j.dbId] = j;
+        }
+        return next;
+      });
+    }
+  }, [jobs]);
+
+  const displayJobs = React.useMemo(() => {
+    const map = { ...allJobsMap };
+    for (const j of jobs) {
+      map[j.dbId] = j;
+    }
+    return Object.values(map);
+  }, [jobs, allJobsMap]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  
-  const totalPages = Math.ceil(jobs.length / itemsPerPage);
+
+  const totalPages = Math.ceil(displayJobs.length / itemsPerPage);
   if (currentPage > totalPages && totalPages > 0) {
     setCurrentPage(totalPages);
   }
-  const currentJobs = jobs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const currentJobs = displayJobs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const isRunning = status.isRunning;
 
@@ -48,6 +74,64 @@ export function JobFinder() {
   const handleRemoveAll = () => {
     if (confirm("Are you sure you want to remove all pending jobs? They will be marked as not eligible.")) {
       clearAll();
+      setActionStates({});
+      setAllJobsMap({});
+    }
+  };
+
+  const handleApplyClick = async (job: any) => {
+    const currentState = actionStates[job.dbId];
+    if (currentState === "applied") {
+      setBusyDbId(job.dbId);
+      try {
+        const res = await undoJob({ dbId: job.dbId });
+        if (res?.messageId) {
+          setAllJobsMap((prev) => ({
+            ...prev,
+            [job.dbId]: { ...job, messageId: res.messageId },
+          }));
+        }
+        setActionStates((prev) => {
+          const next = { ...prev };
+          delete next[job.dbId];
+          return next;
+        });
+      } catch (err) {
+        console.error("Failed to undo apply:", err);
+      } finally {
+        setBusyDbId(null);
+      }
+    } else {
+      applyJob({ messageId: job.messageId, dbId: job.dbId });
+      setActionStates((prev) => ({ ...prev, [job.dbId]: "applied" }));
+    }
+  };
+
+  const handleRemoveClick = async (job: any) => {
+    const currentState = actionStates[job.dbId];
+    if (currentState === "removed") {
+      setBusyDbId(job.dbId);
+      try {
+        const res = await undoJob({ dbId: job.dbId });
+        if (res?.messageId) {
+          setAllJobsMap((prev) => ({
+            ...prev,
+            [job.dbId]: { ...job, messageId: res.messageId },
+          }));
+        }
+        setActionStates((prev) => {
+          const next = { ...prev };
+          delete next[job.dbId];
+          return next;
+        });
+      } catch (err) {
+        console.error("Failed to undo remove:", err);
+      } finally {
+        setBusyDbId(null);
+      }
+    } else {
+      removeJob({ messageId: job.messageId, dbId: job.dbId });
+      setActionStates((prev) => ({ ...prev, [job.dbId]: "removed" }));
     }
   };
 
@@ -74,10 +158,10 @@ export function JobFinder() {
               <span className={`relative inline-flex rounded-full h-3 w-3 ${isRunning || isStarting ? 'bg-emerald-500' : 'bg-muted-foreground'}`}></span>
             </div>
             <span className="text-sm font-semibold text-muted-foreground">
-              {isLoading || isStarting ? "Starting up engine..." 
-               : isRunning ? "Engine is currently running" 
-               : showStoppedUI ? "Engine was recently stopped" 
-               : "Engine is currently stopped"}
+              {isLoading || isStarting ? "Starting up engine..."
+                : isRunning ? "Engine is currently running"
+                  : showStoppedUI ? "Engine was recently stopped"
+                    : "Engine is currently stopped"}
             </span>
           </div>
         </div>
@@ -108,11 +192,10 @@ export function JobFinder() {
           <button
             onClick={handleStart}
             disabled={isStarting || isLoading}
-            className={`flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold transition-all shadow-md ${
-              !isStarting && !isLoading
-                ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/25 hover:shadow-indigo-500/40"
-                : "bg-muted text-muted-foreground cursor-not-allowed border border-border"
-            }`}
+            className={`flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold transition-all shadow-md ${!isStarting && !isLoading
+              ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/25 hover:shadow-indigo-500/40"
+              : "bg-muted text-muted-foreground cursor-not-allowed border border-border"
+              }`}
           >
             {isLoading || isStarting ? (
               <>
@@ -146,7 +229,7 @@ export function JobFinder() {
         </div>
         <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col gap-1 select-none cursor-default">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pending AI Check</span>
-          <span className="text-3xl font-black text-amber-500">{jobs.length}</span>
+          <span className="text-3xl font-black text-amber-500">{displayJobs.length}</span>
         </div>
       </div>
 
@@ -164,7 +247,7 @@ export function JobFinder() {
           </div>
           <button
             onClick={handleRemoveAll}
-            disabled={jobs.length === 0 || isClearingAll}
+            disabled={displayJobs.length === 0 || isClearingAll}
             className="flex items-center gap-2 px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isClearingAll ? (
@@ -177,108 +260,158 @@ export function JobFinder() {
         </div>
 
         <div className="overflow-x-auto min-h-[300px] flex flex-col">
-          {jobs.length > 0 ? (
+          {displayJobs.length > 0 ? (
             <>
               <table className="w-full text-sm text-left">
-              <thead className="text-xs text-muted-foreground uppercase bg-muted/30">
-                <tr>
-                  <th className="px-6 py-4 font-semibold">Role</th>
-                  <th className="px-6 py-4 font-semibold">Company</th>
-                  <th className="px-6 py-4 font-semibold">Portal</th>
-                  <th className="px-6 py-4 font-semibold text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                {currentJobs.map((job) => (
-                  <tr key={job.messageId} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-6 py-4 font-medium">{job.role}</td>
-                    <td className="px-6 py-4 text-muted-foreground">{job.companyName}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-2.5 py-1 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-semibold rounded-md border border-indigo-500/20">
-                        {getSourceShortName(job.sourceName)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-1">
-                        {job.portalLink && (
-                          <a 
-                            href={job.portalLink} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="p-2 text-indigo-600 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-lg transition-colors flex items-center justify-center"
-                            title="View on Job Portal"
-                          >
-                            <Globe className="w-4 h-4" />
-                          </a>
-                        )}
-                        {job.link && (
-                          <a 
-                            href={job.link} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="p-2 text-emerald-600 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors flex items-center justify-center"
-                            title="Direct Apply Link"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-                        )}
-                        <button
-                          onClick={() => applyJob({ messageId: job.messageId, dbId: job.dbId })}
-                          disabled={(isApplying && applyingId === job.messageId) || (isRemoving && removingId === job.messageId)}
-                          className="p-2 text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors disabled:opacity-50"
-                          title="Mark as Applied"
-                        >
-                          {isApplying && applyingId === job.messageId ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <CheckSquare className="w-4 h-4" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => removeJob({ messageId: job.messageId, dbId: job.dbId })}
-                          disabled={(isRemoving && removingId === job.messageId) || (isApplying && applyingId === job.messageId)}
-                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50"
-                          title="Remove from queue & mark as not eligible"
-                        >
-                          {isRemoving && removingId === job.messageId ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                    </td>
+                <thead className="text-xs text-muted-foreground uppercase bg-muted/30">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold">Role</th>
+                    <th className="px-6 py-4 font-semibold">Company</th>
+                    <th className="px-6 py-4 font-semibold">Portal</th>
+                    <th className="px-6 py-4 font-semibold text-right">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-border/50 bg-muted/10 mt-auto">
-                <div className="text-sm text-muted-foreground">
-                  Showing <span className="font-medium text-foreground">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * itemsPerPage, jobs.length)}</span> of <span className="font-medium text-foreground">{jobs.length}</span> entries
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {currentJobs.map((job) => {
+                    const state = actionStates[job.dbId];
+                    const isBusy = busyDbId === job.dbId ||
+                      (isApplying && applyingId === job.messageId) ||
+                      (isRemoving && removingId === job.messageId);
+
+                    return (
+                      <tr
+                        key={job.messageId || job.dbId}
+                        className={`transition-colors ${state === 'applied'
+                          ? 'bg-emerald-500/5 hover:bg-emerald-500/10'
+                          : state === 'removed'
+                            ? 'bg-destructive/5 opacity-60 hover:bg-destructive/10'
+                            : 'hover:bg-muted/20'
+                          }`}
+                      >
+                        <td className={`px-6 py-4 font-medium ${state === 'removed' ? 'line-through text-muted-foreground' : ''}`}>
+                          {job.role}
+                        </td>
+                        <td className="px-6 py-4 text-muted-foreground">{job.companyName}</td>
+                        <td className="px-6 py-4">
+                          <span className="px-2.5 py-1 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-semibold rounded-md border border-indigo-500/20">
+                            {getSourceShortName(job.sourceName)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end items-center gap-1.5">
+                            {job.portalLink && (
+                              <a
+                                href={job.portalLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 text-indigo-600 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-lg transition-colors flex items-center justify-center"
+                                title="View on Job Portal"
+                              >
+                                <Globe className="w-4 h-4" />
+                              </a>
+                            )}
+                            {job.link && (
+                              <a
+                                href={job.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 text-emerald-600 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors flex items-center justify-center"
+                                title="Direct Apply Link"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                              </a>
+                            )}
+
+                            {state === "applied" ? (
+                              <button
+                                onClick={() => handleApplyClick(job)}
+                                disabled={isBusy}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/30 transition-all cursor-pointer disabled:opacity-50"
+                                title="Applied! Click again to Undo"
+                              >
+                                {isBusy ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                )}
+                                <span>Applied (Undo)</span>
+                              </button>
+                            ) : state === "removed" ? (
+                              <button
+                                onClick={() => handleRemoveClick(job)}
+                                disabled={isBusy}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-destructive/15 hover:bg-destructive/25 text-destructive text-xs font-bold rounded-lg border border-destructive/30 transition-all cursor-pointer disabled:opacity-50"
+                                title="Removed! Click again to Undo"
+                              >
+                                {isBusy ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  <RotateCcw className="w-3.5 h-3.5" />
+                                )}
+                                <span>Removed (Undo)</span>
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => handleApplyClick(job)}
+                                  disabled={isBusy}
+                                  className="p-2 text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors disabled:opacity-50"
+                                  title="Mark as Applied"
+                                >
+                                  {isBusy ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <CheckSquare className="w-4 h-4" />
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => handleRemoveClick(job)}
+                                  disabled={isBusy}
+                                  className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50"
+                                  title="Remove from queue & mark as not eligible"
+                                >
+                                  {isBusy ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="w-4 h-4" />
+                                  )}
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-border/50 bg-muted/10 mt-auto">
+                  <div className="text-sm text-muted-foreground">
+                    Showing <span className="font-medium text-foreground">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * itemsPerPage, displayJobs.length)}</span> of <span className="font-medium text-foreground">{displayJobs.length}</span> entries
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="p-1.5 rounded-md hover:bg-muted text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <span className="text-sm font-medium px-2">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-1.5 rounded-md hover:bg-muted text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="p-1.5 rounded-md hover:bg-muted text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <span className="text-sm font-medium px-2">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="p-1.5 rounded-md hover:bg-muted text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            )}
+              )}
             </>
           ) : isPendingJobsLoading ? (
             <div className="flex-1 flex flex-col justify-center items-center text-muted-foreground min-h-[300px]">

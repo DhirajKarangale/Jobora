@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAutomationStatus, startAutomationProcess, stopAutomationProcess, getPendingJobs, removePendingJob, clearAllPendingJobs, markPendingJobApplied } from "./automation.ts";
+import { getAutomationStatus, startAutomationProcess, stopAutomationProcess, getPendingJobs, removePendingJob, clearAllPendingJobs, markPendingJobApplied, undoPendingJob } from "./automation.ts";
 import { getEligibleJobs, toggleJobApplied, toggleJobExpired } from "./eligibleJobs.ts";
 import { getAnalytics, getFilterOptionsHandler } from "./analytics.ts";
 
@@ -12,6 +12,7 @@ router.get("/automation/pending-jobs", getPendingJobs);
 router.delete("/automation/pending-jobs/clear", clearAllPendingJobs);
 router.delete("/automation/pending-jobs/:messageId", removePendingJob);
 router.post("/automation/pending-jobs/:messageId/apply", markPendingJobApplied);
+router.post("/automation/pending-jobs/undo", undoPendingJob);
 router.get("/jobs/eligible", getEligibleJobs);
 router.post("/jobs/apply", toggleJobApplied);
 router.post("/jobs/expired", toggleJobExpired);

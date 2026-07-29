@@ -1,5 +1,5 @@
 export const WAIT_TIME = 2000;
-export const JOB_PORTAL_PAGINATATION = 2;
+export const JOB_PORTAL_PAGINATATION = 1;
 export const MAX_CONCURRENT_PORTALS = 5;
 
 export const LINKEDIN_URL_JOB = "https://www.linkedin.com/jobs/view/";

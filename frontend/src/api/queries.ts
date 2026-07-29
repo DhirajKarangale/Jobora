@@ -85,6 +85,11 @@ export async function clearAllPendingJobs(): Promise<{ success: boolean }> {
   return response.data;
 }
 
+export async function undoPendingJob(dbId: string): Promise<{ success: boolean; messageId: string; dbId: string }> {
+  const response = await api.post<{ success: boolean; messageId: string; dbId: string }>(ENDPOINTS.PENDING_JOBS_UNDO, { dbId });
+  return response.data;
+}
+
 
 
 export async function fetchEligibleJobs(): Promise<Job[] | null> {
@@ -277,22 +282,14 @@ export function usePendingJobs() {
 
   const removeMutation = useMutation({
     mutationFn: ({ messageId, dbId }: { messageId: string; dbId: string }) => removePendingJob(messageId, dbId),
-    onSuccess: (data) => {
-      queryClient.setQueryData<PendingJob[]>(["pendingJobs"], (old) => {
-        if (!old) return old;
-        return old.filter((j) => j.messageId !== data.messageId);
-      });
-    },
   });
 
   const applyMutation = useMutation({
     mutationFn: ({ messageId, dbId }: { messageId: string; dbId: string }) => markPendingJobApplied(messageId, dbId),
-    onSuccess: (data) => {
-      queryClient.setQueryData<PendingJob[]>(["pendingJobs"], (old) => {
-        if (!old) return old;
-        return old.filter((j) => j.messageId !== data.messageId);
-      });
-    },
+  });
+
+  const undoMutation = useMutation({
+    mutationFn: ({ dbId }: { dbId: string }) => undoPendingJob(dbId),
   });
 
   const clearAllMutation = useMutation({
@@ -313,6 +310,9 @@ export function usePendingJobs() {
     applyJob: applyMutation.mutate,
     isApplying: applyMutation.isPending,
     applyingId: applyMutation.variables?.messageId,
+    undoJob: undoMutation.mutateAsync,
+    isUndoing: undoMutation.isPending,
+    undoingDbId: undoMutation.variables?.dbId,
     clearAll: clearAllMutation.mutate,
     isClearingAll: clearAllMutation.isPending,
   };

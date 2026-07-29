@@ -9,7 +9,8 @@ import cutshort from "../job_portals/cutshort/index.ts";
 import { getProcessState, resetProcessState, setProcessStarted } from "../utils/automationState.ts";
 import { MAX_CONCURRENT_PORTALS } from "../utils/constants.ts";
 import { redis, connectRedis } from "../cloud/redis/config.ts";
-import { getJobsByIds, setJobsIneligibleStatus, setJobAppliedFromPending } from "../cloud/db/index.ts";
+import { addToProcessStream } from "../cloud/redis/index.ts";
+import { getJobsByIds, setJobsIneligibleStatus, setJobAppliedFromPending, resetPendingJobStatus } from "../cloud/db/index.ts";
 
 const GLOBAL_STREAM_KEY = process.env.REDIS_CONSUMER_PROCESS;
 
@@ -208,5 +209,24 @@ export async function clearAllPendingJobs(_req: Request, res: Response): Promise
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: "Failed to clear pending jobs" });
+  }
+}
+
+export async function undoPendingJob(req: Request, res: Response): Promise<void> {
+  try {
+    const { dbId } = req.body;
+    
+    if (!dbId || !GLOBAL_STREAM_KEY) {
+      res.status(400).json({ error: "Missing required parameters" });
+      return;
+    }
+    
+    await resetPendingJobStatus(dbId);
+    const newMessageId = await addToProcessStream({ id: dbId });
+    
+    res.json({ success: true, messageId: newMessageId, dbId });
+  } catch (error) {
+    console.error("Error in undoPendingJob:", error);
+    res.status(500).json({ error: "Failed to undo pending job action" });
   }
 }
