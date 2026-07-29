@@ -55,14 +55,10 @@ class JDState(TypedDict):
     eligibility_result: Dict[str, Any]
 
 
+from utils.profile_parser import parse_candidate_profile, load_candidate_profile_text
+
 def load_candidate_profile() -> str:
-    profile_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "Dhiraj_Karangale_Profile.md")
-    )
-    if os.path.exists(profile_path):
-        with open(profile_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return ""
+    return load_candidate_profile_text()
 
 
 def run_llm_step(text: str, prompt: str, models: list[str]) -> str:
@@ -87,42 +83,108 @@ def run_llm_json_step(text: str, prompt: str, models: list[str]) -> Dict[str, An
         return {}
 
 
-def verify_eligibility_rules(structured_data: Dict[str, Any], candidate_exp: int = 2) -> Dict[str, Any]:
-    exp_str = str(structured_data.get("experience", "")).lower()
-    numbers = [int(n) for n in re.findall(r'\b\d+\b', exp_str)]
+def verify_eligibility_rules(structured_data: Dict[str, Any], raw_text: str = "", candidate_exp: int = None) -> Dict[str, Any]:
+    parsed_profile = parse_candidate_profile()
     
-    if numbers:
-        min_req_exp = numbers[0]
-        if min_req_exp > candidate_exp + 1:
+    if candidate_exp is None:
+        candidate_exp = parsed_profile["candidate_experience"]
+        
+    rules_config = parsed_profile["rules_config"]
+    allowed_skills = parsed_profile["allowed_skills"]
+    target_roles = parsed_profile["target_roles"]
+
+    exp_buffer = rules_config.get("experience_buffer_years", 1)
+    max_allowed_min_exp = candidate_exp + exp_buffer
+
+    role = str(structured_data.get("role", "")).strip()
+    exp_str = str(structured_data.get("experience", "")).strip()
+    skills = structured_data.get("skills", [])
+    
+    full_text_sample = f"{role} {exp_str} {raw_text[:2000]}".lower()
+    role_lower = role.lower()
+
+    # 1. High Seniority Title Check (Dynamic from rules_config.json)
+    seniority_titles = rules_config.get("seniority_titles", [])
+    for st in seniority_titles:
+        if st in role_lower:
             return {
                 "override": True,
                 "eligible": "NO",
-                "reason": f"Ineligible due to experience requirement: JD requires {min_req_exp}+ years of experience."
+                "reason": f"Ineligible due to high seniority title: '{role}'."
             }
 
-    skills = structured_data.get("skills", [])
-    if isinstance(skills, list) and len(skills) > 0:
-        top_skills = [str(s).lower() for s in skills[:2]]
-        dealbreakers = ["c#", ".net", "kotlin", "swift", "ios developer", "salesforce", "sap consultant", "cobol", "abap"]
-        for db in dealbreakers:
-            if any(db in ts for ts in top_skills):
+    # 2. Dynamic Experience Requirement Check
+    numbers = [int(n) for n in re.findall(r'\d+', exp_str)]
+    if numbers:
+        min_req_exp = numbers[0]
+        if min_req_exp > max_allowed_min_exp:
+            return {
+                "override": True,
+                "eligible": "NO",
+                "reason": f"Ineligible due to experience requirement: JD requires {min_req_exp}+ years of experience (Candidate has {candidate_exp} yrs)."
+            }
+
+    # Explicit high experience regex patterns in JD text/exp string
+    high_exp_patterns = [
+        r'\b([4-9]|\d{2,})\s*\+\s*(?:years?|yrs?)',
+        r'\b([4-9]|\d{2,})\s*(?:to|-)\s*\d+\s*(?:years?|yrs?)',
+        r'\bminimum\s*of\s*([4-9]|\d{2,})\s*(?:years?|yrs?)',
+    ]
+    for pat in high_exp_patterns:
+        match = re.search(pat, full_text_sample)
+        if match:
+            found_val = int(match.group(1))
+            if found_val > max_allowed_min_exp:
                 return {
                     "override": True,
                     "eligible": "NO",
-                    "reason": f"Ineligible due to top skill mismatch: '{db.upper()}'."
+                    "reason": f"Ineligible due to high experience pattern in JD: '{match.group(0)}'."
                 }
 
-    role = str(structured_data.get("role", "")).lower()
-    incompatible_roles = ["kotlin developer", "c# developer", ".net developer", "ios developer", "salesforce developer", "sap consultant"]
-    for ir in incompatible_roles:
-        if ir in role:
+    # 3. Dynamic Dealbreaker Categories Check (loaded from rules_config.json)
+    dealbreaker_categories = rules_config.get("dealbreaker_categories", {})
+    all_dealbreakers = set()
+    for cat_items in dealbreaker_categories.values():
+        all_dealbreakers.update(cat_items)
+
+    for db in all_dealbreakers:
+        if re.search(r'\b' + re.escape(db) + r'\b', role_lower):
             return {
                 "override": True,
                 "eligible": "NO",
-                "reason": f"Ineligible due to target role mismatch: '{structured_data.get('role')}'."
+                "reason": f"Ineligible due to dealbreaker domain/role: '{role}' (matches '{db}')."
+            }
+
+    # 4. Check Extracted Skills against Configured Dealbreakers
+    if isinstance(skills, list):
+        for raw_skill in skills:
+            s_lower = str(raw_skill).lower().strip()
+            if s_lower in ["c", "c/c++"]:
+                return {
+                    "override": True,
+                    "eligible": "NO",
+                    "reason": f"Ineligible due to dealbreaker skill: '{raw_skill}'."
+                }
+            for dbs in all_dealbreakers:
+                if dbs == s_lower or re.search(r'\b' + re.escape(dbs) + r'\b', s_lower):
+                    return {
+                        "override": True,
+                        "eligible": "NO",
+                        "reason": f"Ineligible due to dealbreaker skill: '{raw_skill}'."
+                    }
+
+    # 5. Critical Text Dealbreakers Check (loaded from rules_config.json)
+    critical_text_dealbreakers = rules_config.get("critical_text_dealbreakers", [])
+    for ctd in critical_text_dealbreakers:
+        if ctd in full_text_sample:
+            return {
+                "override": True,
+                "eligible": "NO",
+                "reason": f"Ineligible due to critical dealbreaker stack in text: '{ctd}'."
             }
 
     return {"override": False}
+
 
 
 def text_cleaning_node(state: JDState) -> JDState:
@@ -150,6 +212,17 @@ def eligibility_node(state: JDState) -> JDState:
     raw_text = state.get("raw_text", "")
     cleaned_text = state.get("current_text", "")
     
+    # 1. Run Python Rule Guard FIRST
+    safety_check = verify_eligibility_rules(structured_data, raw_text=raw_text, candidate_exp=2)
+    if safety_check.get("override"):
+        return {
+            "eligibility_result": {
+                "Eligible": "NO",
+                "Reasoning": safety_check.get("reason", "Ineligible based on rule guard.")
+            },
+            "profile_data": state.get("profile_data", "")
+        }
+
     profile_text = state.get("profile_data", "")
     if not profile_text:
         profile_text = load_candidate_profile()
@@ -157,24 +230,19 @@ def eligibility_node(state: JDState) -> JDState:
     prompt = get_eligibility_prompt(structured_data, profile_text)
     llm_res = run_llm_json_step(cleaned_text, prompt, ELIGIBILITY_MODELS)
 
-    safety_check = verify_eligibility_rules(structured_data, candidate_exp=2)
-    
-    if safety_check.get("override"):
-        final_eligible = "NO"
-    else:
-        exp_str = str(structured_data.get("experience", "")).lower()
-        numbers = [int(n) for n in re.findall(r'\b\d+\b', exp_str)]
-        
-        if numbers and numbers[0] > 3:
-            final_eligible = "NO"
-        else:
-            raw_val = str(llm_res.get("Eligible") or llm_res.get("eligible") or "").upper()
-            final_eligible = "YES" if "YES" in raw_val or ("ELIGIBLE" in raw_val and "INELIGIBLE" not in raw_val) else "NO"
+    # 2. Process LLM Result
+    raw_val = str(llm_res.get("Eligible") or llm_res.get("eligible") or "").upper()
+    reasoning_val = str(llm_res.get("Reasoning") or llm_res.get("reasoning") or "")
+    final_eligible = "YES" if "YES" in raw_val or ("ELIGIBLE" in raw_val and "INELIGIBLE" not in raw_val) else "NO"
 
     return {
-        "eligibility_result": {"Eligible": final_eligible},
+        "eligibility_result": {
+            "Eligible": final_eligible,
+            "Reasoning": reasoning_val
+        },
         "profile_data": profile_text
     }
+
 
 
 builder = StateGraph(JDState)

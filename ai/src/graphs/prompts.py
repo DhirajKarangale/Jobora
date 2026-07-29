@@ -29,20 +29,21 @@ Raw Job Description:
 {text}
 
 ANTI-HALLUCINATION & EXTRACTION RULES:
-- Actively SEARCH the text to find the required data. Scan thoroughly before concluding a field is "Not provided".
-- Extract ONLY data EXPLICITLY mentioned in the input text (except for the explicit fallback rules defined below).
+- Actively SEARCH the entire text (including all bullet points and requirements) to find the required data. Scan thoroughly before concluding a field is "Not provided".
+- Extract ONLY data EXPLICITLY mentioned in the input text.
 - DO NOT assume, guess, or invent any programming language, framework, database, or requirement.
 
 FIELD SPECIFICATIONS & SCHEMA:
 Ensure your output strictly adheres to this JSON schema and data types:
 
-1. "skills" (Array of Strings): Extract ONLY technical skills (languages, frameworks, tools, databases) explicitly present. Sort them so that primary/core technologies (e.g., mentioned in the title or "Requirements" section) are AT THE TOP. Do not include soft skills or non-technical jargon.
-2. "experience" (String): Extract the exact phrase regarding years of experience (e.g., "3-5 years", "8+ years"). If completely absent, output "Not provided".
-3. "education" (String): Extract degree requirements (e.g., "Bachelor's in CS"). If absent, output "Not provided".
-4. "salary" (String): Extract the exact salary range and currency explicitly stated. If stated in a foreign currency (e.g., USD, EUR), append a bracketed estimated conversion to INR LPA based on standard market rates (e.g., "$100k - $120k (Approx. 80-96 LPA)"). If completely absent, output "Not provided".
-5. "location" (String): Extract the job location(s) if explicitly stated. If absent, output "Not provided".
-6. "employment_type" (String): Extract explicit terms like "Full-time", "Contract", or "Intern". If not explicitly stated but the JD lists standard permanent employee benefits (e.g., PTO, health insurance), output "Full-time (Implied)". Otherwise, output "Not provided".
-7. "extra" (Array of Strings): Extract critical, non-fluff technical or operational details ONLY IF present (e.g., "Remote option", "On-call rotation", "Shift timings"). Default to an empty array [] if none exist.
+1. "role" (String): Extract the official job role/title explicitly stated. If absent, output "Not provided".
+2. "skills" (Array of Strings): Extract ALL technical skills (languages, frameworks, tools, databases, cloud platforms) explicitly present. Sort them so primary/core technologies (e.g. mentioned in the title or "Requirements" section) are AT THE TOP. Do not include soft skills or non-technical jargon.
+3. "experience" (String): Extract the exact phrase or range regarding required years of experience (e.g. "3-5 years", "8+ years", "2+ yrs"). If completely absent, output "Not provided".
+4. "education" (String): Extract degree requirements (e.g. "Bachelor's in CS"). If absent, output "Not provided".
+5. "salary" (String): Extract the exact salary range and currency explicitly stated. If stated in a foreign currency (e.g., USD, EUR), append a bracketed estimated conversion to INR LPA based on standard market rates (e.g., "$100k - $120k (Approx. 80-96 LPA)"). If completely absent, output "Not provided".
+6. "location" (String): Extract the job location(s) if explicitly stated. If absent, output "Not provided".
+7. "employment_type" (String): Extract explicit terms like "Full-time", "Contract", or "Intern". If not explicitly stated but the JD lists standard permanent employee benefits (e.g., PTO, health insurance), output "Full-time (Implied)". Otherwise, output "Not provided".
+8. "extra" (Array of Strings): Extract critical, non-fluff technical or operational details ONLY IF present (e.g., "Remote option", "On-call rotation", "Shift timings"). Default to an empty array [] if none exist.
 
 OUTPUT FORMAT:
 You must output ONLY a valid JSON object matching the keys above. 
@@ -50,6 +51,7 @@ Do NOT wrap the output in markdown code blocks (e.g., do not use ```json or ```)
 Do NOT include any conversational filler before or after the JSON.
 
 {{
+  "role": "",
   "skills": [],
   "experience": "",
   "education": "",
@@ -65,42 +67,38 @@ def get_eligibility_prompt(structured_jd: dict, profile_text: str) -> str:
 
     return f"""Evaluate if the candidate is ELIGIBLE for the job position by dynamically comparing the CANDIDATE PROFILE with the STRUCTURED JOB DESCRIPTION.
 
-DO NOT ASSUME OR HARDCODE ANY CANDIDATE DATA. Extract candidate experience, skills, target roles, preferred locations, and expectations directly from the CANDIDATE PROFILE below.
-
 CANDIDATE PROFILE:
 {profile_text}
 
 STRUCTURED JOB DESCRIPTION:
 {jd_str}
 
-ELIGIBILITY EVALUATION RULES:
+STRICT ELIGIBILITY EVALUATION RULES:
 
-1. EXPERIENCE (Strict Calculation):
-   - Extract the candidate's total years of experience from the Candidate Profile (let this be X).
-   - Extract the MINIMUM required years of experience from the JD (let this be Y). If the JD lists a range (e.g., "3-5 years"), Y is 3.
-   - If Y <= (X + 1): PASS.
-   - If Y > (X + 1): FAIL.
-   - If job experience is "Not provided" or ambiguous: PASS.
+1. EXPERIENCE (Strict Ceiling):
+   - Extract candidate's total full-time software experience (X = 2 years).
+   - Extract MINIMUM required experience from JD (Y).
+   - If Y > 3 years (e.g., 4+, 5+, 6+, 7+, 8+, 10+ years), or if role is Staff/Principal/Director level: RETURN INELIGIBLE (NO).
+   - Maximum allowed minimum required experience is 3 years.
 
-2. SKILLS (Top Skills & Strict Full-Stack Match):
-   - Prioritization: Treat the first listed skills in both the JD and the Profile as the most critical. The top primary skills required in the JD MUST explicitly exist in the candidate's profile.
-   - Strict Full-Stack Rule: If the role is Full-Stack, the candidate MUST have matching experience in BOTH the specific frontend and the specific backend required. 
-   - Full-Stack Example: If the JD requires a React frontend and a C# .NET backend, but the candidate only possesses React alongside Node.js or Java, this is a FAIL. Partial stack matches (matching frontend but failing backend) equal a FAIL.
+2. SKILLS & STRICT DEALBREAKERS:
+   - Candidate Core Skills: React.js, TypeScript, JavaScript, Node.js, Express.js, Java, Spring Boot, Python, PostgreSQL, MySQL, Redis, MongoDB, Docker, Git.
+   - DEALBREAKER SKILLS (Candidate DOES NOT possess these; if ANY are required as a primary/core skill in the JD, RETURN INELIGIBLE - NO):
+     * Game / Embedded / Native: Unity, Unity3D, Unreal, C#, .NET, ASP.NET, C++, C, Swift, iOS, Kotlin, Android Native, Flutter.
+     * ERP / CRM / Proprietary: Salesforce, Apex, SAP, ABAP, ServiceNow, Workday, Pega, COBOL.
+     * Non-matching Web Stacks: Ruby, Ruby on Rails, PHP, Laravel, Rust, Go/Golang (if primary), Scala.
+     * Non-Developer Roles: QA/Manual/Automation Testing, DevOps/SRE, Data Engineering (ETL/Snowflake/Hadoop), Security, Scrum Master, Product/Project Manager.
+   - Strict Full-Stack Rule: If the role is Full-Stack, candidate MUST match BOTH frontend (React/TS/JS) and backend (Node/Express/Java/Python). Partial stack match (e.g. React frontend with C# backend) is INELIGIBLE (NO).
 
-3. ROLE:
-   - Compare the job role against the candidate's Target Roles or primary skill domain.
-   - If the role requires a completely different domain specialization not matching the candidate's profile: FAIL.
-   - Otherwise: PASS.
-
-4. LOCATION, EDUCATION & SALARY:
-   - Compare job location, education, salary, and employment type against the Candidate Profile.
-   - If any JD requirements directly violate the candidate's explicit preferences or boundaries: FAIL.
-   - Otherwise: PASS.
+3. ROLE FIT:
+   - Target Roles: Software Engineer, SDE, Full-Stack Developer, Frontend Developer, Backend Developer, MERN Stack Developer, Agentic AI Engineer.
+   - Any non-matching role or domain (e.g., Unity Engineer, iOS Developer, Salesforce Developer) MUST BE MARKED INELIGIBLE (NO).
 
 RETURN FORMAT:
 You must output ONLY a valid JSON object matching this exact schema. Do not include markdown formatting like ```json.
 {{
-  "Reasoning": "Provide a concise, 2-3 sentence step-by-step breakdown. State the candidate's experience (X) vs JD experience (Y). Then explicitly check the primary frontend and backend skills for exact matches.",
+  "Reasoning": "Provide a concise 2-3 sentence step-by-step breakdown checking experience ceiling, dealbreaker skills, and full-stack match.",
   "Eligible": "YES or NO"
 }}
 """
+
