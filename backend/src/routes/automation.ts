@@ -140,7 +140,7 @@ export async function getPendingJobs(_req: Request, res: Response): Promise<void
 
 export async function removePendingJob(req: Request, res: Response): Promise<void> {
   try {
-    const { messageId } = req.params;
+    const messageId = String(req.params.messageId);
     const { dbId } = req.body;
     
     if (!messageId || !dbId || !GLOBAL_STREAM_KEY) {
@@ -160,7 +160,7 @@ export async function removePendingJob(req: Request, res: Response): Promise<voi
 
 export async function markPendingJobApplied(req: Request, res: Response): Promise<void> {
   try {
-    const { messageId } = req.params;
+    const messageId = String(req.params.messageId);
     const { dbId } = req.body;
     
     if (!messageId || !dbId || !GLOBAL_STREAM_KEY) {
