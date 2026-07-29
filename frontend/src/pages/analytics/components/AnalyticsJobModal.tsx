@@ -12,7 +12,8 @@ import {
   Wrench,
   Sparkles,
   Clock,
-  Calendar
+  Calendar,
+  ExternalLink
 } from "lucide-react";
 
 interface AnalyticsJobModalProps {
@@ -65,6 +66,16 @@ export function AnalyticsJobModal({ job, isOpen, onClose }: AnalyticsJobModalPro
               )}
               
               <div className="flex items-center gap-2 ml-auto">
+                {job.portal_link && (
+                  <a href={job.portal_link} target="_blank" rel="noreferrer" className="text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground px-2.5 py-1 rounded-full transition-colors flex items-center gap-1">
+                    <Globe className="w-3.5 h-3.5" /> Portal Link
+                  </a>
+                )}
+                {job.link && (
+                  <a href={job.link} target="_blank" rel="noreferrer" className="text-xs font-semibold bg-emerald-500 hover:bg-emerald-600 text-white px-2.5 py-1 rounded-full transition-colors flex items-center gap-1">
+                    <ExternalLink className="w-3.5 h-3.5" /> Apply Link
+                  </a>
+                )}
                 {job.isApplied ? (
                   <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 px-2 py-0.5 text-xs">
                     {job.isAutoApply ? 'Auto Applied' : 'Manual Applied'}: {job.appliedDate ? new Date(job.appliedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}

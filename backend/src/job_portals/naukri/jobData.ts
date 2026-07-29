@@ -73,8 +73,14 @@ async function handleApply(browser: Browser, page: Page, currentUrl: string): Pr
 
           if (newPages.length > 0) {
             const newPage = newPages[0];
-            await delay(WAIT_TIME);
-            newPageUrl = newPage.url();
+            let url = newPage.url();
+            let attempts = 0;
+            while ((url === 'about:blank' || url === '') && attempts < 15) {
+              await delay(WAIT_TIME);
+              url = newPage.url();
+              attempts++;
+            }
+            newPageUrl = url !== 'about:blank' && url !== '' ? url : currentUrl;
             await newPage.close();
             break;
           }
@@ -163,8 +169,8 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
         companyName,
         jobId: null,
         description: fullDescription,
-        link: applicationLink,
-        portal_link: applyLink,
+        link: applyLink && applyLink !== 'about:blank' ? applyLink : applicationLink,
+        portal_link: applicationLink,
         role,
         isEligible: true
       };

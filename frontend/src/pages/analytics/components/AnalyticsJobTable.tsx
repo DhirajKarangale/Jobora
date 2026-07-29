@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Globe, Building2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Globe, Building2, Eye, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import type { Job } from "@/types";
 
 interface AnalyticsJobTableProps {
@@ -76,15 +76,39 @@ export function AnalyticsJobTable({ jobsList, pagination, onPageChange, onSelect
                   )}
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-500/10"
-                    onClick={() => onSelectJob(job)}
-                  >
-                    <Eye className="w-4 h-4 mr-1.5" />
-                    View Details
-                  </Button>
+                  <div className="flex justify-end items-center gap-1">
+                    {job.portal_link && (
+                      <a 
+                        href={job.portal_link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="p-2 text-indigo-600 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-lg transition-colors flex items-center justify-center"
+                        title="View on Job Portal"
+                      >
+                        <Globe className="w-4 h-4" />
+                      </a>
+                    )}
+                    {job.link && (
+                      <a 
+                        href={job.link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="p-2 text-emerald-600 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors flex items-center justify-center"
+                        title="Direct Apply Link"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-500/10 ml-2"
+                      onClick={() => onSelectJob(job)}
+                    >
+                      <Eye className="w-4 h-4 mr-1.5" />
+                      View Details
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
