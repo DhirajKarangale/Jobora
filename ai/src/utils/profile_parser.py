@@ -49,16 +49,18 @@ def parse_candidate_profile() -> Dict[str, Any]:
                 
     expanded_target_roles: Set[str] = set(target_roles)
     for r in target_roles:
-        if "full-stack" in r or "full stack" in r:
-            expanded_target_roles.update(["full-stack", "full stack", "fullstack", "fullstack developer", "fullstack engineer"])
+        if "full-stack" in r or "full stack" in r or "fullstack" in r:
+            expanded_target_roles.update(["full-stack", "full stack", "fullstack", "fullstack developer", "fullstack engineer", "full-stack developer", "full-stack engineer"])
         if "frontend" in r or "front-end" in r:
-            expanded_target_roles.update(["frontend", "front-end", "frontend developer", "frontend engineer"])
+            expanded_target_roles.update(["frontend", "front-end", "frontend developer", "frontend engineer", "front-end developer", "front-end engineer"])
         if "backend" in r or "back-end" in r:
-            expanded_target_roles.update(["backend", "back-end", "backend developer", "backend engineer"])
-        if "software engineer" in r or "sde" in r:
-            expanded_target_roles.update(["software engineer", "sde", "software development engineer", "sde-1", "sde 1", "sde-i", "sde i", "sde-2", "sde 2"])
-        if "agentic ai" in r or "ai engineer" in r:
+            expanded_target_roles.update(["backend", "back-end", "backend developer", "backend engineer", "back-end developer", "back-end engineer"])
+        if "software engineer" in r or "sde" in r or "software developer" in r:
+            expanded_target_roles.update(["software engineer", "sde", "software development engineer", "software developer", "sde-1", "sde 1", "sde-i", "sde i", "sde-2", "sde 2"])
+        if "agentic ai" in r or "ai engineer" in r or "ai developer" in r:
             expanded_target_roles.update(["agentic ai engineer", "ai engineer", "ai developer", "llm engineer"])
+        if "mern" in r or "web" in r:
+            expanded_target_roles.update(["mern stack developer", "mern developer", "web developer", "web engineer"])
 
     raw_skills: Set[str] = set()
     in_skills_section = False

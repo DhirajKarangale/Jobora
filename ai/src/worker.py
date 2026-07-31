@@ -11,6 +11,7 @@ if current_dir not in sys.path:
 
 from workflow import manage_job_workflow
 from utils.redis import RedisClient
+from utils.huggingface import AllTokensExhaustedException
 
 load_dotenv()
 
@@ -27,6 +28,7 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 
 def run_worker(worker_id: int = 1):
+    global running
     redis_handler = RedisClient(worker_id=worker_id)
     is_busy = False
 
@@ -50,14 +52,28 @@ def run_worker(worker_id: int = 1):
                 try:
                     manage_job_workflow(job_id=job_id, redis_handler=redis_handler, msg_id=msg_id)
                     print(f"[Worker {worker_id}] Successfully updated job: {job_id}")
+                except AllTokensExhaustedException as ate:
+                    print("\n" + "=" * 70)
+                    print(f"[Worker {worker_id} (PID: {os.getpid()})] STOPPING WORKER: {str(ate)}")
+                    print(f"[Worker {worker_id}] All environment API tokens are completed/exhausted as token over. Stopping worker.")
+                    print("=" * 70 + "\n")
+                    running = False
+                    break
                 except Exception as wf_err:
-                    print(f"[Worker {worker_id}] Failed on job {job_id}. Reason: {str(wf_err)}")
+                    print(f"[Worker {worker_id}] Processing failed for job {job_id}: {str(wf_err)}. Skipping DB update & moving to next job.")
             else:
                 redis_handler.acknowledge_job(msg_id)
                 redis_handler.remove_job_from_process_stream(msg_id)
 
             is_busy = False
 
+        except AllTokensExhaustedException as ate:
+            print("\n" + "=" * 70)
+            print(f"[Worker {worker_id} (PID: {os.getpid()})] STOPPING WORKER: {str(ate)}")
+            print(f"[Worker {worker_id}] All environment API tokens are completed/exhausted as token over. Stopping worker.")
+            print("=" * 70 + "\n")
+            running = False
+            break
         except redis.exceptions.ConnectionError as ce:
             time.sleep(5)
         except Exception as e:
@@ -68,3 +84,4 @@ def run_worker(worker_id: int = 1):
 if __name__ == "__main__":
     worker_id_arg = int(sys.argv[1]) if len(sys.argv) > 1 else 1
     run_worker(worker_id_arg)
+

@@ -1,8 +1,8 @@
 import { type Browser, type Page } from "puppeteer-core";
-import { saveJob, saveEligibleAndAppliedJob } from "../../cloud/db/index.ts";
+import { saveJob, saveEligibleAndAppliedJob, isJobExisting } from "../../cloud/db/index.ts";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
-import { DataJob, CURSHORT_URL_JOB, CURSHORT_URL_JOB_SEARCH, blacklistedCompanies, WAIT_TIME } from "../../utils/constants.ts";
+import { DataJob, CURSHORT_URL_JOB, CURSHORT_URL_JOB_SEARCH, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/automationState.ts";
 
 export default async function cutshort(browser: Browser): Promise<void> {
@@ -79,7 +79,10 @@ export default async function cutshort(browser: Browser): Promise<void> {
 
       if (!jobData || !jobData.jobId) continue;
 
-      if (jobData.company && blacklistedCompanies.some(company => jobData.company.toLowerCase().includes(company))) {
+      const cleanJobId = jobData.jobId.trim().toLowerCase();
+      if (!cleanJobId || await isJobExisting(cleanJobId)) continue;
+
+      if (isBlacklistedCompany(jobData.company)) {
         continue;
       }
 
@@ -97,9 +100,9 @@ export default async function cutshort(browser: Browser): Promise<void> {
       const dataToSave: DataJob = {
         id: null,
         sourceName: "Cutshort",
-        sourceJobId: jobData.jobId,
+        sourceJobId: cleanJobId,
         companyName: jobData.company || null,
-        jobId: jobData.jobId,
+        jobId: cleanJobId,
         description: fullDescription,
         link: applyLink,
         portal_link: portalLink,

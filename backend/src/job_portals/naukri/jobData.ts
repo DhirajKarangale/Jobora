@@ -1,8 +1,8 @@
 import { type Browser, Page } from "puppeteer-core";
-import { saveJob, saveEligibleAndAppliedJob } from "../../cloud/db/index.ts";
+import { saveJob, saveEligibleAndAppliedJob, isJobExisting } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
-import { DataJob, NAUKRI_URL_JOB, blacklistedCompanies, WAIT_TIME } from "../../utils/constants.ts";
+import { DataJob, NAUKRI_URL_JOB, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/automationState.ts";
 
 async function extractData(page: Page, jobId: string) {
@@ -11,12 +11,41 @@ async function extractData(page: Page, jobId: string) {
 
     let companyName = null;
     const header = document.querySelector('header');
-    if (header && header.nextElementSibling && header.nextElementSibling.tagName.toLowerCase() === 'a') {
-      companyName = header.nextElementSibling.textContent?.trim() || null;
+
+    let primaryCompany = null;
+    if (header && header.nextElementSibling) {
+      if (header.nextElementSibling.tagName.toLowerCase() === 'a') {
+        primaryCompany = header.nextElementSibling.textContent?.trim() || null;
+      } else {
+        const primaryAnchor = header.nextElementSibling.querySelector('a');
+        if (primaryAnchor) {
+          primaryCompany = primaryAnchor.textContent?.trim() || null;
+        }
+      }
     }
-    if (!companyName) {
-      const companyAnchor = Array.from(document.querySelectorAll('a')).find(a => a.getAttribute('title')?.endsWith(' Careers'));
-      if (companyAnchor) companyName = companyAnchor.textContent?.trim() || null;
+
+    let consultantCompany = null;
+    const consultantDiv = document.querySelector('.styles_consultant-posted-by__Vb6Hq a');
+    if (consultantDiv) {
+      consultantCompany = consultantDiv.textContent?.trim() || null;
+    }
+
+    const companyAnchorFallback = Array.from(document.querySelectorAll('a')).find(a => a.getAttribute('title')?.endsWith(' Careers'));
+    if (!consultantCompany && companyAnchorFallback) {
+      const text = companyAnchorFallback.textContent?.trim() || null;
+      if (text && text !== primaryCompany) {
+        consultantCompany = text;
+      }
+    }
+
+    if (primaryCompany && consultantCompany && primaryCompany !== consultantCompany) {
+      companyName = `${primaryCompany} ${consultantCompany}`;
+    } else if (primaryCompany) {
+      companyName = primaryCompany;
+    } else if (consultantCompany) {
+      companyName = consultantCompany;
+    } else if (companyAnchorFallback) {
+      companyName = companyAnchorFallback.textContent?.trim() || null;
     }
 
     const expNode = document.querySelector('.styles_jhc__exp__k_giM span');
@@ -130,8 +159,11 @@ async function handleApply(browser: Browser, page: Page, currentUrl: string): Pr
 export async function getJobData(browser: Browser, jobIds: string[]) {
   for (const jobId of jobIds) {
     try {
+      const cleanJobId = jobId ? jobId.trim().toLowerCase() : "";
+      if (!cleanJobId || await isJobExisting(cleanJobId)) continue;
+
       const page = await browser.newPage();
-      const applicationLink = `${NAUKRI_URL_JOB}${jobId}`;
+      const applicationLink = `${NAUKRI_URL_JOB}${cleanJobId}`;
       await page.goto(applicationLink, { waitUntil: "load" });
       await delay(WAIT_TIME);
 
@@ -146,7 +178,7 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
         continue;
       }
 
-      if (blacklistedCompanies.some(company => companyName.toLowerCase().includes(company))) {
+      if (isBlacklistedCompany(companyName)) {
         await delay(WAIT_TIME);
         await page.close();
         continue;

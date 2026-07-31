@@ -1,8 +1,8 @@
 import { type Browser, Page } from "puppeteer-core";
-import { saveJob, saveEligibleAndAppliedJob } from "../../cloud/db/index.ts";
+import { saveJob, saveEligibleAndAppliedJob, isJobExisting } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
-import { DataJob, WELLFOUND_URL_JOB, blacklistedCompanies, WAIT_TIME } from "../../utils/constants.ts";
+import { DataJob, WELLFOUND_URL_JOB, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/automationState.ts";
 
 async function extractData(page: Page, jobId: string) {
@@ -86,8 +86,11 @@ async function tryApplyJob(page: Page): Promise<boolean> {
 export async function getJobData(browser: Browser, jobIds: string[]) {
   for (const jobId of jobIds) {
     try {
+      const cleanJobId = jobId ? jobId.trim().toLowerCase() : "";
+      if (!cleanJobId || await isJobExisting(cleanJobId)) continue;
+
       const page = await browser.newPage();
-      const applicationLink = `${WELLFOUND_URL_JOB}${jobId}`;
+      const applicationLink = `${WELLFOUND_URL_JOB}${cleanJobId}`;
       await page.goto(applicationLink, { waitUntil: "load" });
       await delay(WAIT_TIME);
 
@@ -102,7 +105,7 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
         continue;
       }
 
-      if (blacklistedCompanies.some(company => companyName.toLowerCase().includes(company))) {
+      if (isBlacklistedCompany(companyName)) {
         await delay(WAIT_TIME);
         await page.close();
         continue;

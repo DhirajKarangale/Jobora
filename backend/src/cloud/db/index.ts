@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 import dotenv from "dotenv";
-import type { DataJob } from "../../utils/constants.ts";
+import { type DataJob, isBlacklistedCompany } from "../../utils/constants.ts";
 
 dotenv.config();
 
@@ -43,31 +43,64 @@ function isUuid(str: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 }
 
-export async function filterExistingJobIds(jobIds: Set<string>): Promise<string[]> {
-  if (jobIds.size === 0) return [];
+export async function filterExistingJobIds(jobIds: Set<string> | string[]): Promise<string[]> {
+  const rawIds = Array.from(jobIds);
+  if (rawIds.length === 0) return [];
 
-  const ids = [...jobIds];
+  const normalizedIds = Array.from(new Set(rawIds.map(id => id ? String(id).trim().toLowerCase() : "").filter(Boolean)));
+  if (normalizedIds.length === 0) return [];
 
   const { rows } = await pool.query<{ source_job_id: string; external_job_id: string }>(
     `
-    SELECT source_job_id, external_job_id
+    SELECT LOWER(TRIM(source_job_id)) AS source_job_id, LOWER(TRIM(external_job_id)) AS external_job_id
     FROM jobs
-    WHERE source_job_id = ANY($1::text[]) OR external_job_id = ANY($1::text[])
+    WHERE LOWER(TRIM(source_job_id)) = ANY($1::text[]) OR LOWER(TRIM(external_job_id)) = ANY($1::text[])
     `,
-    [ids]
+    [normalizedIds]
   );
 
   const existingIds = new Set<string>();
 
   for (const row of rows) {
-    if (row.source_job_id) existingIds.add(row.source_job_id);
-    if (row.external_job_id) existingIds.add(row.external_job_id);
+    if (row.source_job_id) existingIds.add(row.source_job_id.trim().toLowerCase());
+    if (row.external_job_id) existingIds.add(row.external_job_id.trim().toLowerCase());
   }
 
-  return ids.filter(id => !existingIds.has(id));
+  return normalizedIds.filter(id => !existingIds.has(id));
+}
+
+export async function isJobExisting(jobId: string): Promise<boolean> {
+  if (!jobId) return false;
+  const cleanId = String(jobId).trim().toLowerCase();
+  if (!cleanId) return false;
+
+  const { rows } = await pool.query(
+    `
+    SELECT 1 FROM jobs
+    WHERE LOWER(TRIM(source_job_id)) = $1 OR LOWER(TRIM(external_job_id)) = $1
+    LIMIT 1
+    `,
+    [cleanId]
+  );
+
+  return rows.length > 0;
 }
 
 export async function saveJob(data: DataJob): Promise<string> {
+  if (isBlacklistedCompany(data.companyName)) {
+    return "";
+  }
+
+  const cleanSourceJobId = data.sourceJobId ? String(data.sourceJobId).trim().toLowerCase() : "";
+  const cleanJobId = data.jobId ? String(data.jobId).trim().toLowerCase() : null;
+
+  if (cleanSourceJobId && await isJobExisting(cleanSourceJobId)) {
+    return "";
+  }
+  if (cleanJobId && await isJobExisting(cleanJobId)) {
+    return "";
+  }
+
   const query = `
     INSERT INTO jobs (
       source,
@@ -87,9 +120,9 @@ export async function saveJob(data: DataJob): Promise<string> {
 
   const values = [
     data.sourceName,
-    data.sourceJobId,
+    cleanSourceJobId,
     data.companyName,
-    data.jobId,
+    cleanJobId,
     data.description,
     data.link,
     new Date(),
@@ -101,7 +134,22 @@ export async function saveJob(data: DataJob): Promise<string> {
   const { rows } = await pool.query(query, values);
   return rows[0].id;
 }
+
 export async function saveEligibleAndAppliedJob(data: DataJob): Promise<string> {
+  if (isBlacklistedCompany(data.companyName)) {
+    return "";
+  }
+
+  const cleanSourceJobId = data.sourceJobId ? String(data.sourceJobId).trim().toLowerCase() : "";
+  const cleanJobId = data.jobId ? String(data.jobId).trim().toLowerCase() : null;
+
+  if (cleanSourceJobId && await isJobExisting(cleanSourceJobId)) {
+    return "";
+  }
+  if (cleanJobId && await isJobExisting(cleanJobId)) {
+    return "";
+  }
+
   const query = `
     INSERT INTO jobs (
       source,
@@ -123,9 +171,9 @@ export async function saveEligibleAndAppliedJob(data: DataJob): Promise<string> 
 
   const values = [
     data.sourceName,
-    data.sourceJobId,
+    cleanSourceJobId,
     data.companyName,
-    data.jobId,
+    cleanJobId,
     data.description,
     data.link,
     true,
@@ -159,7 +207,7 @@ export async function getAllEligibleJobs(): Promise<DataJobFrontend[]> {
     SELECT id, source, company, description, apply_link, (applied_date IS NOT NULL) AS isapplied, added_date, is_expired, portal_link, role
     FROM jobs
     WHERE is_eligible IS NOT NULL
-      AND is_eligible = true
+      AND LOWER(is_eligible::text) = 'true'
       AND applied_date IS NULL
       AND (is_expired IS NULL OR is_expired = false)
     ORDER BY id DESC
@@ -317,9 +365,11 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     if (status === 'applied') {
       filterQuery += ` AND applied_date IS NOT NULL`;
     } else if (status === 'eligible') {
-      filterQuery += ` AND applied_date IS NULL AND is_eligible = true AND (is_expired IS NULL OR is_expired = false)`;
+      filterQuery += ` AND applied_date IS NULL AND LOWER(is_eligible::text) = 'true' AND (is_expired IS NULL OR is_expired = false)`;
     } else if (status === 'pending_ai') {
       filterQuery += ` AND applied_date IS NULL AND is_eligible IS NULL AND (is_expired IS NULL OR is_expired = false)`;
+    } else if (status === 'not_eligible' || status === 'ineligible') {
+      filterQuery += ` AND is_eligible IS NOT NULL AND LOWER(is_eligible::text) != 'true'`;
     } else if (status === 'expired') {
       filterQuery += ` AND is_expired = true`;
     }
@@ -328,7 +378,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
   const topCompaniesQuery = `
     SELECT company as name, COUNT(*) as count
     FROM jobs
-    ${filterQuery} AND company IS NOT NULL AND (is_eligible = true OR applied_date IS NOT NULL)
+    ${filterQuery} AND company IS NOT NULL AND (LOWER(is_eligible::text) = 'true' OR applied_date IS NOT NULL)
     GROUP BY company
     ORDER BY count DESC
     LIMIT 10
@@ -341,9 +391,9 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
       COUNT(CASE WHEN applied_date IS NOT NULL AND is_auto_apply = true THEN 1 END) as auto_applied_jobs,
       COUNT(CASE WHEN applied_date IS NOT NULL AND (is_auto_apply IS NULL OR is_auto_apply = false) THEN 1 END) as manual_applied_jobs,
       COUNT(CASE WHEN applied_date IS NULL AND is_eligible IS NULL AND (is_expired IS NULL OR is_expired = false) THEN 1 END) as pending_ai_jobs,
-      COUNT(CASE WHEN is_eligible = false THEN 1 END) as not_eligible_jobs,
+      COUNT(CASE WHEN is_eligible IS NOT NULL AND LOWER(is_eligible::text) != 'true' THEN 1 END) as not_eligible_jobs,
       COUNT(CASE WHEN is_expired = true THEN 1 END) as expired_jobs,
-      COUNT(CASE WHEN applied_date IS NULL AND is_eligible = true AND (is_expired IS NULL OR is_expired = false) THEN 1 END) as active_jobs
+      COUNT(CASE WHEN applied_date IS NULL AND LOWER(is_eligible::text) = 'true' AND (is_expired IS NULL OR is_expired = false) THEN 1 END) as active_jobs
     FROM jobs
     ${filterQuery}
   `;
@@ -352,7 +402,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     WITH date_series AS (
       SELECT DATE(added_date) as date, 
              1 as is_added, 
-             CASE WHEN is_eligible = true OR (applied_date IS NOT NULL AND is_eligible IS NULL) THEN 1 ELSE 0 END as is_eligible,
+             CASE WHEN LOWER(is_eligible::text) = 'true' OR (applied_date IS NOT NULL AND is_eligible IS NULL) THEN 1 ELSE 0 END as is_eligible,
              0 as is_applied 
       FROM jobs ${filterQuery}
       UNION ALL
@@ -387,7 +437,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
       COUNT(CASE WHEN applied_date IS NULL THEN 1 END) as to_apply,
       COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END) as applied
     FROM jobs
-    ${filterQuery} AND source IS NOT NULL AND is_eligible = true
+    ${filterQuery} AND source IS NOT NULL AND LOWER(is_eligible::text) = 'true'
     GROUP BY source
     ORDER BY (COUNT(CASE WHEN applied_date IS NULL THEN 1 END) + COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END)) DESC
   `;
@@ -451,7 +501,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     addedDate: r.added_date ? new Date(r.added_date).toISOString() : null,
     isExpired: Boolean(r.is_expired),
     portal_link: r.portal_link,
-    isEligible: r.is_eligible !== null ? Boolean(r.is_eligible) : undefined,
+    isEligible: r.is_eligible !== null ? (String(r.is_eligible).toLowerCase() === 'true' || r.is_eligible === true) : undefined,
     appliedDate: r.applied_date ? new Date(r.applied_date).toISOString() : null,
     role: r.role,
     isAutoApply: r.is_auto_apply !== null ? Boolean(r.is_auto_apply) : undefined,

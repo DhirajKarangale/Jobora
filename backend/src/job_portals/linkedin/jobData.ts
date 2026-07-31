@@ -1,8 +1,8 @@
 import { type Page, Browser } from "puppeteer-core";
-import { saveJob } from "../../cloud/db/index.ts";
+import { saveJob, isJobExisting } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
-import { DataJob, LINKEDIN_URL_JOB, blacklistedCompanies, WAIT_TIME } from "../../utils/constants.ts";
+import { DataJob, LINKEDIN_URL_JOB, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped } from "../../utils/automationState.ts";
 
 const SELECTORS = {
@@ -105,7 +105,7 @@ async function extractData(browser: Browser, jobId: string) {
   await page.close();
 
   if (!companyName || !link || !description) return;
-  if (blacklistedCompanies.some(company => companyName.toLowerCase().includes(company))) return;
+  if (isBlacklistedCompany(companyName)) return;
 
   const data: DataJob = {
     id: null,
@@ -125,7 +125,10 @@ async function extractData(browser: Browser, jobId: string) {
 export async function getJobData(browser: Browser, jobIds: string[]) {
   for (const jobId of jobIds) {
     try {
-      const id = await extractData(browser, jobId);
+      const cleanJobId = jobId ? jobId.trim().toLowerCase() : "";
+      if (!cleanJobId || await isJobExisting(cleanJobId)) continue;
+
+      const id = await extractData(browser, cleanJobId);
       if (id) {
         await addToProcessStream({ id });
         incrementJobsScraped();

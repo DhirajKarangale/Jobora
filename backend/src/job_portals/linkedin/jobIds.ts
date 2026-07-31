@@ -70,7 +70,9 @@ export async function getJobIds(browser: Browser) {
     await delay(WAIT_TIME);
 
     if (currentJobIds.length === 0) break;
-    currentJobIds.forEach(id => jobIds.add(id));
+    currentJobIds.forEach(id => {
+      if (id) jobIds.add(id.trim().toLowerCase());
+    });
 
     const exists = await page.$(NEXT_BUTTON_SELECTOR);
     if (!exists) break;

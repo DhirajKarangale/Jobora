@@ -1,9 +1,10 @@
 import os
 import re
+import json
 from typing import TypedDict, Dict, Any
 from langgraph.graph import StateGraph, START, END
 
-from utils.huggingface import invoke_llm
+from utils.huggingface import invoke_llm, AllTokensExhaustedException
 from graphs.prompts import (
     get_cleaning_prompt,
     get_structuring_prompt,
@@ -11,12 +12,14 @@ from graphs.prompts import (
 )
 
 CLEANING_MODELS = [
-    "llama3",
     "qwen2_5",
-    "qwen2_5_7b",
+    "llama3_3_70b",
+    "deepseek_v3",
+    "llama3",
     "deepseek_r1_distill_llama_8b",
     "hermes",
     "mistral",
+    "qwen2_5_7b",
     "phi3_mini",
     "gemma_7b",
     "zephyr",
@@ -24,11 +27,12 @@ CLEANING_MODELS = [
 
 STRUCTURING_MODELS = [
     "qwen2_5",
-    "llama3",
-    "qwen2_5_7b",
-    "deepseek_r1_distill_llama_8b",
-    "hermes",
+    "llama3_3_70b",
     "deepseek_v3",
+    "hermes",
+    "llama3",
+    "deepseek_r1_distill_llama_8b",
+    "qwen2_5_7b",
     "phi3_mini",
     "gemma_7b",
     "zephyr",
@@ -36,11 +40,13 @@ STRUCTURING_MODELS = [
 
 ELIGIBILITY_MODELS = [
     "qwen2_5",
-    "llama3",
-    "qwen2_5_7b",
+    "llama3_3_70b",
+    "deepseek_v3",
     "deepseek_r1_distill_llama_8b",
     "hermes",
-    "deepseek_v3",
+    "llama3",
+    "mistral",
+    "qwen2_5_7b",
     "phi3_mini",
     "gemma_7b",
     "zephyr",
@@ -67,8 +73,10 @@ def run_llm_step(text: str, prompt: str, models: list[str]) -> str:
     try:
         result = invoke_llm(models, prompt, parse_as_json=False)
         return result.strip() if result else text
+    except AllTokensExhaustedException:
+        raise
     except Exception as e:
-        return text
+        raise RuntimeError(f"LLM cleaning step failed: {str(e)}") from e
 
 
 def run_llm_json_step(text: str, prompt: str, models: list[str]) -> Dict[str, Any]:
@@ -76,11 +84,14 @@ def run_llm_json_step(text: str, prompt: str, models: list[str]) -> Dict[str, An
         return {}
     try:
         result = invoke_llm(models, prompt, parse_as_json=True)
-        if isinstance(result, dict):
+        if isinstance(result, dict) and result:
             return result
-        return {}
+        raise ValueError("LLM output did not return valid non-empty JSON dict.")
+    except AllTokensExhaustedException:
+        raise
     except Exception as e:
-        return {}
+        raise RuntimeError(f"LLM JSON step failed: {str(e)}") from e
+
 
 
 def verify_eligibility_rules(structured_data: Dict[str, Any], raw_text: str = "", candidate_exp: int = None) -> Dict[str, Any]:
@@ -100,18 +111,24 @@ def verify_eligibility_rules(structured_data: Dict[str, Any], raw_text: str = ""
     exp_str = str(structured_data.get("experience", "")).strip()
     skills = structured_data.get("skills", [])
     
-    full_text_sample = f"{role} {exp_str} {raw_text[:2000]}".lower()
+    full_text_sample = f"{role} {exp_str} {json.dumps(skills)} {raw_text[:5000]}".lower()
     role_lower = role.lower()
 
+    # 1. Seniority Guard (Lead, Staff, Principal, Architect, Director, Manager)
     seniority_titles = rules_config.get("seniority_titles", [])
     for st in seniority_titles:
-        if st in role_lower:
+        st_clean = st.strip().lower()
+        if not st_clean:
+            continue
+        pattern = r'\b' + re.escape(st_clean) + r'\b'
+        if re.search(pattern, role_lower) or re.search(pattern, full_text_sample[:1500]):
             return {
                 "override": True,
                 "eligible": "NO",
-                "reason": f"Ineligible due to high seniority title: '{role}'."
+                "reason": f"Ineligible due to senior/lead title or role: '{st_clean}'."
             }
 
+    # 2. Experience Requirement Ceiling (Candidate = 2 yrs, Max Min Allowed = 3 yrs)
     numbers = [int(n) for n in re.findall(r'\d+', exp_str)]
     if numbers:
         min_req_exp = numbers[0]
@@ -119,7 +136,7 @@ def verify_eligibility_rules(structured_data: Dict[str, Any], raw_text: str = ""
             return {
                 "override": True,
                 "eligible": "NO",
-                "reason": f"Ineligible due to experience requirement: JD requires {min_req_exp}+ years of experience (Candidate has {candidate_exp} yrs)."
+                "reason": f"Ineligible: JD requires {min_req_exp}+ years of experience (Candidate has {candidate_exp} yrs)."
             }
 
     high_exp_patterns = [
@@ -138,44 +155,64 @@ def verify_eligibility_rules(structured_data: Dict[str, Any], raw_text: str = ""
                     "reason": f"Ineligible due to high experience pattern in JD: '{match.group(0)}'."
                 }
 
+    # 3. Hardcoded Dealbreaker Categories & Critical Text Dealbreakers Check
     dealbreaker_categories = rules_config.get("dealbreaker_categories", {})
     all_dealbreakers = set()
     for cat_items in dealbreaker_categories.values():
         all_dealbreakers.update(cat_items)
 
+    critical_text_dealbreakers = rules_config.get("critical_text_dealbreakers", [])
+    all_dealbreakers.update(critical_text_dealbreakers)
+
     for db in all_dealbreakers:
-        if re.search(r'\b' + re.escape(db) + r'\b', role_lower):
+        db_clean = db.strip().lower()
+        if not db_clean:
+            continue
+        pattern = r'\b' + re.escape(db_clean) + r'\b'
+        if re.search(pattern, full_text_sample):
             return {
                 "override": True,
                 "eligible": "NO",
-                "reason": f"Ineligible due to dealbreaker domain/role: '{role}' (matches '{db}')."
+                "reason": f"Ineligible due to dealbreaker technology/role found in job: '{db_clean}'."
             }
 
-    if isinstance(skills, list):
-        for raw_skill in skills:
-            s_lower = str(raw_skill).lower().strip()
-            if s_lower in ["c", "c/c++"]:
+    # 4. Dynamic Target Role Inclusion Check
+    if role_lower and role_lower != "not provided":
+        # Verify role matches positive target role concepts
+        has_target_role = False
+        target_role_concepts = [
+            "software engineer", "sde", "full-stack", "fullstack", "backend", "frontend",
+            "front-end", "back-end", "ai engineer", "web developer", "developer", "software developer"
+        ]
+        for trc in target_role_concepts:
+            if re.search(r'\b' + re.escape(trc) + r'\b', role_lower):
+                has_target_role = True
+                break
+
+        if not has_target_role:
+            return {
+                "override": True,
+                "eligible": "NO",
+                "reason": f"Ineligible: Role '{role}' does not match candidate's target software engineering roles."
+            }
+
+    # 5. Dynamic Core Skill Overlap Ratio Check
+    if isinstance(skills, list) and skills:
+        cleaned_jd_skills = [str(s).lower().strip() for s in skills if str(s).strip() and len(str(s).strip()) > 1]
+        if len(cleaned_jd_skills) >= 2:
+            matching_skills = []
+            for js in cleaned_jd_skills:
+                for cs in allowed_skills:
+                    if js == cs or (len(js) >= 3 and js in cs) or (len(cs) >= 3 and cs in js):
+                        matching_skills.append(js)
+                        break
+
+            if len(matching_skills) == 0:
                 return {
                     "override": True,
                     "eligible": "NO",
-                    "reason": f"Ineligible due to dealbreaker skill: '{raw_skill}'."
+                    "reason": f"Ineligible: Zero skill overlap between required job skills and candidate's core tech stack."
                 }
-            for dbs in all_dealbreakers:
-                if dbs == s_lower or re.search(r'\b' + re.escape(dbs) + r'\b', s_lower):
-                    return {
-                        "override": True,
-                        "eligible": "NO",
-                        "reason": f"Ineligible due to dealbreaker skill: '{raw_skill}'."
-                    }
-
-    critical_text_dealbreakers = rules_config.get("critical_text_dealbreakers", [])
-    for ctd in critical_text_dealbreakers:
-        if ctd in full_text_sample:
-            return {
-                "override": True,
-                "eligible": "NO",
-                "reason": f"Ineligible due to critical dealbreaker stack in text: '{ctd}'."
-            }
 
     return {"override": False}
 
@@ -222,9 +259,22 @@ def eligibility_node(state: JDState) -> JDState:
     prompt = get_eligibility_prompt(structured_data, profile_text)
     llm_res = run_llm_json_step(cleaned_text, prompt, ELIGIBILITY_MODELS)
 
-    raw_val = str(llm_res.get("Eligible") or llm_res.get("eligible") or "").upper()
+    raw_upper = str(llm_res.get("Eligible") or llm_res.get("eligible") or "").upper().strip()
     reasoning_val = str(llm_res.get("Reasoning") or llm_res.get("reasoning") or "")
-    final_eligible = "YES" if "YES" in raw_val or ("ELIGIBLE" in raw_val and "INELIGIBLE" not in raw_val) else "NO"
+    
+    # 1. Any negative indicator forces NO
+    if any(neg in raw_upper for neg in ["NO", "NOT", "INELIGIBLE", "FALSE", "UNELIGIBLE", "NEITHER", "REJECT"]):
+        final_eligible = "NO"
+    # 2. Strict positive check
+    elif raw_upper in ["YES", "TRUE", "ELIGIBLE"] or raw_upper.startswith("YES"):
+        final_eligible = "YES"
+    else:
+        final_eligible = "NO"
+
+    post_check = verify_eligibility_rules(structured_data, raw_text=raw_text)
+    if post_check.get("override"):
+        final_eligible = "NO"
+        reasoning_val = post_check.get("reason", reasoning_val)
 
     return {
         "eligibility_result": {

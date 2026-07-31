@@ -1,7 +1,7 @@
 import { type Browser, type Page } from "puppeteer-core";
 import { setTimeout as delay } from "node:timers/promises";
 import { extractJobData } from "./jobData.ts";
-import { INSTAHYRE_URL_JOB_SEARCH, blacklistedCompanies, WAIT_TIME } from "../../utils/constants.ts";
+import { INSTAHYRE_URL_JOB_SEARCH, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsAutoApplied } from "../../utils/automationState.ts";
 
 async function applyJobs(page: Page): Promise<void> {
@@ -15,9 +15,13 @@ async function applyJobs(page: Page): Promise<void> {
         break;
       }
 
-      const { companyName } = await extractJobData(page);
+      const { companyName, isAlreadyProcessed } = await extractJobData(page);
 
-      if (!companyName || !blacklistedCompanies.some(company => companyName.toLowerCase().includes(company))) {
+      if (isAlreadyProcessed) {
+        break;
+      }
+
+      if (companyName && !isBlacklistedCompany(companyName)) {
         await page.evaluate((btn: any) => btn.click(), applyBtn);
         incrementJobsAutoApplied();
       }

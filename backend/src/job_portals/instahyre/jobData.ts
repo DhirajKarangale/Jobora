@@ -1,8 +1,8 @@
 import { type Page } from "puppeteer-core";
 import { DataJob } from "../../utils/constants.ts";
-import { saveEligibleAndAppliedJob } from "../../cloud/db/index.ts";
+import { saveEligibleAndAppliedJob, isJobExisting } from "../../cloud/db/index.ts";
 
-export async function extractJobData(page: Page): Promise<{ companyName: string | null }> {
+export async function extractJobData(page: Page): Promise<{ companyName: string | null; isAlreadyProcessed?: boolean }> {
   try {
     const data = await page.evaluate(() => {
       const companyName = document.querySelector("h2.company-name")?.textContent?.trim() || null;
@@ -14,15 +14,25 @@ export async function extractJobData(page: Page): Promise<{ companyName: string 
       const description = document.querySelector("div.profile-content.job-description")?.textContent?.trim() || null;
       const companyLink = (document.querySelector("a#employer-website") as HTMLAnchorElement)?.href || null;
 
+      const oppId = document.querySelector("[data-job-id]")?.getAttribute("data-job-id")
+        || document.querySelector("[id^='opportunity-']")?.id?.replace("opportunity-", "")
+        || (companyName && role ? `instahyre-${companyName}-${role}`.toLowerCase().replace(/[^a-z0-9]/g, "-") : "");
+
       return {
         companyName,
         location,
         experience,
         role,
         description,
-        companyLink
+        companyLink,
+        opportunityId: oppId
       };
     });
+
+    const cleanJobId = data.opportunityId ? data.opportunityId.trim().toLowerCase() : "";
+    if (cleanJobId && await isJobExisting(cleanJobId)) {
+      return { companyName: data.companyName, isAlreadyProcessed: true };
+    }
 
     const fullDescription = [
       data.experience ? `Experience: ${data.experience}` : "",
@@ -33,9 +43,9 @@ export async function extractJobData(page: Page): Promise<{ companyName: string 
     const jobData: DataJob = {
       id: null,
       sourceName: "Instahyre",
-      sourceJobId: "",
+      sourceJobId: cleanJobId,
       companyName: data.companyName,
-      jobId: "",
+      jobId: cleanJobId,
       description: fullDescription,
       link: data.companyLink,
       portal_link: null,
@@ -43,7 +53,7 @@ export async function extractJobData(page: Page): Promise<{ companyName: string 
     };
 
     await saveEligibleAndAppliedJob(jobData);
-    return { companyName: data.companyName };
+    return { companyName: data.companyName, isAlreadyProcessed: false };
   } catch (error) {
     console.log("Error extracting and saving Instahyre job data:", error);
     return { companyName: null };

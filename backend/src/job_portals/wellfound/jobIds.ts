@@ -37,7 +37,9 @@ export async function getJobIds(browser: Browser): Promise<string[]> {
     }
 
     const initialSize = jobIds.size;
-    currentJobIds.forEach(id => jobIds.add(id));
+    currentJobIds.forEach(id => {
+      if (id) jobIds.add(id.trim().toLowerCase());
+    });
 
     if (jobIds.size === initialSize) {
       break;

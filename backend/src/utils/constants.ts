@@ -16,7 +16,19 @@ export const NAUKRI_URL_JOB_SEARCH = "https://www.naukri.com/software-engineer-s
 export const CURSHORT_URL_JOB = "https://cutshort.io/profile/all-jobs?matchesfor=65749e03eb780500f05b3e86&minsal=1500000&salaryCurrency=INR&minexp=0&maxexp=2&roletype=full_time";
 export const CURSHORT_URL_JOB_SEARCH = "https://cutshort.io/job/"
 
-export const blacklistedCompanies = ["infosys", "tcs", "tata consultancy services"];
+export const blacklistedCompanies = ["infosys", "infy", "infi", "tcs", "tata consultancy services"];
+
+export function isBlacklistedCompany(companyName: string | null | undefined): boolean {
+  if (!companyName) return false;
+
+  const normalized = String(companyName).toLowerCase().replace(/[-_]/g, ' ').trim();
+
+  return blacklistedCompanies.some(blacklisted => {
+    const cleanBlacklisted = blacklisted.toLowerCase().trim();
+    if (!cleanBlacklisted) return false;
+    return normalized.includes(cleanBlacklisted);
+  });
+}
 
 export interface DataJob {
   id: string | null;

@@ -22,7 +22,13 @@ HF_TOKENS = [t.strip() for t in hf_tokens_env.split(",") if t.strip()]
 if not HF_TOKENS:
     raise ValueError("HF_TOKENS environment variable contains no valid tokens.")
 
+class AllTokensExhaustedException(Exception):
+    """Raised when all HuggingFace API tokens provided in HF_TOKENS environment variable are exhausted or rate-limited."""
+    pass
+
+
 _current_token_index = 0
+_exhausted_token_indices = set()
 _connected_llms = {}
 
 
@@ -68,12 +74,22 @@ def _get_llm(name: str, token_index: int):
 
 
 def invoke_llm(model_names: list[str], prompt: str, parse_as_json: bool = False):
-    global _current_token_index
+    global _current_token_index, _exhausted_token_indices
+
+    if len(_exhausted_token_indices) >= len(HF_TOKENS):
+        raise AllTokensExhaustedException(
+            f"All {len(HF_TOKENS)} HuggingFace API token(s) from environment variables are exhausted or rate-limited."
+        )
 
     for model_name in model_names:
         attempts_with_different_tokens = 0
 
         while attempts_with_different_tokens < len(HF_TOKENS):
+            if len(_exhausted_token_indices) >= len(HF_TOKENS):
+                raise AllTokensExhaustedException(
+                    f"All {len(HF_TOKENS)} HuggingFace API token(s) from environment variables are exhausted or rate-limited."
+                )
+
             network_retries = 0
 
             while network_retries < 3:
@@ -97,12 +113,23 @@ def invoke_llm(model_names: list[str], prompt: str, parse_as_json: bool = False)
                         "payment required",
                         "depleted",
                         "credits",
+                        "exceeded",
+                        "forbidden",
+                        "unauthorized",
                     ]
 
                     if any(keyword in error_msg for keyword in limit_keywords):
+                        _exhausted_token_indices.add(_current_token_index)
+                        print(
+                            f"[HuggingFace] Rate limit/Quota hit on token index {_current_token_index} "
+                            f"({len(_exhausted_token_indices)}/{len(HF_TOKENS)} tokens exhausted)."
+                        )
                         _current_token_index = (_current_token_index + 1) % len(HF_TOKENS)
-                        print(f"[HuggingFace] Rate limit hit. Moved to token index: {_current_token_index}")
                         attempts_with_different_tokens += 1
+                        if len(_exhausted_token_indices) >= len(HF_TOKENS):
+                            raise AllTokensExhaustedException(
+                                f"All {len(HF_TOKENS)} HuggingFace API token(s) from environment variables are exhausted or rate-limited."
+                            )
                         break
                     else:
                         network_retries += 1
@@ -110,7 +137,13 @@ def invoke_llm(model_names: list[str], prompt: str, parse_as_json: bool = False)
                             delay = 2 ** network_retries
                             time.sleep(delay)
                         else:
-                            attempts_with_different_tokens = len(HF_TOKENS)
+                            attempts_with_different_tokens += 1
                             break
 
+    if len(_exhausted_token_indices) >= len(HF_TOKENS):
+        raise AllTokensExhaustedException(
+            f"All {len(HF_TOKENS)} HuggingFace API token(s) from environment variables are exhausted or rate-limited."
+        )
+
     raise RuntimeError("All models and tokens failed to generate a valid response.")
+
