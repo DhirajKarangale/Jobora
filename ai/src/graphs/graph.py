@@ -61,7 +61,7 @@ class JDState(TypedDict):
     eligibility_result: Dict[str, Any]
 
 
-from utils.profile_parser import parse_candidate_profile, load_candidate_profile_text
+from utils.profile_parser import parse_candidate_profile, load_candidate_profile_text, build_evidence_summary
 
 def load_candidate_profile() -> str:
     return load_candidate_profile_text()
@@ -93,129 +93,240 @@ def run_llm_json_step(text: str, prompt: str, models: list[str]) -> Dict[str, An
         raise RuntimeError(f"LLM JSON step failed: {str(e)}") from e
 
 
+# ---------------------------------------------------------------------------
+# Layer 1: Deterministic Hard Filters
+# Only genuinely objective checks — explicit experience ceiling &
+# unambiguous seniority titles (Staff/Principal/Director/VP/Head).
+# ---------------------------------------------------------------------------
 
-def verify_eligibility_rules(structured_data: Dict[str, Any], raw_text: str = "", candidate_exp: int = None) -> Dict[str, Any]:
-    parsed_profile = parse_candidate_profile()
+def apply_hard_filters(structured_data: Dict[str, Any], raw_text: str = "") -> Dict[str, Any]:
+    """Apply minimal deterministic hard filters that are objectively verifiable.
     
-    if candidate_exp is None:
-        candidate_exp = parsed_profile["candidate_experience"]
-        
+    Returns {"override": True, "eligible": "NO", "reason": "..."} to reject,
+    or {"override": False} to pass through to semantic evaluation.
+    """
+    parsed_profile = parse_candidate_profile()
     rules_config = parsed_profile["rules_config"]
-    allowed_skills = parsed_profile["allowed_skills"]
-    target_roles = parsed_profile["target_roles"]
 
-    exp_buffer = rules_config.get("experience_buffer_years", 1)
-    max_allowed_min_exp = candidate_exp + exp_buffer
+    candidate_exp = parsed_profile["candidate_experience"]
+    exp_hard_ceiling = rules_config.get("experience_hard_ceiling_years", 5)
 
     role = str(structured_data.get("role", "")).strip()
     exp_str = str(structured_data.get("experience", "")).strip()
-    skills = structured_data.get("skills", [])
-    
-    full_text_sample = f"{role} {exp_str} {json.dumps(skills)} {raw_text[:5000]}".lower()
     role_lower = role.lower()
 
-    # 1. Seniority Guard (Lead, Staff, Principal, Architect, Director, Manager)
-    seniority_titles = rules_config.get("seniority_titles", [])
-    for st in seniority_titles:
-        st_clean = st.strip().lower()
-        if not st_clean:
+    # 1. Unambiguous Seniority Title Rejection
+    #    Only titles that are NEVER appropriate regardless of context.
+    #    "Lead" and "Senior" are intentionally excluded — evaluated semantically.
+    seniority_hard_reject = rules_config.get("seniority_hard_reject", [])
+    for title in seniority_hard_reject:
+        title_clean = title.strip().lower()
+        if not title_clean:
             continue
-        pattern = r'\b' + re.escape(st_clean) + r'\b'
-        if re.search(pattern, role_lower) or re.search(pattern, full_text_sample[:1500]):
+        pattern = r'\b' + re.escape(title_clean) + r'\b'
+        if re.search(pattern, role_lower):
             return {
                 "override": True,
                 "eligible": "NO",
-                "reason": f"Ineligible due to senior/lead title or role: '{st_clean}'."
+                "reason": f"Ineligible: Role title contains unambiguous senior designation '{title_clean}'."
             }
 
-    # 2. Experience Requirement Ceiling (Candidate = 2 yrs, Max Min Allowed = 3 yrs)
+    # 2. Experience Hard Ceiling
+    #    Reject if the JD explicitly requires >= experience_hard_ceiling_years.
+    #    Only uses the structured experience field (LLM-extracted) for reliability.
     numbers = [int(n) for n in re.findall(r'\d+', exp_str)]
     if numbers:
         min_req_exp = numbers[0]
-        if min_req_exp > max_allowed_min_exp:
+        if min_req_exp >= exp_hard_ceiling:
             return {
                 "override": True,
                 "eligible": "NO",
-                "reason": f"Ineligible: JD requires {min_req_exp}+ years of experience (Candidate has {candidate_exp} yrs)."
+                "reason": f"Ineligible: JD explicitly requires {min_req_exp}+ years (hard ceiling is {exp_hard_ceiling} years, candidate has {candidate_exp})."
             }
 
+    # 3. High experience patterns in raw text as fallback
+    #    Catches cases where the structured field missed it.
+    full_text_lower = raw_text[:5000].lower() if raw_text else ""
     high_exp_patterns = [
-        r'\b([4-9]|\d{2,})\s*\+\s*(?:years?|yrs?)',
-        r'\b([4-9]|\d{2,})\s*(?:to|-)\s*\d+\s*(?:years?|yrs?)',
-        r'\bminimum\s*of\s*([4-9]|\d{2,})\s*(?:years?|yrs?)',
+        r'\b([5-9]|\d{2,})\s*\+\s*(?:years?|yrs?)',
+        r'\bminimum\s*of\s*([5-9]|\d{2,})\s*(?:years?|yrs?)',
     ]
     for pat in high_exp_patterns:
-        match = re.search(pat, full_text_sample)
+        match = re.search(pat, full_text_lower)
         if match:
             found_val = int(match.group(1))
-            if found_val > max_allowed_min_exp:
+            if found_val >= exp_hard_ceiling:
                 return {
                     "override": True,
                     "eligible": "NO",
-                    "reason": f"Ineligible due to high experience pattern in JD: '{match.group(0)}'."
-                }
-
-    # 3. Hardcoded Dealbreaker Categories & Critical Text Dealbreakers Check
-    dealbreaker_categories = rules_config.get("dealbreaker_categories", {})
-    all_dealbreakers = set()
-    for cat_items in dealbreaker_categories.values():
-        all_dealbreakers.update(cat_items)
-
-    critical_text_dealbreakers = rules_config.get("critical_text_dealbreakers", [])
-    all_dealbreakers.update(critical_text_dealbreakers)
-
-    for db in all_dealbreakers:
-        db_clean = db.strip().lower()
-        if not db_clean:
-            continue
-        pattern = r'\b' + re.escape(db_clean) + r'\b'
-        if re.search(pattern, full_text_sample):
-            return {
-                "override": True,
-                "eligible": "NO",
-                "reason": f"Ineligible due to dealbreaker technology/role found in job: '{db_clean}'."
-            }
-
-    # 4. Dynamic Target Role Inclusion Check
-    if role_lower and role_lower != "not provided":
-        # Verify role matches positive target role concepts
-        has_target_role = False
-        target_role_concepts = [
-            "software engineer", "sde", "full-stack", "fullstack", "backend", "frontend",
-            "front-end", "back-end", "ai engineer", "web developer", "developer", "software developer"
-        ]
-        for trc in target_role_concepts:
-            if re.search(r'\b' + re.escape(trc) + r'\b', role_lower):
-                has_target_role = True
-                break
-
-        if not has_target_role:
-            return {
-                "override": True,
-                "eligible": "NO",
-                "reason": f"Ineligible: Role '{role}' does not match candidate's target software engineering roles."
-            }
-
-    # 5. Dynamic Core Skill Overlap Ratio Check
-    if isinstance(skills, list) and skills:
-        cleaned_jd_skills = [str(s).lower().strip() for s in skills if str(s).strip() and len(str(s).strip()) > 1]
-        if len(cleaned_jd_skills) >= 2:
-            matching_skills = []
-            for js in cleaned_jd_skills:
-                for cs in allowed_skills:
-                    if js == cs or (len(js) >= 3 and js in cs) or (len(cs) >= 3 and cs in js):
-                        matching_skills.append(js)
-                        break
-
-            if len(matching_skills) == 0:
-                return {
-                    "override": True,
-                    "eligible": "NO",
-                    "reason": f"Ineligible: Zero skill overlap between required job skills and candidate's core tech stack."
+                    "reason": f"Ineligible: Raw text contains high experience requirement: '{match.group(0)}'."
                 }
 
     return {"override": False}
 
+
+# ---------------------------------------------------------------------------
+# Layer 2a: Deterministic Core Skill Overlap Check
+# Uses the LLM-extracted core_skills from the structuring step to verify
+# that the candidate has meaningful overlap with the job's CORE requirements.
+# This catches obvious mismatches (C++, Golang, Android, CUDA, etc.)
+# BEFORE the LLM eligibility call, providing a reliable safety net.
+# ---------------------------------------------------------------------------
+
+def check_core_skill_overlap(structured_data: Dict[str, Any], allowed_skills: set) -> Dict[str, Any]:
+    """Check if the candidate has meaningful overlap with the job's core skills.
+    
+    Uses the core_skills extracted by the structuring LLM (not a blacklist).
+    This is dynamic — it works for any role because it relies on the structuring
+    step correctly identifying what's core vs secondary.
+    
+    Returns {"override": True, ...} to reject, or {"override": False} to proceed.
+    """
+    core_skills = structured_data.get("core_skills", [])
+    
+    # If the structuring step didn't produce core_skills, skip this check
+    # (backward compat with old schema that used "skills")
+    if not core_skills or not isinstance(core_skills, list):
+        return {"override": False}
+    
+    cleaned_core = [str(s).lower().strip() for s in core_skills if str(s).strip()]
+    if len(cleaned_core) < 2:
+        return {"override": False}
+    
+    # Check how many core skills the candidate actually has
+    matched = []
+    unmatched = []
+    for cs in cleaned_core:
+        found = False
+        for candidate_skill in allowed_skills:
+            # Exact match or substring containment (bidirectional)
+            if cs == candidate_skill:
+                found = True
+                break
+            if len(cs) >= 3 and len(candidate_skill) >= 3:
+                if cs in candidate_skill or candidate_skill in cs:
+                    found = True
+                    break
+        if found:
+            matched.append(cs)
+        else:
+            unmatched.append(cs)
+    
+    match_ratio = len(matched) / len(cleaned_core) if cleaned_core else 0
+    
+    # If the candidate matches LESS THAN HALF of the core skills, reject.
+    # This is the key gate: if most core skills are missing, the role
+    # fundamentally doesn't match, regardless of what the LLM might say.
+    if match_ratio < 0.5:
+        return {
+            "override": True,
+            "eligible": "NO",
+            "reason": (
+                f"Ineligible: Candidate lacks {len(unmatched)}/{len(cleaned_core)} core skills "
+                f"required for this role. Missing: {', '.join(unmatched[:8])}. "
+                f"Core skill match ratio: {match_ratio:.0%}."
+            ),
+            "match_ratio": match_ratio,
+            "matched": matched,
+            "unmatched": unmatched
+        }
+    
+    return {
+        "override": False,
+        "match_ratio": match_ratio,
+        "matched": matched,
+        "unmatched": unmatched
+    }
+
+
+# ---------------------------------------------------------------------------
+# Layer 3: Post-LLM Programmatic Validation
+# Validates the structured JSON output from the LLM semantic evaluation.
+# Conservative defaults — any failing dimension triggers rejection.
+# ---------------------------------------------------------------------------
+
+def validate_llm_eligibility(llm_result: Dict[str, Any], rules_config: Dict[str, Any]) -> Dict[str, Any]:
+    """Programmatically validate the LLM's structured eligibility output.
+    
+    Applies conservative defaults: any failing dimension → NO.
+    Returns the final eligibility result dict with Eligible and Reasoning.
+    """
+    min_ratio = rules_config.get("core_skill_match_min_ratio", 0.4)
+
+    # Extract fields from LLM output with safe defaults
+    role_domain_match = llm_result.get("role_domain_match")
+    core_skill_match_ratio = llm_result.get("core_skill_match_ratio")
+    seniority_compatible = llm_result.get("seniority_compatible")
+    eligible_raw = str(llm_result.get("eligible") or llm_result.get("Eligible") or "").strip().upper()
+    reasoning = str(llm_result.get("reasoning") or llm_result.get("Reasoning") or "")
+    role_domain = str(llm_result.get("role_domain") or "Unknown")
+    
+    # Extract missing core skills for validation
+    missing_core = llm_result.get("candidate_missing_core_skills", [])
+    has_core = llm_result.get("candidate_has_core_skills", [])
+    core_required = llm_result.get("core_skills_required", [])
+
+    rejection_reasons = []
+
+    # Check 1: Role domain match
+    if role_domain_match is False:
+        rejection_reasons.append(f"Role domain '{role_domain}' does not match candidate's experience domain.")
+
+    # Check 2: Core skill match ratio
+    if core_skill_match_ratio is not None:
+        try:
+            ratio = float(core_skill_match_ratio)
+            if ratio < min_ratio:
+                rejection_reasons.append(
+                    f"Core skill match ratio ({ratio:.0%}) is below minimum threshold ({min_ratio:.0%})."
+                )
+        except (ValueError, TypeError):
+            pass
+
+    # Check 3: Missing core skills — if majority of core skills are missing, reject
+    if isinstance(missing_core, list) and isinstance(core_required, list):
+        if len(core_required) >= 2 and len(missing_core) > len(core_required) / 2:
+            rejection_reasons.append(
+                f"Candidate missing majority of core skills: {', '.join(str(s) for s in missing_core[:6])}."
+            )
+
+    # Check 4: Seniority compatibility
+    if seniority_compatible is False:
+        rejection_reasons.append("Seniority level is not compatible with candidate's experience.")
+
+    # Check 5: Parse LLM's eligible field with negative bias
+    if any(neg in eligible_raw for neg in ["NO", "NOT", "INELIGIBLE", "FALSE", "REJECT"]):
+        llm_says_no = True
+    elif eligible_raw in ["YES", "TRUE", "ELIGIBLE"] or eligible_raw.startswith("YES"):
+        llm_says_no = False
+    else:
+        # Ambiguous or missing → default NO
+        llm_says_no = True
+
+    if llm_says_no:
+        rejection_reasons.append("LLM evaluation determined candidate is not eligible.")
+
+    # Final decision: ANY rejection reason → NO
+    if rejection_reasons:
+        combined_reasoning = reasoning + " | Post-validation: " + "; ".join(rejection_reasons) if reasoning else "; ".join(rejection_reasons)
+        return {
+            "Eligible": "NO",
+            "Reasoning": combined_reasoning,
+            "role_domain": role_domain,
+            "validation_flags": rejection_reasons
+        }
+
+    return {
+        "Eligible": "YES",
+        "Reasoning": reasoning,
+        "role_domain": role_domain,
+        "validation_flags": []
+    }
+
+
+# ---------------------------------------------------------------------------
+# LangGraph Node Functions
+# ---------------------------------------------------------------------------
 
 def text_cleaning_node(state: JDState) -> JDState:
     text = state["current_text"]
@@ -229,11 +340,12 @@ def structuring_node(state: JDState) -> JDState:
     raw_text = state.get("raw_text", "")
     prompt = get_structuring_prompt(text, raw_text)
     structured_dict = run_llm_json_step(text, prompt, STRUCTURING_MODELS)
-    
-    existing_role = state.get("structured_data", {}).get("role", "")
-    if existing_role:
-        structured_dict["role"] = existing_role
-        
+
+    # NOTE: We intentionally do NOT override the LLM-extracted role with the
+    # database role. The LLM should determine the actual role from the JD text.
+    # The previous override caused false positives when the DB had a generic
+    # role like "Software Engineer" for a job that was actually "Data Engineer".
+
     return {"structured_data": structured_dict}
 
 
@@ -241,46 +353,47 @@ def eligibility_node(state: JDState) -> JDState:
     structured_data = state.get("structured_data", {})
     raw_text = state.get("raw_text", "")
     cleaned_text = state.get("current_text", "")
-    
-    safety_check = verify_eligibility_rules(structured_data, raw_text=raw_text)
-    if safety_check.get("override"):
+
+    # Layer 1: Deterministic hard filters (seniority titles, experience ceiling)
+    hard_filter_result = apply_hard_filters(structured_data, raw_text=raw_text)
+    if hard_filter_result.get("override"):
         return {
             "eligibility_result": {
                 "Eligible": "NO",
-                "Reasoning": safety_check.get("reason", "Ineligible based on rule guard.")
+                "Reasoning": hard_filter_result.get("reason", "Ineligible based on hard filter.")
             },
             "profile_data": state.get("profile_data", "")
         }
 
-    profile_text = state.get("profile_data", "")
-    if not profile_text:
-        profile_text = load_candidate_profile()
+    # Load candidate profile and evidence
+    parsed_profile = parse_candidate_profile()
+    profile_text = state.get("profile_data", "") or load_candidate_profile()
+    evidence_summary = parsed_profile.get("evidence_summary", "")
+    rules_config = parsed_profile.get("rules_config", {})
+    allowed_skills = parsed_profile.get("allowed_skills", set())
 
-    prompt = get_eligibility_prompt(structured_data, profile_text)
-    llm_res = run_llm_json_step(cleaned_text, prompt, ELIGIBILITY_MODELS)
+    # Layer 2a: Deterministic core skill overlap check
+    # Uses the LLM-extracted core_skills from structuring to catch obvious
+    # mismatches (C++, Golang, Android, CUDA, etc.) BEFORE the LLM call.
+    skill_check = check_core_skill_overlap(structured_data, allowed_skills)
+    if skill_check.get("override"):
+        return {
+            "eligibility_result": {
+                "Eligible": "NO",
+                "Reasoning": skill_check.get("reason", "Ineligible: core skill mismatch.")
+            },
+            "profile_data": profile_text
+        }
 
-    raw_upper = str(llm_res.get("Eligible") or llm_res.get("eligible") or "").upper().strip()
-    reasoning_val = str(llm_res.get("Reasoning") or llm_res.get("reasoning") or "")
-    
-    # 1. Any negative indicator forces NO
-    if any(neg in raw_upper for neg in ["NO", "NOT", "INELIGIBLE", "FALSE", "UNELIGIBLE", "NEITHER", "REJECT"]):
-        final_eligible = "NO"
-    # 2. Strict positive check
-    elif raw_upper in ["YES", "TRUE", "ELIGIBLE"] or raw_upper.startswith("YES"):
-        final_eligible = "YES"
-    else:
-        final_eligible = "NO"
+    # Layer 2b: LLM semantic evaluation
+    prompt = get_eligibility_prompt(structured_data, profile_text, evidence_summary)
+    llm_result = run_llm_json_step(cleaned_text, prompt, ELIGIBILITY_MODELS)
 
-    post_check = verify_eligibility_rules(structured_data, raw_text=raw_text)
-    if post_check.get("override"):
-        final_eligible = "NO"
-        reasoning_val = post_check.get("reason", reasoning_val)
+    # Layer 3: Post-LLM programmatic validation
+    final_result = validate_llm_eligibility(llm_result, rules_config)
 
     return {
-        "eligibility_result": {
-            "Eligible": final_eligible,
-            "Reasoning": reasoning_val
-        },
+        "eligibility_result": final_result,
         "profile_data": profile_text
     }
 
@@ -306,12 +419,10 @@ def process_job_description(job_input: Any, job_id: str = "", source_job_id: str
         raw_text = job_input.get("description", "")
         jid = str(job_input.get("id", job_id))
         sjid = str(job_input.get("source_job_id", source_job_id))
-        role = str(job_input.get("role", ""))
     else:
         raw_text = str(job_input or "")
         jid = job_id
         sjid = source_job_id
-        role = ""
 
     if not raw_text:
         return {"id": jid, "source_job_id": sjid, "eligible": "NO"}
@@ -320,7 +431,7 @@ def process_job_description(job_input: Any, job_id: str = "", source_job_id: str
     initial_state = {
         "raw_text": raw_text,
         "current_text": raw_text,
-        "structured_data": {"role": role} if role else {},
+        "structured_data": {},
         "profile_data": profile_text,
         "eligibility_result": {}
     }

@@ -8,7 +8,7 @@ Raw Job Description:
 
 CLEANING INSTRUCTIONS:
 1. Strip all HTML tags, emojis, special character icons, and visual separators (e.g., '---', '***').
-2. Fix encoding artifacts: Normalize unicode escapes (e.g., '\u2019' to standard apostrophe "'") and handle raw '\n' tags by converting them to actual line breaks.
+2. Fix encoding artifacts: Normalize unicode escapes (e.g., '\\u2019' to standard apostrophe "'") and handle raw '\\n' tags by converting them to actual line breaks.
 3. Remove boilerplate noise: Delete EEO (Equal Employment Opportunity) disclaimers, diversity statements, "Apply Now" links, standard legal footers, and conversational introductions.
 
 STRICT PRESERVATION RULES:
@@ -37,14 +37,23 @@ ANTI-HALLUCINATION & EXTRACTION RULES:
 FIELD SPECIFICATIONS & SCHEMA:
 Ensure your output strictly adheres to this JSON schema and data types:
 
-1. "role" (String): Extract the exact official job role/title explicitly stated in the posting (e.g., "Cloud Developer", "QA Engineer", "Software Engineer", "Full Stack Developer", "ServiceNow Developer"). If absent, output "Not provided".
-2. "skills" (Array of Strings): Extract ALL technical skills (languages, frameworks, tools, databases, cloud platforms) explicitly present. Sort them so primary/core technologies (e.g. mentioned in the title or "Requirements" section) are AT THE TOP. Do not include soft skills.
-3. "experience" (String): Extract the exact phrase or range regarding required years of experience (e.g. "0-2 years", "3-5 years", "8+ years", "2+ yrs"). If completely absent, output "Not provided".
-4. "education" (String): Extract degree requirements (e.g. "Bachelor's in CS"). If absent, output "Not provided".
-5. "salary" (String): Extract the exact salary range and currency explicitly stated. If stated in a foreign currency (e.g., USD, EUR), append a bracketed estimated conversion to INR LPA based on standard market rates (e.g., "$100k - $120k (Approx. 80-96 LPA)"). If completely absent, output "Not provided".
-6. "location" (String): Extract the job location(s) if explicitly stated. If absent, output "Not provided".
-7. "employment_type" (String): Extract explicit terms like "Full-time", "Contract", or "Intern". If not explicitly stated but the JD lists standard permanent employee benefits, output "Full-time (Implied)". Otherwise, output "Not provided".
-8. "extra" (Array of Strings): Extract critical operational details ONLY IF present (e.g., "Remote option", "On-call rotation", "Shift timings"). Default to an empty array [] if none exist.
+1. "role" (String): Extract the exact official job role/title explicitly stated in the posting (e.g., "Cloud Developer", "QA Engineer", "Software Engineer", "Full Stack Developer", "Data Engineer", "Android Developer", "C++ Engineer"). If absent, output "Not provided".
+2. "core_skills" (Array of Strings): Extract the CORE/MANDATORY technical skills that are FUNDAMENTAL to performing this job. These are the technologies that define what the role actually is — the skills without which a candidate CANNOT do this job. Examples: For an Android Developer role, core skills are "Android", "Kotlin", "Java (Android)". For a Data Engineer role, core skills are "PySpark", "ETL", "Snowflake", "Airflow". For a C++ Engineer, the core skill is "C++". For a Full-Stack Web Developer, core skills are "React", "Node.js", "TypeScript". Core skills are typically: mentioned in the job title, listed as "required"/"must-have", or central to the described responsibilities.
+3. "secondary_skills" (Array of Strings): Extract the SECONDARY/SUPPORTING/NICE-TO-HAVE technical skills. These are generic, transferable, or supplementary technologies that support the core role but do NOT define it. Examples: "Git", "Docker", "AWS", "SQL", "REST APIs", "CI/CD", "Agile". These are skills that many engineering roles share regardless of specialization.
+4. "experience" (String): Extract the exact phrase or range regarding required years of experience (e.g. "0-2 years", "3-5 years", "8+ years", "2+ yrs"). If completely absent, output "Not provided".
+5. "education" (String): Extract degree requirements (e.g. "Bachelor's in CS"). If absent, output "Not provided".
+6. "salary" (String): Extract the exact salary range and currency explicitly stated. If stated in a foreign currency (e.g., USD, EUR), append a bracketed estimated conversion to INR LPA based on standard market rates (e.g., "$100k - $120k (Approx. 80-96 LPA)"). If completely absent, output "Not provided".
+7. "location" (String): Extract the job location(s) if explicitly stated. If absent, output "Not provided".
+8. "employment_type" (String): Extract explicit terms like "Full-time", "Contract", or "Intern". If not explicitly stated but the JD lists standard permanent employee benefits, output "Full-time (Implied)". Otherwise, output "Not provided".
+9. "responsibilities" (Array of Strings): Extract the key responsibilities and day-to-day duties described in the job posting. Focus on what the person will actually DO in this role. Extract the 5-8 most important responsibilities. If absent, output an empty array [].
+10. "domain" (String): Classify the PRIMARY professional discipline/domain of this role based on the title, responsibilities, and required skills. Choose the MOST SPECIFIC matching domain from this list: "Web Development", "Frontend Development", "Backend Development", "Full-Stack Development", "Mobile Development (iOS)", "Mobile Development (Android)", "Mobile Development (Cross-Platform)", "Data Engineering", "Data Science / ML", "DevOps / Infrastructure", "Cloud Engineering", "QA / Testing", "Security Engineering", "Game Development", "Embedded Systems", "Enterprise ERP/CRM", "AI / LLM Engineering", "Site Reliability Engineering", "Database Administration", "Systems Programming", "GPU / Graphics Programming", "General Software Engineering". If none fit precisely, describe the domain in 2-4 words.
+11. "extra" (Array of Strings): Extract critical operational details ONLY IF present (e.g., "Remote option", "On-call rotation", "Shift timings"). Default to an empty array [] if none exist.
+
+IMPORTANT — CORE vs SECONDARY SKILL CLASSIFICATION:
+- A skill is CORE if removing it from the candidate's profile would make them unqualified for the role.
+- A skill is SECONDARY if it is useful but not essential — many different engineers have it regardless of specialization.
+- When in doubt, classify a skill as CORE. It is better to over-classify than under-classify.
+- Python, SQL, Git, Docker, AWS, REST APIs are almost always SECONDARY unless the role is specifically about those (e.g., "Python Developer" makes Python core).
 
 OUTPUT FORMAT:
 You must output ONLY a valid JSON object matching the keys above. 
@@ -53,58 +62,99 @@ Do NOT include any conversational filler before or after the JSON.
 
 {{
   "role": "",
-  "skills": [],
+  "core_skills": [],
+  "secondary_skills": [],
   "experience": "",
   "education": "",
   "salary": "",
   "location": "",
   "employment_type": "",
+  "responsibilities": [],
+  "domain": "",
   "extra": []
 }}
 """
 
-def get_eligibility_prompt(structured_jd: dict, profile_text: str) -> str:
+def get_eligibility_prompt(structured_jd: dict, profile_text: str, evidence_summary: str = "") -> str:
     jd_str = json.dumps(structured_jd, indent=2, ensure_ascii=False)
 
-    return f"""Evaluate if candidate DHIRAJ KARANGALE is ELIGIBLE for the job position by dynamically comparing his CANDIDATE PROFILE with the STRUCTURED JOB DESCRIPTION.
+    return f"""You are a STRICT job eligibility evaluator. Your job is to REJECT candidates who lack core competencies. Default to NO unless there is strong evidence of fit.
 
 CANDIDATE PROFILE:
 {profile_text}
 
+{f"CANDIDATE EVIDENCE (What the candidate has actually worked on):{chr(10)}{evidence_summary}" if evidence_summary else ""}
+
 STRUCTURED JOB DESCRIPTION:
 {jd_str}
 
-STRICT ELIGIBILITY EVALUATION RULES (HIGH PRECISION REQUIRED):
+EVALUATION INSTRUCTIONS:
 
-1. TARGET ROLE FIT (Software Development vs Disqualified Disciplines):
-   - Dhiraj's Target Roles: Agentic AI Engineer, Software Engineer, Software Development Engineer (SDE), Full-Stack Developer, Frontend Developer, Backend Developer, MERN Stack Developer.
-   - DISQUALIFIED ROLE DOMAINS (MUST RETURN INELIGIBLE - NO):
-     * Cloud / DevOps / Infrastructure: Cloud Developer, Cloud Engineer, Cloud Architect, Infrastructure Engineer, DevOps Engineer, SRE, Site Reliability Engineer, SysAdmin.
-       CRITICAL: Roles focused on Cloud development/infrastructure or DevOps are NOT target roles for Dhiraj. Even if the JD lists programming languages like Python, Java, Golang, or JavaScript, Cloud/DevOps roles MUST RETURN INELIGIBLE (NO).
-     * QA / Software Testing / SDET: QA Engineer, Software QA, Test Automation Engineer, Manual Tester, QA Specialist, SDET, Selenium Tester, Playwright Tester.
-       CRITICAL: Writing test automation scripts in Python or TypeScript for a QA/Testing role does NOT make it a Software Engineering job. Return INELIGIBLE (NO).
-     * Enterprise ERP / CRM: ServiceNow Developer/Consultant, Salesforce Developer/Admin, SAP Consultant, ABAP, Workday, Pega, COBOL, Mainframe.
-     * Game / Embedded / Native Mobile: Unity, Unreal Engine, C#, .NET, ASP.NET, C++, Embedded/Firmware, Swift, iOS Native, Android Native, Flutter.
-     * Non-Developer Roles: Product Manager, Project Manager, Scrum Master, Business Analyst, Customer Success, Technical Support.
+You must determine if this candidate can REALISTICALLY perform this job based on their DEMONSTRATED experience. Follow these steps strictly:
 
-2. SENIORITY TITLE & EXPERIENCE CEILING (Strict 2-Year Full-Time Candidate):
-   - Dhiraj has 2 years of full-time experience (Max allowed minimum requirement ceiling is 3 years).
-   - If minimum required experience Y > 3 years (e.g. 4+, 5+, 6+, 7+, 8+, 10+ years): RETURN INELIGIBLE (NO).
-   - SENIORITY TITLE CHECK: If the role title or JD specifies Principal, Staff, Lead (Lead Developer, Lead Engineer, Tech Lead, Team Lead), Architect, Manager, Director, or VP, RETURN INELIGIBLE (NO) REGARDLESS of whether numerical experience is unstated or listed as 0-2 years.
+STEP 1 — IDENTIFY THE ACTUAL JOB
+Look at the role title, domain, responsibilities, AND core_skills together. What does this person actually DO day-to-day?
+Do NOT rely on the job title alone. An "SDE" role requiring C++, CUDA, and GPU programming is a GPU/Systems Engineer, not a general Software Engineer.
 
-3. TECH STACK ALIGNMENT:
-   - Candidate's Core Stack: React.js, TypeScript, JavaScript, Node.js, Express.js, Java, Spring Boot, Python (Web/Backend/AI), PostgreSQL, MySQL, Redis, MongoDB, Docker, Git, REST APIs, WebSockets, LLMs/LangChain.
-   - Disqualified Tech Stacks (RETURN INELIGIBLE - NO): Candidate does NOT specialize in C#, .NET, C++, Ruby, Rails, PHP, Laravel, Go/Golang (if primary language), Apex, ABAP, ServiceNow, Salesforce, Unity, Unreal, Swift, Kotlin, Flutter, Selenium, Playwright, Cypress. If ANY of these non-candidate technologies is a primary/core requirement of the job, RETURN INELIGIBLE (NO).
-   - Full-Stack Requirement: If the role is Full-Stack, candidate MUST match BOTH frontend (React/TS/JS) and backend (Node/Express/Java/Python).
+STEP 2 — CHECK CORE SKILL COMPETENCY (MOST IMPORTANT STEP)
+Look at the "core_skills" from the structured JD. These are the skills WITHOUT WHICH a person CANNOT do this job.
+For EACH core skill, check: does the candidate have PROVEN experience with it?
+- Professional work experience = strong evidence
+- Built a project with it = moderate evidence  
+- Listed in skills section only = weak evidence (NOT sufficient for core skills)
+- Not mentioned at all = no evidence
 
-4. DEFAULT CONSERVATIVE RULE:
-   - If there is ANY mismatch or ambiguity in role domain, seniority title, experience ceiling, or core tech stack, default strictly to INELIGIBLE (NO).
+CRITICAL RULE: If the candidate LACKS experience with the MAJORITY of core skills, they are NOT ELIGIBLE. Period.
+Generic skill overlap (Python, SQL, Git, Docker, AWS, REST APIs) does NOT compensate for missing core skills.
 
-RETURN FORMAT:
-You must output ONLY a valid JSON object matching this exact schema. Do not include markdown formatting like ```json.
+Examples of INCORRECT eligibility decisions (these should ALL be NO):
+- Android Developer role: candidate knows Java but NOT Android/Kotlin → NO (Java alone is not Android competency)
+- C++ Engineer role: candidate knows Python, JS but NOT C++ → NO
+- Golang Developer role: candidate knows Node.js but NOT Go → NO  
+- Data Engineer role: candidate knows Python, SQL but NOT PySpark/ETL/Airflow/data pipelines → NO
+- GPU Engineer role: candidate knows Python but NOT CUDA/OpenGL/GPU programming → NO
+- iOS Developer role: candidate knows React but NOT Swift/Objective-C → NO
+- DevOps Engineer role: candidate knows Docker but NOT Terraform/Ansible/CI-CD-as-primary-role → NO
+
+STEP 3 — CHECK DOMAIN COMPATIBILITY
+The candidate is a Web/Full-Stack Software Engineer. Their professional experience is in:
+- React/TypeScript frontends, Node.js/Express/Java/Spring Boot backends
+- REST APIs, WebSockets, micro-frontend architectures
+- AI-powered web applications using LLMs/LangChain
+- PostgreSQL, MySQL, Redis, MongoDB in web application context
+
+Compatible domains: Web Development, Frontend, Backend, Full-Stack, AI/LLM Engineering, General Software Engineering (when core stack matches)
+Incompatible domains: Data Engineering, DevOps, Cloud Engineering, Mobile (iOS/Android), QA/Testing, Game Development, Embedded Systems, GPU/Graphics, Enterprise ERP/CRM, Systems Programming, Security Engineering
+
+STEP 4 — CHECK SENIORITY
+Candidate has ~2 years of full-time experience.
+- 0-3 years required: compatible
+- 2-4 years required: compatible
+- 4+ years or Senior title with senior-level responsibilities: incompatible
+- Staff/Principal/Lead/Architect responsibilities (leading teams, setting org-wide direction): incompatible
+
+STEP 5 — FINAL VERDICT
+The candidate is ELIGIBLE only if ALL of the following are true:
+1. The job domain matches the candidate's experience domain
+2. The candidate has proven experience with the MAJORITY of core skills
+3. The seniority level is compatible
+4. A hiring manager would realistically consider this candidate
+
+If ANY of these fail, the answer is NO.
+
+OUTPUT FORMAT:
+Output ONLY a valid JSON object. Do not wrap in markdown code blocks.
+
 {{
-  "Reasoning": "Provide a concise 2-3 sentence step-by-step breakdown checking target role fit (Developer vs Cloud/QA/DevOps/ERP), seniority title (Staff/Principal/Lead), experience ceiling, and core tech stack match.",
-  "Eligible": "YES or NO"
+  "role_domain": "The actual domain/discipline of this job",
+  "role_domain_match": true or false,
+  "core_skills_required": ["the core skills this job requires"],
+  "candidate_has_core_skills": ["which core skills the candidate actually has"],
+  "candidate_missing_core_skills": ["which core skills the candidate LACKS"],
+  "core_skill_match_ratio": 0.0 to 1.0,
+  "seniority_level": "junior/mid/senior/staff/principal/lead",
+  "seniority_compatible": true or false,
+  "reasoning": "2-3 sentences explaining: what the job actually is, what core skills are missing, and why the candidate is or is not a fit",
+  "eligible": "YES or NO"
 }}
 """
-
