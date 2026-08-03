@@ -21,7 +21,7 @@ export function parseJobDescription(description: string | null): ParsedDescripti
       const parsed = JSON.parse(trimmed) as ParsedJobData;
       return { isJson: true, data: parsed, raw: description, title: parsed.title || "" };
     }
-  } catch {}
+  } catch { }
   return { isJson: false, data: null, raw: description, title: "" };
 }
 
@@ -119,7 +119,7 @@ export interface AnalyticsFilter {
 export interface AnalyticsData {
   summary: { totalJobs: number; pendingAiJobs: number; notEligibleJobs: number; eligibleJobs: number; appliedJobs: number; autoAppliedJobs: number; manualAppliedJobs: number; };
   timeSeries: { date: string; totalJobs: number; eligibleJobs: number; appliedJobs: number; }[];
-  actionableJobsBySource: { name: string; toApply: number; applied: number }[];
+  actionableJobsBySource: { name: string; toApply: number; autoApplied: number; manualApplied: number }[];
   jobsBySource: { name: string; count: number }[];
   topCompanies: { name: string; count: number }[];
   statusBreakdown: { name: string; value: number }[];
@@ -144,7 +144,7 @@ export async function fetchFilterOptions(sourceName?: string, companyName?: stri
   const params = new URLSearchParams();
   if (sourceName) params.append('sourceName', sourceName);
   if (companyName) params.append('companyName', companyName);
-  
+
   const response = await api.get<{ sources: string[], companies: string[] }>(`${ENDPOINTS.ANALYTICS_FILTERS}?${params.toString()}`);
   return response.data;
 }
@@ -224,8 +224,8 @@ export function useAutomationStatus() {
     placeholderData: keepPreviousData,
   });
 
-  const status = isError 
-    ? { jobsScraped: 0, jobsAutoApplied: 0, isRunning: false } 
+  const status = isError
+    ? { jobsScraped: 0, jobsAutoApplied: 0, isRunning: false }
     : (fetchedStatus || { jobsScraped: 0, jobsAutoApplied: 0, isRunning: false });
 
   React.useEffect(() => {

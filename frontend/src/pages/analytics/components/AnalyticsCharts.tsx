@@ -1,6 +1,6 @@
-import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
-  BarChart, Bar, PieChart, Pie, Cell 
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, PieChart, Pie, Cell
 } from 'recharts';
 import type { AnalyticsData } from "@/api/queries";
 
@@ -12,10 +12,11 @@ interface AnalyticsChartsProps {
 
 export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
   const { summary } = data;
-  
+
   const pipelineData = [
     { name: 'Total Found', count: summary.totalJobs },
     { name: 'Not Checked', count: summary.pendingAiJobs },
+    { name: 'Not Eligible', count: summary.notEligibleJobs },
     { name: 'Eligible', count: summary.eligibleJobs + summary.appliedJobs }, // Total eligible includes applied
     { name: 'Applied', count: summary.appliedJobs },
     { name: 'Expired', count: data.statusBreakdown.find(s => s.name === 'Expired')?.value || 0 }
@@ -28,7 +29,7 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      
+
       {/* Job Pipeline */}
       <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-xs space-y-6 min-w-0">
         <div className="space-y-1">
@@ -73,10 +74,26 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
                   contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
                   labelStyle={{ fontWeight: 'bold', color: 'var(--foreground)', marginBottom: '8px' }}
                   cursor={{ fill: 'var(--muted)', opacity: 0.4 }}
+                  itemSorter={(item) => {
+                    if (item.name === 'Manual Applied') return 1;
+                    if (item.name === 'Auto Applied') return 2;
+                    return 3;
+                  }}
                 />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                <Legend
+                  iconType="circle"
+                  wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                  {...({
+                    payload: [
+                      { value: 'Manual Applied', type: 'circle', id: 'manualApplied', color: '#3b82f6' },
+                      { value: 'Auto Applied', type: 'circle', id: 'autoApplied', color: '#10b981' },
+                      { value: 'To Apply (Open)', type: 'circle', id: 'toApply', color: '#f59e0b' }
+                    ]
+                  } as any)}
+                />
                 <Bar dataKey="toApply" name="To Apply (Open)" stackId="a" fill="#f59e0b" maxBarSize={60} />
-                <Bar dataKey="applied" name="Applied" stackId="a" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                <Bar dataKey="autoApplied" name="Auto Applied" stackId="a" fill="#10b981" maxBarSize={60} />
+                <Bar dataKey="manualApplied" name="Manual Applied" stackId="a" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={60} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -96,16 +113,16 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
             <AreaChart data={data.timeSeries} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
               <defs>
                 <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorEligible" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorApplied" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false} />
@@ -154,8 +171,8 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
                   label={({ name, percent }) => percent > 0.05 ? `${name} ${(percent * 100).toFixed(0)}%` : null}
                   labelLine={false}
                 >
-                  <Cell fill="#f97316" /> {/* Auto Applied Orange */}
-                  <Cell fill="#ec4899" /> {/* Manual Applied Pink */}
+                  <Cell fill="#10b981" /> {/* Auto Applied Green */}
+                  <Cell fill="#3b82f6" /> {/* Manual Applied Blue */}
                 </Pie>
                 <Tooltip
                   contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
@@ -182,12 +199,12 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
               <BarChart data={data.topCompanies} layout="vertical" margin={{ top: 5, right: 20, bottom: 5, left: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} horizontal={true} vertical={false} />
                 <XAxis type="number" tick={{ fontSize: 12 }} stroke="currentColor" opacity={0.5} allowDecimals={false} />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  tick={{ fontSize: 12 }} 
-                  stroke="currentColor" 
-                  opacity={0.5} 
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  tick={{ fontSize: 12 }}
+                  stroke="currentColor"
+                  opacity={0.5}
                   width={120}
                   tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
                 />
