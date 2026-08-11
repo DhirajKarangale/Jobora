@@ -166,7 +166,37 @@ def apply_hard_filters(structured_data: Dict[str, Any], raw_text: str = "") -> D
 
 
 # ---------------------------------------------------------------------------
-# Layer 2a: Deterministic Core Skill Overlap Check
+# Layer 2a: Deterministic Primary Skill Check
+# Uses the LLM-extracted primary_defining_skill from the structuring step.
+# If a job is defined by a single non-negotiable skill (e.g., Go, C++, Android)
+# and the candidate lacks it entirely, reject immediately.
+# ---------------------------------------------------------------------------
+
+def check_primary_skill(structured_data: Dict[str, Any], allowed_skills: set) -> Dict[str, Any]:
+    """Check if the candidate has the absolute primary defining skill (if one exists)."""
+    primary = structured_data.get("primary_defining_skill")
+    
+    if not primary or str(primary).strip().lower() == "null" or str(primary).strip() == "none" or str(primary).strip() == "":
+        return {"override": False}
+        
+    primary_clean = str(primary).strip().lower()
+    
+    # Check if primary_clean matches any allowed_skill
+    for candidate_skill in allowed_skills:
+        if primary_clean == candidate_skill:
+            return {"override": False}
+        if len(primary_clean) >= 3 and len(candidate_skill) >= 3:
+            if primary_clean in candidate_skill or candidate_skill in primary_clean:
+                return {"override": False}
+                
+    return {
+        "override": True,
+        "eligible": "NO",
+        "reason": f"Ineligible: Candidate lacks the primary defining skill '{primary}' which is an absolute requirement for this role."
+    }
+
+# ---------------------------------------------------------------------------
+# Layer 2b: Deterministic Core Skill Overlap Check
 # Uses the LLM-extracted core_skills from the structuring step to verify
 # that the candidate has meaningful overlap with the job's CORE requirements.
 # This catches obvious mismatches (C++, Golang, Android, CUDA, etc.)
@@ -372,7 +402,19 @@ def eligibility_node(state: JDState) -> JDState:
     rules_config = parsed_profile.get("rules_config", {})
     allowed_skills = parsed_profile.get("allowed_skills", set())
 
-    # Layer 2a: Deterministic core skill overlap check
+    # Layer 2a: Deterministic primary skill check
+    # Checks if the role has a single defining skill (e.g., Go, C++) that the candidate lacks
+    primary_skill_check = check_primary_skill(structured_data, allowed_skills)
+    if primary_skill_check.get("override"):
+        return {
+            "eligibility_result": {
+                "Eligible": "NO",
+                "Reasoning": primary_skill_check.get("reason", "Ineligible: primary skill mismatch.")
+            },
+            "profile_data": profile_text
+        }
+
+    # Layer 2b: Deterministic core skill overlap check
     # Uses the LLM-extracted core_skills from structuring to catch obvious
     # mismatches (C++, Golang, Android, CUDA, etc.) BEFORE the LLM call.
     skill_check = check_core_skill_overlap(structured_data, allowed_skills)
@@ -385,7 +427,7 @@ def eligibility_node(state: JDState) -> JDState:
             "profile_data": profile_text
         }
 
-    # Layer 2b: LLM semantic evaluation
+    # Layer 2c: LLM semantic evaluation
     prompt = get_eligibility_prompt(structured_data, profile_text, evidence_summary)
     llm_result = run_llm_json_step(cleaned_text, prompt, ELIGIBILITY_MODELS)
 

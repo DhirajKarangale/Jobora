@@ -38,9 +38,10 @@ FIELD SPECIFICATIONS & SCHEMA:
 Ensure your output strictly adheres to this JSON schema and data types:
 
 1. "role" (String): Extract the exact official job role/title explicitly stated in the posting (e.g., "Cloud Developer", "QA Engineer", "Software Engineer", "Full Stack Developer", "Data Engineer", "Android Developer", "C++ Engineer"). If absent, output "Not provided".
-2. "core_skills" (Array of Strings): Extract the CORE/MANDATORY technical skills that are FUNDAMENTAL to performing this job. These are the technologies that define what the role actually is — the skills without which a candidate CANNOT do this job. Examples: For an Android Developer role, core skills are "Android", "Kotlin", "Java (Android)". For a Data Engineer role, core skills are "PySpark", "ETL", "Snowflake", "Airflow". For a C++ Engineer, the core skill is "C++". For a Full-Stack Web Developer, core skills are "React", "Node.js", "TypeScript". Core skills are typically: mentioned in the job title, listed as "required"/"must-have", or central to the described responsibilities.
-3. "secondary_skills" (Array of Strings): Extract the SECONDARY/SUPPORTING/NICE-TO-HAVE technical skills. These are generic, transferable, or supplementary technologies that support the core role but do NOT define it. Examples: "Git", "Docker", "AWS", "SQL", "REST APIs", "CI/CD", "Agile". These are skills that many engineering roles share regardless of specialization.
-4. "experience" (String): Extract the exact phrase or range regarding required years of experience (e.g. "0-2 years", "3-5 years", "8+ years", "2+ yrs"). If completely absent, output "Not provided".
+2. "primary_defining_skill" (String or null): The SINGLE most critical programming language, framework, or technology that fundamentally defines this role (e.g., "Go" for a "Go Lang Developer", "C++" for a "C++ Engineer", "Android" for "Android Developer"). This skill is an absolute dealbreaker. If the role is generic (e.g., "Software Engineer") without a single defining technology, output null.
+3. "core_skills" (Array of Strings): Extract the CORE/MANDATORY technical skills that are FUNDAMENTAL to performing this job. These are the technologies that define what the role actually is — the skills without which a candidate CANNOT do this job. Examples: For an Android Developer role, core skills are "Android", "Kotlin", "Java (Android)". For a Data Engineer role, core skills are "PySpark", "ETL", "Snowflake", "Airflow". For a C++ Engineer, the core skill is "C++". For a Full-Stack Web Developer, core skills are "React", "Node.js", "TypeScript". Core skills are typically: mentioned in the job title, listed as "required"/"must-have", or central to the described responsibilities.
+4. "secondary_skills" (Array of Strings): Extract the SECONDARY/SUPPORTING/NICE-TO-HAVE technical skills. These are generic, transferable, or supplementary technologies that support the core role but do NOT define it. Examples: "Git", "Docker", "AWS", "SQL", "REST APIs", "CI/CD", "Agile". These are skills that many engineering roles share regardless of specialization.
+5. "experience" (String): Extract the exact phrase or range regarding required years of experience (e.g. "0-2 years", "3-5 years", "8+ years", "2+ yrs"). If completely absent, output "Not provided".
 5. "education" (String): Extract degree requirements (e.g. "Bachelor's in CS"). If absent, output "Not provided".
 6. "salary" (String): Extract the exact salary range and currency explicitly stated. If stated in a foreign currency (e.g., USD, EUR), append a bracketed estimated conversion to INR LPA based on standard market rates (e.g., "$100k - $120k (Approx. 80-96 LPA)"). If completely absent, output "Not provided".
 7. "location" (String): Extract the job location(s) if explicitly stated. If absent, output "Not provided".
@@ -62,6 +63,7 @@ Do NOT include any conversational filler before or after the JSON.
 
 {{
   "role": "",
+  "primary_defining_skill": null,
   "core_skills": [],
   "secondary_skills": [],
   "experience": "",
