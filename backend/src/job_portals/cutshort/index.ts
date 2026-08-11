@@ -106,8 +106,7 @@ export default async function cutshort(browser: Browser): Promise<void> {
         description: fullDescription,
         link: applyLink,
         portal_link: portalLink,
-        role: jobData.role,
-        isEligible: true
+        role: jobData.role
       };
 
       const applyStatus = await page.evaluate(async (index) => {
@@ -144,6 +143,7 @@ export default async function cutshort(browser: Browser): Promise<void> {
       } else {
         const id = await saveJob(dataToSave);
         if (id) {
+          await addToProcessStream({ id });
           incrementJobsScraped();
         }
       }

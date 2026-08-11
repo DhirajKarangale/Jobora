@@ -36,6 +36,7 @@ def init_db():
 
 def get_all_jobs(conn):
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("SELECT * FROM jobs ORDER BY added_date DESC;")
         rows = cur.fetchall()
         return [dict(row) for row in rows] if rows else []
 

@@ -29,5 +29,5 @@ export async function edge() {
 }
 
 export async function closeBrowser(browser: Browser): Promise<void> {
-  await browser.close();
+  // await browser.close();
 }

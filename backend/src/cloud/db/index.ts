@@ -25,7 +25,8 @@ export const pool = new Pool({
   },
 });
 
-pool.on('error', (err, _client) => {
+pool.on('error', (err: any, _client) => {
+  if (err.message === 'Connection terminated unexpectedly') return;
   console.error('Unexpected error on idle database client', err);
 });
 

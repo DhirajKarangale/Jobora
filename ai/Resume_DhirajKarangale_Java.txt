@@ -1,0 +1,146 @@
+% --- HEADER ---
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{enumitem}
+\usepackage[hidelinks,pdfnewwindow]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{fontawesome5}
+\usepackage{geometry}
+\input{glyphtounicode}
+
+% --- MARGINS & SPACING CONFIGURATION ---
+\geometry{
+    letterpaper,
+    left=0.5in,
+    right=0.5in,
+    top=0.3in,
+    bottom=0.3in,
+    headheight=0pt,
+    headsep=0pt
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\setlength{\footskip}{10pt}
+\raggedbottom
+\raggedright
+\urlstyle{same}
+\pdfgentounicode=1
+
+% --- GLOBAL LIST VARIABLES ---
+\setlist[itemize]{
+    label={--},
+    itemsep=2pt,
+    parsep=0pt,
+    topsep=2pt,
+    partopsep=0pt,
+    leftmargin=*
+}
+
+% Custom list for Skills
+\newlist{skillslist}{itemize}{1}
+\setlist[skillslist]{
+    label={},
+    leftmargin=0pt,
+    itemsep=2pt,
+    parsep=0pt,
+    topsep=2pt
+}
+
+% --- SECTION FORMATTING ---
+\titlespacing*{\section}{0pt}{7pt}{3.5pt}
+\titleformat{\section}{
+  \scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule]
+
+\titlespacing*{\subsection}{0pt}{5.5pt}{1.5pt}
+\titleformat{\subsection}{
+  \small\bfseries
+}{}{0em}{}
+
+% --- DOCUMENT START ---
+\begin{document}
+
+% --- NAME & CONTACT ---
+\begin{center}
+    {\Huge \scshape Dhiraj Karangale} \\ \smallskip
+    \small 
+    \underline{+91 7620320595} \enskip
+    \faIcon{envelope} \href{mailto:dakarangale02@gmail.com}{\underline{dakarangale02@gmail.com}} \enskip
+    \faIcon{linkedin} \href{https://www.linkedin.com/in/dhiraj-karangale-464ab91bb/}{\underline{linkedin/dhiraj-karangale}} \enskip
+    \faIcon{github} \href{https://github.com/DhirajKarangale}{\underline{github/DhirajKarangale}} \enskip
+    \faIcon{code} \href{https://dhirajkarangale.vercel.app}{\underline{Portfolio}}
+\end{center}
+
+% --- Skills ---
+\section{Skills}
+\begin{skillslist}
+    \item \textbf{Languages:} Java, JavaScript, TypeScript, Python, SQL
+    \item \textbf{Backend:} Spring Boot, Spring Security, Spring Data JPA, Node.js, Express.js, REST APIs, gRPC, WebSockets
+    \item \textbf{Databases \& Cloud:} PostgreSQL, MySQL, Redis, MongoDB, AWS, GCP
+    \item \textbf{Tools \& Concepts:} Git, Docker, Jenkins (CI/CD), Microservices, System Design, OOP
+\end{skillslist}
+
+% --- Achievements ---
+\section{Achievements}
+\begin{itemize}
+    \item Demonstrated advanced Data Structures \& Algorithms proficiency by achieving \href{https://leetcode.com/u/DhirajKarangale/}{\underline{\textbf{LeetCode Knight}}} (2,012 Rating), ranked in the top \textbf{2.45\%} globally with \textbf{1K+} solved problems.
+    \item Developed and shipped Android applications, achieving over \textbf{211K+ Play Store downloads}.
+    \item Published open-source \href{https://www.npmjs.com/~dhirajkarangale}{\underline{\textbf{npm libraries}}} with \textbf{3.3K+} downloads.
+    \item Selected as a \textbf{HackWithInfy Finalist}, and one of 150 builders chosen from 5K+ applicants at \textbf{Push to Prod 2026}, an Anthropic Claude hackathon.
+\end{itemize}
+
+% --- EXPERIENCE ---
+\section{Experience}
+
+\subsection{Infosys $|$ \normalfont\footnotesize\emph{Specialist Programmer – Software Development Engineer} \hspace*{\fill} \normalfont\small Aug 2024 -- Present}
+\begin{itemize}
+    \item Developed POCs using \textbf{Java and Spring Boot}, including \textbf{gRPC}-based service communication and backend service integration.
+    \item Built a React library to export complex dashboards into fully editable PPT and PDF documents, adopted across 7+ projects by 3 teams, reducing manual report creation from hours to one click.
+    \item Developed an AI-powered platform transforming meeting transcripts and videos into structured Process Design Documents, reducing creation time from hours to under 5 minutes.
+    \item Architected applications using \textbf{REST APIs, MySQL, and Webpack Module Federation}, enabling scalable backend integration and independent frontend deployments.
+    \item Optimized \textbf{MySQL queries} and implemented database indexing, reducing API response times by \textbf{25\%}.
+    \item Integrated AWS (S3, Parameter Store) and GCP (Cloud SQL, Redis, Cloud Storage) for configuration management and data storage.
+\end{itemize}
+
+\subsection{SaralTech $|$ \normalfont\footnotesize\emph{Software Engineer Intern} \hspace*{\fill} \normalfont\small Jan 2024 -- Jun 2024}
+\begin{itemize}
+    \item Developed REST APIs and React-based application workflows for a real-time application, integrating WebSockets for live updates and state synchronization.
+    \item Implemented \textbf{JWT authentication, session management, and Google OAuth} for application access.
+\end{itemize}
+
+% --- PROJECTS ---
+\section{Projects}
+
+\subsection{\href{https://github.com/DhirajKarangale/ConsentManagement}{\underline{Consent Management}} $|$ \normalfont\footnotesize\emph{Java, Spring Boot, Spring Security, Spring Data JPA, PostgreSQL, React, TypeScript} \hspace*{\fill} \normalfont\small 2025}
+\begin{itemize}
+    \item Built a full-stack role-based consent management platform aligned with India's \textbf{DPDP Act, 2023}.
+    \item Developed backend REST APIs using \textbf{Java Spring Boot} with Controller-Service-Repository architecture.
+    \item Implemented \textbf{Spring Security}, session-based authentication, and role-based access control across User, Company, Consent Manager, and Government roles.
+    \item Managed consent lifecycle and audit operations using \textbf{Spring Data JPA and PostgreSQL}.
+\end{itemize}
+
+\subsection{\href{https://satyamark.vercel.app/}{\underline{SatyaMark}} $|$ \normalfont\footnotesize\emph{Python, Node.js, PostgreSQL, Redis Streams, WebSockets, LangGraph} \hspace*{\fill} \normalfont\small 2025}
+\begin{itemize}
+    \item Built an open-source multi-modal content verification platform using distributed processing and asynchronous worker architecture.
+    \item Designed verification pipelines using \textbf{PostgreSQL, Redis Streams, WebSockets}, and independent workers with retries and API failover.
+    \item Implemented processing workflows for claim extraction, evidence retrieval, scoring, and re-evaluation.
+    \item Published a reusable React SDK with \textbf{2.3K+ downloads} for integrating live verification results.
+\end{itemize}
+
+% --- EDUCATION ---
+\section{Education}
+
+\subsection{Sinhgad College of Engineering, Pune $|$ \normalfont\footnotesize\emph{B.E. Computer Engineering (CGPA: 8.18)} \hspace*{\fill} \normalfont\small 2021 -- 2024}
+
+\end{document}

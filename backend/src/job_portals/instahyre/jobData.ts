@@ -29,6 +29,8 @@ export async function extractJobData(page: Page): Promise<{ companyName: string 
       };
     });
 
+    if (!data.companyName) return { companyName: '', isAlreadyProcessed: false };
+
     const cleanJobId = data.opportunityId ? data.opportunityId.trim().toLowerCase() : "";
     if (cleanJobId && await isJobExisting(cleanJobId)) {
       return { companyName: data.companyName, isAlreadyProcessed: true };
