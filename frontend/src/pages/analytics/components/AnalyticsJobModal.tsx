@@ -32,13 +32,12 @@ export function AnalyticsJobModal({ job, isOpen, onClose }: AnalyticsJobModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className={`sm:max-w-[850px] max-h-[85vh] overflow-hidden flex flex-col gap-0 p-0 bg-card rounded-2xl border-2 ${
-        job.isApplied 
+      <DialogContent className={`sm:max-w-[850px] max-h-[85vh] overflow-hidden flex flex-col gap-0 p-0 bg-card rounded-2xl border-2 ${job.isApplied
           ? "border-emerald-500/50 shadow-[0_0_20px_-3px_rgba(16,185,129,0.15)]"
           : job.isExpired
             ? "border-red-500/50 shadow-[0_0_20px_-3px_rgba(239,68,68,0.15)]"
             : "border-border shadow-2xl"
-      }`}>
+        }`}>
         <DialogHeader className="p-6 border-b border-border/50 bg-muted/20 relative shrink-0">
           <div className="flex flex-col gap-2 pr-8">
             <div className="flex justify-between items-start gap-4">
@@ -71,7 +70,7 @@ export function AnalyticsJobModal({ job, isOpen, onClose }: AnalyticsJobModalPro
                   Best Fit: {job.fitResume} Resume
                 </Badge>
               )}
-              
+
               <div className="flex items-center gap-2 ml-auto">
                 {job.portal_link && (
                   <a href={job.portal_link} target="_blank" rel="noreferrer" className="text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground px-2.5 py-1 rounded-full transition-colors flex items-center gap-1">

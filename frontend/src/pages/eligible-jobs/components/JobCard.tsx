@@ -57,7 +57,7 @@ export function JobCard({
                 className="bg-emerald-500/10 backdrop-blur-xs font-semibold text-[8px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400 border-emerald-500/20 px-1.5 py-0 rounded-full"
                 title="Best Fit Resume"
               >
-                {job.fitResume} Resume
+                {job.fitResume}
               </Badge>
             )}
             <Badge

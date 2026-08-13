@@ -50,8 +50,10 @@ def run_worker(worker_id: int = 1):
                 redis_handler.acknowledge_job(msg_id)
 
                 try:
-                    manage_job_workflow(job_id=job_id, redis_handler=redis_handler, msg_id=msg_id)
-                    print(f"[Worker {worker_id}] Successfully updated job: {job_id}")
+                    updated_job, is_eligible, fit_resume = manage_job_workflow(job_id=job_id, redis_handler=redis_handler, msg_id=msg_id)
+                    elig_str = "YES" if is_eligible else "NO"
+                    res_str = fit_resume if fit_resume else "NONE"
+                    print(f"[Worker {worker_id}] Successfully updated job: {job_id} | Eligible: {elig_str} | Resume: {res_str}")
                 except AllTokensExhaustedException as ate:
                     print("\n" + "=" * 70)
                     print(f"[Worker {worker_id} (PID: {os.getpid()})] STOPPING WORKER: {str(ate)}")

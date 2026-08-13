@@ -40,7 +40,7 @@ def manage_job_workflow(job_id: str, redis_handler=None, msg_id: str = None):
         if redis_handler and msg_id:
             redis_handler.remove_job_from_process_stream(msg_id)
 
-        return updated_job
+        return updated_job, is_eligible, update_fields["fit_resume"]
 
     except Exception as e:
         if redis_handler and msg_id:
