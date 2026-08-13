@@ -50,12 +50,23 @@ export function JobCard({
             {job.addedDate ? new Date(job.addedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ""}
           </div>
           
-          <Badge
-            variant="outline"
-            className="bg-muted/90 backdrop-blur-xs font-semibold text-[8px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400 border-indigo-500/20 px-1.5 py-0 rounded-full"
-          >
-            {sourceShort}
-          </Badge>
+          <div className="flex items-center gap-1.5">
+            {job.fitResume && (
+              <Badge
+                variant="outline"
+                className="bg-emerald-500/10 backdrop-blur-xs font-semibold text-[8px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400 border-emerald-500/20 px-1.5 py-0 rounded-full"
+                title="Best Fit Resume"
+              >
+                {job.fitResume} Resume
+              </Badge>
+            )}
+            <Badge
+              variant="outline"
+              className="bg-muted/90 backdrop-blur-xs font-semibold text-[8px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400 border-indigo-500/20 px-1.5 py-0 rounded-full"
+            >
+              {sourceShort}
+            </Badge>
+          </div>
         </div>
 
         <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground font-medium pt-1">

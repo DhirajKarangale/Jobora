@@ -16,7 +16,8 @@ import {
   DollarSign,
   Wrench,
   Sparkles,
-  Clock
+  Clock,
+  FileText
 } from "lucide-react";
 
 interface JobDetailModalProps {
@@ -86,6 +87,12 @@ export function JobDetailModal({ job, open, onOpenChange }: JobDetailModalProps)
               <div className="text-xs text-muted-foreground/80 font-medium">
                 {new Date(job.addedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
+            )}
+            {job.fitResume && (
+              <Badge variant="outline" className="ml-0 sm:ml-2 mt-2 sm:mt-0 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-semibold px-2 py-0.5 text-[10px] uppercase">
+                <FileText className="w-3 h-3 mr-1 inline" />
+                Best Fit: {job.fitResume} Resume
+              </Badge>
             )}
           </div>
         </DialogHeader>

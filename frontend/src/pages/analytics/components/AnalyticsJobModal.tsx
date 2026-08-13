@@ -13,7 +13,8 @@ import {
   Sparkles,
   Clock,
   Calendar,
-  ExternalLink
+  ExternalLink,
+  FileText
 } from "lucide-react";
 
 interface AnalyticsJobModalProps {
@@ -63,6 +64,12 @@ export function AnalyticsJobModal({ job, isOpen, onClose }: AnalyticsJobModalPro
                   <Calendar className="w-3.5 h-3.5" />
                   Added: {new Date(job.addedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </div>
+              )}
+              {job.fitResume && (
+                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-semibold px-2 py-0.5 text-xs">
+                  <FileText className="w-3.5 h-3.5 mr-1.5 inline" />
+                  Best Fit: {job.fitResume} Resume
+                </Badge>
               )}
               
               <div className="flex items-center gap-2 ml-auto">

@@ -12,6 +12,7 @@ export interface Job {
   appliedDate?: string | null;
   role?: string | null;
   isAutoApply?: boolean;
+  fitResume?: string | null;
 }
 
 export interface ParsedJobData {

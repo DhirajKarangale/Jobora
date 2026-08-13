@@ -201,11 +201,12 @@ export interface DataJobFrontend {
   isExpired: boolean;
   portal_link: string | null;
   role: string | null;
+  fitResume?: string | null;
 }
 
 export async function getAllEligibleJobs(): Promise<DataJobFrontend[]> {
   const query = `
-    SELECT id, source, company, description, apply_link, (applied_date IS NOT NULL) AS isapplied, added_date, is_expired, portal_link, role
+    SELECT id, source, company, description, apply_link, (applied_date IS NOT NULL) AS isapplied, added_date, is_expired, portal_link, role, fit_resume
     FROM jobs
     WHERE is_eligible IS NOT NULL
       AND LOWER(is_eligible::text) = 'true'
@@ -227,6 +228,7 @@ export async function getAllEligibleJobs(): Promise<DataJobFrontend[]> {
     isExpired: Boolean(r.is_expired),
     portal_link: r.portal_link,
     role: r.role,
+    fitResume: r.fit_resume,
   }));
 }
 
@@ -457,7 +459,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
       id, source, company, description, apply_link, 
       (applied_date IS NOT NULL) AS isapplied, 
       added_date, is_expired, portal_link,
-      is_eligible, applied_date, role, is_auto_apply
+      is_eligible, applied_date, role, is_auto_apply, fit_resume
     FROM jobs
     ${filterQuery}
     ORDER BY added_date DESC
@@ -507,6 +509,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     appliedDate: r.applied_date ? new Date(r.applied_date).toISOString() : null,
     role: r.role,
     isAutoApply: r.is_auto_apply !== null ? Boolean(r.is_auto_apply) : undefined,
+    fitResume: r.fit_resume,
   }));
 
   return {

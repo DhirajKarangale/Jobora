@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Set
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(BASE_DIR, "rules_config.json")
 PROFILE_PATH = os.path.abspath(
-    os.path.join(BASE_DIR, "..", "..", "Dhiraj_Karangale_Profile.md")
+    os.path.join(BASE_DIR, "..", "..", "profile", "Dhiraj_Karangale_Profile.md")
 )
 
 def load_rules_config() -> Dict[str, Any]:

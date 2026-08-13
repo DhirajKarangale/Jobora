@@ -158,3 +158,30 @@ Output ONLY a valid JSON object. Do not wrap in markdown code blocks.
   "eligible": "YES or NO"
 }}
 """
+
+def get_resume_selection_prompt(structured_jd: dict, all_resumes_text: str) -> str:
+    jd_str = json.dumps(structured_jd, indent=2, ensure_ascii=False)
+    
+    return f"""You are an expert technical recruiter matching a job description to a candidate's available resumes.
+
+STRUCTURED JOB DESCRIPTION:
+{jd_str}
+
+AVAILABLE RESUMES:
+{all_resumes_text}
+
+EVALUATION INSTRUCTIONS:
+1. Carefully analyze the requirements in the job description (Core Skills, Domain, Responsibilities).
+2. Read through the full text of all provided resumes to understand the candidate's experience in different domains.
+3. Determine which resume highlights the skills and experience that BEST match the job description.
+4. The available resumes are typically named "General", "AI", "Java", and "MERN", but their exact names and contents are provided above.
+5. If NO resume is a good fit for this role (e.g. the role requires skills completely missing across all resumes), you must indicate that by returning "fit_resume": "NONE".
+
+OUTPUT FORMAT:
+Output ONLY a valid JSON object. Do not wrap in markdown code blocks.
+
+{{
+  "reasoning": "Explain why this specific resume was chosen, or why none fit.",
+  "fit_resume": "Name of the best-fit resume (e.g. 'General', 'AI', 'Java', 'MERN'), or 'NONE' if none fit"
+}}
+"""

@@ -56,7 +56,7 @@ The Jobora system operates through a carefully orchestrated data flow:
 4. **AI Processing Pipeline**: The **AI** background workers continuously poll the Redis queue. When a job ID is picked up, they:
    - Fetch the raw data from PostgreSQL.
    - Run a stateful AI pipeline (LangGraph) to *Clean* the HTML/noise and *Structure* the data (skills, salary, experience) into strict JSON formats.
-   - *Evaluate* the structured requirements against the candidate's local profile (`Dhiraj_Karangale_Profile.md`).
+   - *Evaluate* the structured requirements against the candidate's local profile (`ai/profile/Dhiraj_Karangale_Profile.md`).
 5. **Final Output**: The AI worker updates the PostgreSQL record with the structured data and the final `is_eligible` boolean flag. This processed data is then instantly available to be visualized and managed on the **Frontend** dashboard.
 
 ## 🚀 How to Run the Project

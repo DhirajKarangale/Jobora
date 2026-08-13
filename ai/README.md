@@ -16,7 +16,7 @@ The AI directory contains a powerful background worker application that automati
 3. **Analyze:** It uses a 3-step AI pipeline to:
    - **Clean:** Remove HTML, formatting artifacts, and noise from the raw text while preserving technical details.
    - **Structure:** Extract key fields into a strict JSON format based on the cleaned text.
-   - **Evaluate:** Compare the job requirements against a local candidate profile (`Dhiraj_Karangale_Profile.md`) to determine if the candidate is a match.
+   - **Evaluate:** Compare the job requirements against a local candidate profile (`profile/Dhiraj_Karangale_Profile.md`) to determine if the candidate is a match.
 4. **Update:** It saves the structured JSON data and the boolean eligibility status back to the PostgreSQL database and acknowledges the message in Redis.
 
 ## Architecture
@@ -67,7 +67,7 @@ HF_TOKENS=your_hf_token_1,your_hf_token_2
 ```
 
 ### 3. Configure Candidate Profile
-The AI pipeline evaluates job eligibility against a specific candidate's profile. You must update the [`Dhiraj_Karangale_Profile.md`](file:///e:/FullStack/Jobora/ai/Dhiraj_Karangale_Profile.md) file in this directory with your own experience, skills, target roles, and preferences before running the processor.
+The AI pipeline evaluates job eligibility against a specific candidate's profile. You must update the [`profile/Dhiraj_Karangale_Profile.md`](file:///e:/FullStack/Jobora/ai/profile/Dhiraj_Karangale_Profile.md) file in this directory with your own experience, skills, target roles, and preferences before running the processor.
 
 ### 4. Run the Test Workflow
 Before starting the full worker pool, you can run the test script to verify that the AI pipeline can successfully process a sample job. This is useful for debugging changes to the prompts or logic.

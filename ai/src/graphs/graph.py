@@ -398,16 +398,74 @@ def eligibility_node(state: JDState) -> JDState:
     }
 
 
+def load_all_resumes() -> str:
+    import os
+    profile_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "profile"))
+    resume_files = {
+        "General": "Resume_DhirajKarangale.txt",
+        "AI": "Resume_DhirajKarangale_AI.txt",
+        "MERN": "Resume_DhirajKarangale_FullStack.txt",
+        "Java": "Resume_DhirajKarangale_Java.txt"
+    }
+    
+    combined_text = ""
+    for name, filename in resume_files.items():
+        filepath = os.path.join(profile_dir, filename)
+        if os.path.exists(filepath):
+            with open(filepath, "r", encoding="utf-8") as f:
+                content = f.read()
+                combined_text += f"\n\n--- RESUME: {name} ---\n\n{content}"
+    
+    return combined_text
+
+
+def resume_selector_node(state: JDState) -> JDState:
+    structured_data = state.get("structured_data", {})
+    all_resumes_text = load_all_resumes()
+    
+    from graphs.prompts import get_resume_selection_prompt
+    prompt = get_resume_selection_prompt(structured_data, all_resumes_text)
+    
+    llm_result = run_llm_json_step(state.get("current_text", ""), prompt, ELIGIBILITY_MODELS)
+    
+    fit_resume_raw = str(llm_result.get("fit_resume") or "General").strip()
+    reasoning = str(llm_result.get("reasoning") or "")
+    
+    valid_resumes = ["AI", "Java", "MERN", "General"]
+    
+    eligibility_result = dict(state.get("eligibility_result", {}))
+    
+    if fit_resume_raw == "NONE":
+        eligibility_result["Eligible"] = "NO"
+        eligibility_result["Reasoning"] = eligibility_result.get("Reasoning", "") + f" | Resume Selector Rejected: {reasoning}"
+    else:
+        fit_resume = fit_resume_raw if fit_resume_raw in valid_resumes else "General"
+        eligibility_result["fit_resume"] = fit_resume
+        eligibility_result["Reasoning"] = eligibility_result.get("Reasoning", "") + f" | Selected Resume: {fit_resume} - {reasoning}"
+        
+    return {"eligibility_result": eligibility_result}
+
+
 builder = StateGraph(JDState)
 
 builder.add_node("text_cleaning", text_cleaning_node)
 builder.add_node("structuring", structuring_node)
 builder.add_node("eligibility_evaluator", eligibility_node)
+builder.add_node("resume_selector", resume_selector_node)
 
 builder.add_edge(START, "text_cleaning")
 builder.add_edge("text_cleaning", "structuring")
 builder.add_edge("structuring", "eligibility_evaluator")
-builder.add_edge("eligibility_evaluator", END)
+
+def should_select_resume(state: JDState):
+    elig_result = state.get("eligibility_result", {})
+    eligible = elig_result.get("Eligible", elig_result.get("eligible", "NO"))
+    if eligible in ["YES", "TRUE", "ELIGIBLE"]:
+        return "resume_selector"
+    return END
+
+builder.add_conditional_edges("eligibility_evaluator", should_select_resume, {"resume_selector": "resume_selector", END: END})
+builder.add_edge("resume_selector", END)
 
 jd_cleaner_graph = builder.compile()
 
@@ -439,11 +497,13 @@ def process_job_description(job_input: Any, job_id: str = "", source_job_id: str
     final_state = jd_cleaner_graph.invoke(initial_state)
     eligibility_result = final_state.get("eligibility_result", {})
     eligible_val = eligibility_result.get("Eligible", eligibility_result.get("eligible", "NO"))
+    fit_resume_val = eligibility_result.get("fit_resume")
 
     return {
         "id": jid,
         "source_job_id": sjid,
         "eligible": eligible_val,
         "cleaned_description": final_state.get("current_text", ""),
-        "structured_data": final_state.get("structured_data", {})
+        "structured_data": final_state.get("structured_data", {}),
+        "fit_resume": fit_resume_val
     }
