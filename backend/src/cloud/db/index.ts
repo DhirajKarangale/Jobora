@@ -102,7 +102,7 @@ export async function saveJob(data: DataJob): Promise<string> {
     return "";
   }
 
-  const query = `
+    const query = `
     INSERT INTO jobs (
       source,
       source_job_id,
@@ -113,7 +113,7 @@ export async function saveJob(data: DataJob): Promise<string> {
       added_date,
       portal_link, 
       role,
-      is_eligible
+      fit_resume
     )
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING id;
@@ -129,7 +129,7 @@ export async function saveJob(data: DataJob): Promise<string> {
     new Date(),
     data.portal_link || null,
     data.role,
-    data.isEligible !== undefined ? data.isEligible : null
+    data.isEligible === true ? 'General' : (data.isEligible === false ? 'NONE' : null)
   ];
 
   const { rows } = await pool.query(query, values);
@@ -159,7 +159,7 @@ export async function saveEligibleAndAppliedJob(data: DataJob): Promise<string> 
       external_job_id,
       description,
       apply_link,
-      is_eligible,
+      fit_resume,
       added_date,
       applied_date,
       portal_link,
@@ -177,7 +177,7 @@ export async function saveEligibleAndAppliedJob(data: DataJob): Promise<string> 
     cleanJobId,
     data.description,
     data.link,
-    true,
+    'General',
     new Date(),
     new Date(),
     data.portal_link || null,
@@ -208,8 +208,8 @@ export async function getAllEligibleJobs(): Promise<DataJobFrontend[]> {
   const query = `
     SELECT id, source, company, description, apply_link, (applied_date IS NOT NULL) AS isapplied, added_date, is_expired, portal_link, role, fit_resume
     FROM jobs
-    WHERE is_eligible IS NOT NULL
-      AND LOWER(is_eligible::text) = 'true'
+    WHERE fit_resume IS NOT NULL 
+      AND fit_resume != 'NONE'
       AND applied_date IS NULL
       AND (is_expired IS NULL OR is_expired = false)
     ORDER BY id DESC
@@ -368,11 +368,11 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     if (status === 'applied') {
       filterQuery += ` AND applied_date IS NOT NULL`;
     } else if (status === 'eligible') {
-      filterQuery += ` AND applied_date IS NULL AND LOWER(is_eligible::text) = 'true' AND (is_expired IS NULL OR is_expired = false)`;
+      filterQuery += ` AND applied_date IS NULL AND fit_resume IS NOT NULL AND fit_resume != 'NONE' AND (is_expired IS NULL OR is_expired = false)`;
     } else if (status === 'pending_ai') {
-      filterQuery += ` AND applied_date IS NULL AND is_eligible IS NULL AND (is_expired IS NULL OR is_expired = false)`;
+      filterQuery += ` AND applied_date IS NULL AND fit_resume IS NULL AND (is_expired IS NULL OR is_expired = false)`;
     } else if (status === 'not_eligible' || status === 'ineligible') {
-      filterQuery += ` AND is_eligible IS NOT NULL AND LOWER(is_eligible::text) != 'true'`;
+      filterQuery += ` AND fit_resume = 'NONE'`;
     } else if (status === 'expired') {
       filterQuery += ` AND is_expired = true`;
     }
@@ -381,7 +381,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
   const topCompaniesQuery = `
     SELECT company as name, COUNT(*) as count
     FROM jobs
-    ${filterQuery} AND company IS NOT NULL AND (LOWER(is_eligible::text) = 'true' OR applied_date IS NOT NULL)
+    ${filterQuery} AND company IS NOT NULL AND ((fit_resume IS NOT NULL AND fit_resume != 'NONE') OR applied_date IS NOT NULL)
     GROUP BY company
     ORDER BY count DESC
     LIMIT 10
@@ -393,10 +393,10 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
       COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END) as applied_jobs,
       COUNT(CASE WHEN applied_date IS NOT NULL AND is_auto_apply = true THEN 1 END) as auto_applied_jobs,
       COUNT(CASE WHEN applied_date IS NOT NULL AND (is_auto_apply IS NULL OR is_auto_apply = false) THEN 1 END) as manual_applied_jobs,
-      COUNT(CASE WHEN is_eligible IS NULL AND applied_date IS NULL THEN 1 END) as pending_ai_jobs,
-      COUNT(CASE WHEN LOWER(is_eligible::text) = 'false' THEN 1 END) as not_eligible_jobs,
+      COUNT(CASE WHEN fit_resume IS NULL AND applied_date IS NULL THEN 1 END) as pending_ai_jobs,
+      COUNT(CASE WHEN fit_resume = 'NONE' THEN 1 END) as not_eligible_jobs,
       COUNT(CASE WHEN is_expired = true THEN 1 END) as expired_jobs,
-      COUNT(CASE WHEN LOWER(is_eligible::text) = 'true' AND applied_date IS NULL AND (is_expired IS NULL OR is_expired = false) THEN 1 END) as active_jobs
+      COUNT(CASE WHEN fit_resume IS NOT NULL AND fit_resume != 'NONE' AND applied_date IS NULL AND (is_expired IS NULL OR is_expired = false) THEN 1 END) as active_jobs
     FROM jobs
     ${filterQuery}
   `;
@@ -405,7 +405,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     WITH date_series AS (
       SELECT DATE(added_date) as date, 
              1 as is_added, 
-             CASE WHEN LOWER(is_eligible::text) = 'true' OR (applied_date IS NOT NULL AND is_eligible IS NULL) THEN 1 ELSE 0 END as is_eligible,
+             CASE WHEN (fit_resume IS NOT NULL AND fit_resume != 'NONE') OR (applied_date IS NOT NULL AND fit_resume IS NULL) THEN 1 ELSE 0 END as is_eligible,
              0 as is_applied 
       FROM jobs ${filterQuery}
       UNION ALL
@@ -441,7 +441,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
       COUNT(CASE WHEN applied_date IS NOT NULL AND is_auto_apply = true THEN 1 END) as auto_applied,
       COUNT(CASE WHEN applied_date IS NOT NULL AND (is_auto_apply IS NULL OR is_auto_apply = false) THEN 1 END) as manual_applied
     FROM jobs
-    ${filterQuery} AND source IS NOT NULL AND LOWER(is_eligible::text) = 'true'
+    ${filterQuery} AND source IS NOT NULL AND (fit_resume IS NOT NULL AND fit_resume != 'NONE')
     GROUP BY source
     ORDER BY (COUNT(CASE WHEN applied_date IS NULL AND (is_expired IS NULL OR is_expired = false) THEN 1 END) + COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END)) DESC
   `;
@@ -459,7 +459,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
       id, source, company, description, apply_link, 
       (applied_date IS NOT NULL) AS isapplied, 
       added_date, is_expired, portal_link,
-      is_eligible, applied_date, role, is_auto_apply, fit_resume
+      applied_date, role, is_auto_apply, fit_resume
     FROM jobs
     ${filterQuery}
     ORDER BY added_date DESC
@@ -505,7 +505,7 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
     addedDate: r.added_date ? new Date(r.added_date).toISOString() : null,
     isExpired: Boolean(r.is_expired),
     portal_link: r.portal_link,
-    isEligible: r.is_eligible !== null ? (String(r.is_eligible).toLowerCase() === 'true' || r.is_eligible === true) : undefined,
+    isEligible: r.fit_resume !== null ? (r.fit_resume !== 'NONE') : undefined,
     appliedDate: r.applied_date ? new Date(r.applied_date).toISOString() : null,
     role: r.role,
     isAutoApply: r.is_auto_apply !== null ? Boolean(r.is_auto_apply) : undefined,
@@ -575,7 +575,7 @@ export async function setJobsIneligibleStatus(jobIds: string[]): Promise<boolean
 
   const query = `
     UPDATE jobs
-    SET is_eligible = false
+    SET fit_resume = 'NONE'
     WHERE id = ANY($1::uuid[])
   `;
 
@@ -604,7 +604,7 @@ export async function setJobAppliedFromPending(jobId: string): Promise<boolean> 
 
   const query = `
     UPDATE jobs
-    SET applied_date = CURRENT_DATE, is_eligible = true
+    SET applied_date = CURRENT_DATE, fit_resume = 'General'
     WHERE id = $1
   `;
 
@@ -617,7 +617,7 @@ export async function resetPendingJobStatus(jobId: string): Promise<boolean> {
 
   const query = `
     UPDATE jobs
-    SET applied_date = NULL, is_eligible = NULL, is_auto_apply = NULL
+    SET applied_date = NULL, fit_resume = NULL, is_auto_apply = NULL
     WHERE id = $1
   `;
 
