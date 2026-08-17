@@ -49,7 +49,7 @@ export async function extractJobData(page: Page): Promise<{ companyName: string 
       companyName: data.companyName,
       jobId: cleanJobId,
       description: fullDescription,
-      link: data.companyLink,
+      link: data.companyLink || "",
       portal_link: null,
       role: data.role
     };

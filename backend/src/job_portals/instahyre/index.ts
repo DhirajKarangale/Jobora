@@ -11,17 +11,37 @@ async function applyJobs(page: Page): Promise<void> {
       const applyBtn = await page.$('.apply button');
 
       if (!applyBtn) {
-        // console.log("No apply button found. Exiting loop.");
         break;
       }
 
       const { companyName, isAlreadyProcessed } = await extractJobData(page);
+      
+      const isBlacklisted = companyName ? isBlacklistedCompany(companyName) : false;
 
-      if (isAlreadyProcessed) {
-        break;
+      if (isAlreadyProcessed || isBlacklisted) {
+        const skipped = await page.evaluate(() => {
+          const btns = Array.from(document.querySelectorAll('button'));
+          const skipBtn = btns.find(b => {
+            const text = (b.innerText || '').toLowerCase().trim();
+            return text.includes('not interested') || text.includes('no thanks') || text.includes('decline') || text.includes('skip');
+          });
+          if (skipBtn) {
+            skipBtn.click();
+            return true;
+          }
+          return false;
+        });
+
+        if (!skipped) {
+          console.log("Could not find skip/decline button. Exiting loop.");
+          break;
+        }
+
+        await delay(WAIT_TIME);
+        continue;
       }
 
-      if (companyName && !isBlacklistedCompany(companyName)) {
+      if (companyName) {
         await page.evaluate((btn: any) => btn.click(), applyBtn);
         incrementJobsAutoApplied();
       }
