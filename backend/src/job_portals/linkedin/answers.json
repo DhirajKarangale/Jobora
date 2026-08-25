@@ -1,0 +1,340 @@
+[
+  {
+    "pattern": "years?\\s+(?:of\\s+)?(?:work\\s+)?(?:professional\\s+)?experience",
+    "numericValue": "2",
+    "textValue": "2 years",
+    "dropdownValue": "Yes"
+  },
+  {
+    "pattern": "months?.*experience",
+    "numericValue": "1",
+    "textValue": "1 month",
+    "dropdownValue": "1"
+  },
+  {
+    "pattern": "(?:details|breakdown)\\s+of.*(?:ctc|package|salary|compensation)|(?:ctc|package|salary|compensation).*breakdown|(?:ctc|package|salary|compensation)\\s+structure|(?:fixed|variable).*component",
+    "numericValue": "Total CTC: ₹10.48 LPA | Fixed: ₹8.02 LPA | Variable: ₹2.46 LPA",
+    "textValue": "Total CTC: ₹10.48 LPA | Fixed: ₹8.02 LPA | Variable: ₹2.46 LPA",
+    "dropdownValue": "Total CTC: ₹10.48 LPA | Fixed: ₹8.02 LPA | Variable: ₹2.46 LPA"
+  },
+  {
+    "pattern": "current\\s+(?:package|compensation|ctc|salary)|(?:package|compensation|ctc|salary)\\s+current",
+    "numericValue": "10.48",
+    "fallbackNumericValue": "1048000",
+    "textValue": "10.48 INR LPA",
+    "fallbackTextValue": "1048000 INR LPA"
+  },
+  {
+    "pattern": "expected\\s+(?:package|compensation|ctc|salary)|(?:package|compensation|ctc|salary)\\s+expectations?",
+    "numericValue": "20",
+    "fallbackNumericValue": "2000000",
+    "textValue": "20 INR LPA",
+    "fallbackTextValue": "2000000 INR LPA"
+  },
+  {
+    "pattern": "(?:comfortable|willing|open|able).*?(?:commute|commuting|relocate|relocating|hybrid|on-site|onsite|in-person)",
+    "numericValue": "Yes",
+    "textValue": "Yes"
+  },
+  {
+    "pattern": "notice\\s+period.*(?:days|months|duration)|(?:duration|length|days|months).*notice\\s+period",
+    "numericValue": "30",
+    "textValue": "30 days"
+  },
+  {
+    "pattern": "last\\s+working\\s+day",
+    "numericValue": "NA",
+    "textValue": "NA",
+    "dropdownValue": "NA"
+  },
+  {
+    "pattern": "(?:serving|on)\\s+notice",
+    "numericValue": "Yes",
+    "textValue": "Yes"
+  },
+  {
+    "pattern": "(?:master|doctorate|phd|m\\.sc|m\\.a\\.)",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No"
+  },
+  {
+    "pattern": "(?:bachelor|degree|secondary|ged|high\\s+school|graduation|graduate|equivalent)",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes"
+  },
+  {
+    "pattern": "(?:authorized|eligible).*work",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes"
+  },
+  {
+    "pattern": "(?:require|need|visa).*sponsorship",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No"
+  },
+  {
+    "pattern": "city",
+    "numericValue": "Pune",
+    "textValue": "Pune",
+    "dropdownValue": "Pune",
+    "preferredOptions": ["Pune"]
+  },
+  {
+    "pattern": "state|province",
+    "numericValue": "Maharashtra",
+    "textValue": "Maharashtra",
+    "dropdownValue": "Maharashtra",
+    "preferredOptions": ["Maharashtra", "MH"]
+  },
+  {
+    "pattern": "country",
+    "numericValue": "India",
+    "textValue": "India",
+    "dropdownValue": "India",
+    "preferredOptions": ["India", "IN"]
+  },
+  {
+    "pattern": "which\\s+location.*applying|preferred\\s+location",
+    "numericValue": "Pune",
+    "textValue": "Pune",
+    "dropdownValue": "Pune",
+    "preferredOptions": ["Pune", "Bangalore", "Bengaluru", "Hyderabad", "Mumbai", "Any"]
+  },
+  {
+    "pattern": "(?:ready|ok\\s+with|happy\\s+to|agree\\s+to)",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes"
+  },
+  {
+    "pattern": "(?:who\\s+referred|name\\s+(?:of\\s+)?(?:the\\s+)?person.*refer|referral\\s+name)",
+    "numericValue": "NA",
+    "textValue": "NA",
+    "dropdownValue": "NA"
+  },
+  {
+    "pattern": "\\b(?:referred|referral)\\b",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No"
+  },
+  {
+    "pattern": "portfolio|website|blog|link\\s+to.*work",
+    "numericValue": "https://dhirajkarangale.vercel.app/",
+    "textValue": "https://dhirajkarangale.vercel.app/",
+    "dropdownValue": "https://dhirajkarangale.vercel.app/"
+  },
+  {
+    "pattern": "linkedin|social\\s+media",
+    "numericValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb/",
+    "textValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb/",
+    "dropdownValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb/"
+  },
+  {
+    "pattern": "git|github|version\\s*control|code\\s*review",
+    "numericValue": "https://github.com/DhirajKarangale",
+    "textValue": "https://github.com/DhirajKarangale",
+    "dropdownValue": "https://github.com/DhirajKarangale"
+  },
+  {
+    "pattern": "leetcode|coding\\s*profile",
+    "numericValue": "https://leetcode.com/u/DhirajKarangale/",
+    "textValue": "https://leetcode.com/u/DhirajKarangale/",
+    "dropdownValue": "https://leetcode.com/u/DhirajKarangale/"
+  },
+  {
+    "pattern": "(?:background\\s+check|accurate\\s+and\\s+truthful|acknowledge\\s+and\\s+agree|identity\\s+verification|terms\\s+and\\s+conditions|privacy\\s+policy)",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes"
+  },
+  {
+    "pattern": "18\\s+years\\s+of\\s+age|older\\s+than\\s+18|at\\s+least\\s+18",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes"
+  },
+  {
+    "pattern": "(?:previously|ever)\\s+(?:employed|worked)\\s+(?:by|for|at)|former\\s+employee",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No"
+  },
+  {
+    "pattern": "security\\s+clearance",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No"
+  },
+  {
+    "pattern": "non-compete|non\\s+compete",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No"
+  },
+  {
+    "pattern": "how\\s+did\\s+you\\s+hear|where\\s+did\\s+you\\s+(?:hear|find)|\\bsource\\b",
+    "numericValue": "LinkedIn",
+    "textValue": "LinkedIn",
+    "dropdownValue": "LinkedIn",
+    "preferredOptions": ["LinkedIn", "Job Board", "Online", "Other"]
+  },
+  {
+    "pattern": "highest\\s+(?:level\\s+of\\s+education|degree)",
+    "numericValue": "Bachelor's Degree",
+    "textValue": "Bachelor's Degree",
+    "dropdownValue": "Bachelor's Degree",
+    "preferredOptions": ["Bachelor's Degree", "Bachelor", "Bachelors", "Undergraduate", "Degree"]
+  },
+  {
+    "pattern": "gender|sex",
+    "numericValue": "Male",
+    "textValue": "Male",
+    "dropdownValue": "Male",
+    "preferredOptions": ["Male", "Man", "Prefer not to answer", "Decline to self-identify", "Prefer not to say"]
+  },
+  {
+    "pattern": "sexual\\s+orientation|orientation",
+    "numericValue": "Heterosexual",
+    "textValue": "Heterosexual",
+    "dropdownValue": "Heterosexual",
+    "preferredOptions": ["Straight", "Heterosexual", "Straight or Heterosexual", "Heterosexual or straight", "Prefer not to answer", "Decline to self-identify", "Prefer not to say"]
+  },
+  {
+    "pattern": "race|ethnicity",
+    "numericValue": "Asian",
+    "textValue": "Asian",
+    "dropdownValue": "Asian",
+    "preferredOptions": ["Asian", "Prefer not to answer", "Decline to self-identify", "Prefer not to say"]
+  },
+  {
+    "pattern": "veteran",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No",
+    "preferredOptions": ["I am not a protected veteran", "No", "Prefer not to answer", "Decline to self-identify", "Prefer not to say"]
+  },
+  {
+    "pattern": "disability",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No",
+    "preferredOptions": ["No, I don't have a disability", "No", "Prefer not to answer", "Decline to self-identify", "Prefer not to say"]
+  },
+  {
+    "pattern": "hispanic|latino",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No",
+    "preferredOptions": ["Not Hispanic or Latino", "No", "Prefer not to answer", "Decline to self-identify", "Prefer not to say"]
+  },
+  {
+    "pattern": "(?:applied|interviewed)\\s+(?:to|at|for|with)\\s+(?:this|the)\\s+(?:company|organization)",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No"
+  },
+  {
+    "pattern": "(?:relatives|family\\s+members?|friends?)\\s+(?:working|employed)\\s+(?:here|by|for|at)",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No"
+  },
+  {
+    "pattern": "(?:shares|shareholders|conflict\\s+of\\s+interest)",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No"
+  },
+  {
+    "pattern": "(?:work\\s+outside|continue\\s+working\\s+outside|other\\s+project|own\\s+(?:a\\s+)?business|outside\\s+employment)",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No"
+  },
+  {
+    "pattern": "(?:military|armed\\s+forces|served\\s+in)",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No"
+  },
+  {
+    "pattern": "(?:government\\s+(?:official|employee|affiliated)|related\\s+to\\s+government)",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No"
+  },
+  {
+    "pattern": "(?:embargoed|sanctioned|korea|russia|iran|cuba|syria|crimea)",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No"
+  },
+  {
+    "pattern": "pronouns?",
+    "numericValue": "He/Him",
+    "textValue": "He/Him",
+    "dropdownValue": "He/Him",
+    "preferredOptions": ["He/Him", "He/Him/His", "Prefer not to say"]
+  },
+  {
+    "pattern": "english.*(?:proficiency|fluent|language)|fluent.*english",
+    "numericValue": "Yes",
+    "textValue": "Fluent",
+    "dropdownValue": "Fluent",
+    "preferredOptions": ["Fluent", "Native", "Bilingual", "Advanced", "Professional", "Yes"]
+  },
+  {
+    "pattern": "willing.*travel|travel.*(?:required|percentage|expectations?)",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": ["Yes", "Up to 25%", "Willing to travel"]
+  },
+  {
+    "pattern": "start\\s+date|when\\s+can\\s+you\\s+start|available\\s+to\\s+start",
+    "numericValue": "30 days",
+    "textValue": "30 days from offer",
+    "dropdownValue": "30 days"
+  },
+  {
+    "pattern": "cover\\s*letter|anything\\s*else\\s*to\\s*add|additional\\s*info",
+    "numericValue": "Please refer to my resume for a detailed summary of my experience and qualifications.",
+    "textValue": "Please refer to my resume for a detailed summary of my experience and qualifications.",
+    "dropdownValue": "NA"
+  },
+  {
+    "pattern": "current\\s+location\\s+in\\s+(?:pune|maharashtra)",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes"
+  },
+  {
+    "pattern": "current\\s+location\\s+in",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No"
+  },
+  {
+    "pattern": "tech\\s+stacks?|technology\\s+stack",
+    "numericValue": "Tech Stack: React, Node.js, TypeScript, JavaScript, Python, AI/LLMs, LangChain, LangGraph, RAG, Express.js, FastAPI, PostgreSQL, Redis, Java, Spring Boot, MongoDB, SQL.",
+    "textValue": "Tech Stack: React, Node.js, TypeScript, JavaScript, Python, AI/LLMs, LangChain, LangGraph, RAG, Express.js, FastAPI, PostgreSQL, Redis, Java, Spring Boot, MongoDB, SQL.",
+    "dropdownValue": "React"
+  },
+  {
+    "pattern": "reasons?\\s+for\\s+(?:your\\s+)?(?:job\\s+)?change|reasons?\\s+for\\s+(?:leaving|switch)",
+    "numericValue": "Looking for better growth opportunities, more ownership, and the chance to work on impactful products while expanding my technical skills.",
+    "textValue": "Looking for better growth opportunities, more ownership, and the chance to work on impactful products while expanding my technical skills.",
+    "dropdownValue": "Career growth"
+  },
+  {
+    "pattern": "summary|about\\s+yourself|tell\\s+us\\s+about",
+    "numericValue": "Software Engineer with 2+ years of experience building scalable full-stack applications, AI-powered products, and developer tools using React, Node.js, TypeScript, Python, and SQL. At Infosys, I develop enterprise applications, AI solutions, reusable developer tools, and micro-frontends. I’ve built open-source AI and developer tools with 3.3K+ npm downloads, including SatyaMark and PDF/PPT Export, and developed Android applications with 211K+ Play Store downloads. I’m focused on Agentic AI, scalable software, distributed systems, developer tools, and solving complex engineering problems.",
+    "textValue": "Software Engineer with 2+ years of experience building scalable full-stack applications, AI-powered products, and developer tools using React, Node.js, TypeScript, Python, and SQL. At Infosys, I develop enterprise applications, AI solutions, reusable developer tools, and micro-frontends. I’ve built open-source AI and developer tools with 3.3K+ npm downloads, including SatyaMark and PDF/PPT Export, and developed Android applications with 211K+ Play Store downloads. I’m focused on Agentic AI, scalable software, distributed systems, developer tools, and solving complex engineering problems.",
+    "dropdownValue": "Yes"
+  }
+]

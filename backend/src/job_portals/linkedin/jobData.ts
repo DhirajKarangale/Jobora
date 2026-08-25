@@ -1,9 +1,10 @@
 import { type Page, Browser } from "puppeteer-core";
-import { saveJob, isJobExisting } from "../../cloud/db/index.ts";
+import { saveJob, isJobExisting, saveEligibleAndAppliedJob } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
 import { DataJob, LINKEDIN_URL_JOB, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
-import { incrementJobsScraped } from "../../utils/automationState.ts";
+import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/automationState.ts";
+import { handleEasyApply } from "./autoApply.ts";
 
 const SELECTORS = {
   description: '[data-sdui-component="com.linkedin.sdui.generated.jobseeker.dsl.impl.aboutTheJob"]',
@@ -101,6 +102,21 @@ async function extractData(browser: Browser, jobId: string) {
   const link = (await extractLink(page, jobId))?.trim();
   const description = (await extractDescription(page))?.trim();
   const role = (await extractRole(page))?.trim() || '';
+  
+  let isEasyApply = false;
+  if (link && link.includes("/jobs/view/") && link.includes("/apply")) {
+    isEasyApply = true;
+  } else {
+    isEasyApply = await page.evaluate(() => {
+      return !!document.querySelector('[aria-label="LinkedIn Apply to this job"]') || !!document.querySelector('svg#linkedin-bug-medium');
+    });
+  }
+
+  let autoApplySuccess = false;
+  if (isEasyApply) {
+    autoApplySuccess = await handleEasyApply(page);
+  }
+
   await delay(WAIT_TIME);
   await page.close();
 
@@ -119,7 +135,14 @@ async function extractData(browser: Browser, jobId: string) {
     role
   };
 
-  return await saveJob(data)
+  let dbId: string;
+  if (autoApplySuccess) {
+    dbId = await saveEligibleAndAppliedJob(data);
+  } else {
+    dbId = await saveJob(data);
+  }
+
+  return { id: dbId, autoApplied: autoApplySuccess };
 }
 
 export async function getJobData(browser: Browser, jobIds: string[]) {
@@ -128,9 +151,13 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
       const cleanJobId = jobId ? jobId.trim().toLowerCase() : "";
       if (!cleanJobId || await isJobExisting(cleanJobId)) continue;
 
-      const id = await extractData(browser, cleanJobId);
-      if (id) {
-        await addToProcessStream({ id });
+      const result = await extractData(browser, cleanJobId);
+      if (result && result.id) {
+        if (result.autoApplied) {
+          incrementJobsAutoApplied();
+        } else {
+          await addToProcessStream({ id: result.id });
+        }
         incrementJobsScraped();
       }
     } catch (err) {
