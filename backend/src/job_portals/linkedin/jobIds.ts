@@ -1,7 +1,7 @@
 import { type Browser, Page } from "puppeteer-core";
 import { filterExistingJobIds } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
-import { JOB_PORTAL_PAGINATATION, LINKEDIN_URL_JOB_SEARCH, WAIT_TIME } from "../../utils/constants.ts";
+import { WAIT_TIME } from "../../utils/constants.ts";
 
 const MAX_RETRIES = 3;
 const JOB_SELECTOR = 'div[componentkey^="job-card-component-ref-"]';
@@ -57,11 +57,11 @@ async function waitForNextPage(
   }
 }
 
-export async function getJobIds(browser: Browser) {
+export async function getJobIds(browser: Browser, searchUrl: string, paginationCount: number) {
   const page = await browser.newPage();
-  await page.goto(LINKEDIN_URL_JOB_SEARCH, { waitUntil: "load" });
+  await page.goto(searchUrl, { waitUntil: "load" });
 
-  let pageCount = JOB_PORTAL_PAGINATATION;
+  let pageCount = paginationCount;
   const jobIds = new Set<string>();
 
   while (pageCount-- > 0) {

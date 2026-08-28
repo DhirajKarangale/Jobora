@@ -1,9 +1,12 @@
 export const WAIT_TIME = 2000;
+export const WAIT_TIME_AUTO_APPLY = 300;
 export const JOB_PORTAL_PAGINATATION = 1;
+export const JOB_PORTAL_AUTO_PAGINATATION = 3;
 export const MAX_CONCURRENT_PORTALS = 5;
 
 export const LINKEDIN_URL_JOB = "https://www.linkedin.com/jobs/view/";
 export const LINKEDIN_URL_JOB_SEARCH = "https://www.linkedin.com/jobs/search-results/?currentJobId=4442784137&keywords=software%20engineer&origin=JOB_SEARCH_PAGE_JOB_FILTER&referralSearchId=uW6cOvg%2FqGDP91uF52c9Ug%3D%3D&f_TPR=r86400";
+export const LINKEDIN_URL_JOB_SEARCH_EASY_APPLY = "https://www.linkedin.com/jobs/search-results/?currentJobId=4442784137&keywords=software%20engineer&origin=JOB_SEARCH_PAGE_JOB_FILTER&referralSearchId=uW6cOvg%2FqGDP91uF52c9Ug%3D%3D&f_TPR=r86400&f_AL=true";
 
 export const INSTAHYRE_URL_JOB_SEARCH = "https://www.instahyre.com/candidate/opportunities/?matching=true";
 

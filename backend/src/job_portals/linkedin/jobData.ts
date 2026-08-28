@@ -4,7 +4,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
 import { DataJob, LINKEDIN_URL_JOB, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/automationState.ts";
-import { handleEasyApply } from "./autoApply.ts";
+import { handleEasyApply } from "./auto_apply/index.ts";
 
 const SELECTORS = {
   description: '[data-sdui-component="com.linkedin.sdui.generated.jobseeker.dsl.impl.aboutTheJob"]',
@@ -102,7 +102,7 @@ async function extractData(browser: Browser, jobId: string) {
   const link = (await extractLink(page, jobId))?.trim();
   const description = (await extractDescription(page))?.trim();
   const role = (await extractRole(page))?.trim() || '';
-  
+
   let isEasyApply = false;
   if (link && link.includes("/jobs/view/") && link.includes("/apply")) {
     isEasyApply = true;
@@ -114,7 +114,7 @@ async function extractData(browser: Browser, jobId: string) {
 
   let autoApplySuccess = false;
   if (isEasyApply) {
-    autoApplySuccess = await handleEasyApply(page);
+    autoApplySuccess = await handleEasyApply(page, jobId);
   }
 
   await delay(WAIT_TIME);
@@ -136,13 +136,12 @@ async function extractData(browser: Browser, jobId: string) {
   };
 
   let dbId: string;
-  if (autoApplySuccess) {
-    dbId = await saveEligibleAndAppliedJob(data);
-  } else {
-    dbId = await saveJob(data);
-  }
 
+  if (autoApplySuccess) dbId = await saveEligibleAndAppliedJob(data);
+  else dbId = await saveJob(data);
   return { id: dbId, autoApplied: autoApplySuccess };
+
+  // return null;
 }
 
 export async function getJobData(browser: Browser, jobIds: string[]) {
@@ -152,12 +151,10 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
       if (!cleanJobId || await isJobExisting(cleanJobId)) continue;
 
       const result = await extractData(browser, cleanJobId);
+      // incrementJobsAutoApplied();
       if (result && result.id) {
-        if (result.autoApplied) {
-          incrementJobsAutoApplied();
-        } else {
-          await addToProcessStream({ id: result.id });
-        }
+        if (result.autoApplied) incrementJobsAutoApplied();
+        else await addToProcessStream({ id: result.id });
         incrementJobsScraped();
       }
     } catch (err) {

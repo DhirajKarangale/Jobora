@@ -1,9 +1,12 @@
 [
   {
-    "pattern": "years?\\s+(?:of\\s+)?(?:work\\s+)?(?:professional\\s+)?experience",
+    "pattern": "years?\\s+(?:of\\s+)?(?:work\\s+)?(?:professional\\s+)?experience|total\\s+exp\\b",
     "numericValue": "2",
-    "textValue": "2 years",
-    "dropdownValue": "Yes"
+    "fallbackNumericValue": "2",
+    "textValue": "2",
+    "fallbackTextValue": "2 years",
+    "dropdownValue": "2",
+    "preferredOptions": ["2,4", "2-4", "2 to 4", "1-3", "1 to 3", "2"]
   },
   {
     "pattern": "months?.*experience",
@@ -18,28 +21,44 @@
     "dropdownValue": "Total CTC: ₹10.48 LPA | Fixed: ₹8.02 LPA | Variable: ₹2.46 LPA"
   },
   {
-    "pattern": "current\\s+(?:package|compensation|ctc|salary)|(?:package|compensation|ctc|salary)\\s+current",
-    "numericValue": "10.48",
-    "fallbackNumericValue": "1048000",
-    "textValue": "10.48 INR LPA",
-    "fallbackTextValue": "1048000 INR LPA"
+    "pattern": "^ctc\\s*\\*?$|\\bctc\\b(?!.*expected)|current.*(?:package|compensation|ctc|salary|drawn)|(?:package|compensation|ctc|salary).*current",
+    "numericValue": "1048000",
+    "fallbackNumericValue": "10",
+    "textValue": "1048000",
+    "fallbackTextValue": "10"
   },
   {
-    "pattern": "expected\\s+(?:package|compensation|ctc|salary)|(?:package|compensation|ctc|salary)\\s+expectations?",
-    "numericValue": "20",
-    "fallbackNumericValue": "2000000",
-    "textValue": "20 INR LPA",
-    "fallbackTextValue": "2000000 INR LPA"
+    "pattern": "^ectc\\s*\\*?$|\\bectc\\b|(?:expected|desired|target).*(?:package|compensation|ctc|salary|pay)|(?:package|compensation|ctc|salary|pay).*(?:expectations?|desired|target)",
+    "numericValue": "2000000",
+    "fallbackNumericValue": "20",
+    "textValue": "2000000",
+    "fallbackTextValue": "20"
   },
   {
-    "pattern": "(?:comfortable|willing|open|able).*?(?:commute|commuting|relocate|relocating|hybrid|on-site|onsite|in-person)",
+    "pattern": "current\\s+company",
+    "numericValue": "Infosys",
+    "textValue": "Infosys",
+    "dropdownValue": "Infosys"
+  },
+  {
+    "pattern": "postal\\s+code|zip\\s+code|pin\\s+code",
+    "numericValue": "411057",
+    "textValue": "411057",
+    "dropdownValue": "411057"
+  },
+  {
+    "pattern": "(?:comfortable|willing|open|able|will\\s+you|available).*?(?:commute|commuting|relocate|relocating|hybrid|on-site|onsite|in-person|in\\s+office|office|work\\s+from)",
     "numericValue": "Yes",
-    "textValue": "Yes"
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": ["Yes"]
   },
   {
-    "pattern": "notice\\s+period.*(?:days|months|duration)|(?:duration|length|days|months).*notice\\s+period",
+    "pattern": "notice\\s+period",
     "numericValue": "30",
-    "textValue": "30 days"
+    "fallbackNumericValue": "30",
+    "textValue": "30",
+    "fallbackTextValue": "30 days"
   },
   {
     "pattern": "last\\s+working\\s+day",
@@ -49,8 +68,10 @@
   },
   {
     "pattern": "(?:serving|on)\\s+notice",
-    "numericValue": "Yes",
-    "textValue": "Yes"
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No",
+    "preferredOptions": ["No"]
   },
   {
     "pattern": "(?:master|doctorate|phd|m\\.sc|m\\.a\\.)",
@@ -77,14 +98,14 @@
     "dropdownValue": "No"
   },
   {
-    "pattern": "city",
+    "pattern": "city|what\\s+is\\s+your\\s+(?:current\\s+)?location|current\\s+city|where\\s+are\\s+you\\s+located",
     "numericValue": "Pune",
     "textValue": "Pune",
     "dropdownValue": "Pune",
     "preferredOptions": ["Pune"]
   },
   {
-    "pattern": "state|province",
+    "pattern": "^(?:state|province|state\\s*\\/?\\s*province)\\s*\\*?$|state.*residence|current.*state",
     "numericValue": "Maharashtra",
     "textValue": "Maharashtra",
     "dropdownValue": "Maharashtra",
@@ -98,7 +119,7 @@
     "preferredOptions": ["India", "IN"]
   },
   {
-    "pattern": "which\\s+location.*applying|preferred\\s+location",
+    "pattern": "which\\s+location.*applying|preferred\\s+(?:work\\s+)?location",
     "numericValue": "Pune",
     "textValue": "Pune",
     "dropdownValue": "Pune",
@@ -147,10 +168,11 @@
     "dropdownValue": "https://leetcode.com/u/DhirajKarangale/"
   },
   {
-    "pattern": "(?:background\\s+check|accurate\\s+and\\s+truthful|acknowledge\\s+and\\s+agree|identity\\s+verification|terms\\s+and\\s+conditions|privacy\\s+policy)",
+    "pattern": "(?:background\\s+check|accurate\\s+and\\s+truthful|acknowledge\\s+and\\s+agree|identity\\s+verification|terms\\s+and\\s+conditions|privacy\\s+policy|allow.*contact|consent.*contact|future\\s+job\\s+opportunities|contact\\s+me\\s+about|keep\\s+my\\s+resume|keep\\s+me\\s+in\\s+mind)",
     "numericValue": "Yes",
     "textValue": "Yes",
-    "dropdownValue": "Yes"
+    "dropdownValue": "Yes",
+    "preferredOptions": ["Yes"]
   },
   {
     "pattern": "18\\s+years\\s+of\\s+age|older\\s+than\\s+18|at\\s+least\\s+18",
@@ -296,9 +318,11 @@
     "preferredOptions": ["Yes", "Up to 25%", "Willing to travel"]
   },
   {
-    "pattern": "start\\s+date|when\\s+can\\s+you\\s+start|available\\s+to\\s+start",
-    "numericValue": "30 days",
-    "textValue": "30 days from offer",
+    "pattern": "start\\s+date|when\\s+can\\s+you\\s+start|available\\s+to\\s+start|within\\s+how\\s+many\\s+days\\s+will\\s+you\\s+be\\s+able\\s+to\\s+join",
+    "numericValue": "30",
+    "fallbackNumericValue": "DYNAMIC_DATE_30_DAYS",
+    "textValue": "DYNAMIC_DATE_30_DAYS",
+    "fallbackTextValue": "DYNAMIC_DATE_30_DAYS",
     "dropdownValue": "30 days"
   },
   {
@@ -336,5 +360,58 @@
     "numericValue": "Software Engineer with 2+ years of experience building scalable full-stack applications, AI-powered products, and developer tools using React, Node.js, TypeScript, Python, and SQL. At Infosys, I develop enterprise applications, AI solutions, reusable developer tools, and micro-frontends. I’ve built open-source AI and developer tools with 3.3K+ npm downloads, including SatyaMark and PDF/PPT Export, and developed Android applications with 211K+ Play Store downloads. I’m focused on Agentic AI, scalable software, distributed systems, developer tools, and solving complex engineering problems.",
     "textValue": "Software Engineer with 2+ years of experience building scalable full-stack applications, AI-powered products, and developer tools using React, Node.js, TypeScript, Python, and SQL. At Infosys, I develop enterprise applications, AI solutions, reusable developer tools, and micro-frontends. I’ve built open-source AI and developer tools with 3.3K+ npm downloads, including SatyaMark and PDF/PPT Export, and developed Android applications with 211K+ Play Store downloads. I’m focused on Agentic AI, scalable software, distributed systems, developer tools, and solving complex engineering problems.",
     "dropdownValue": "Yes"
+  },
+  {
+    "pattern": "iit|nit|premier\\s+institute|top\\s+institute",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No",
+    "preferredOptions": ["No"]
+  },
+  {
+    "pattern": "jee.*rank|rank\\s+in.*jee",
+    "numericValue": "0",
+    "textValue": "0",
+    "dropdownValue": "0"
+  },
+  {
+    "pattern": "year\\s+pass\\s+out|graduation\\s+year|year\\s+of\\s+graduation|passing\\s+year",
+    "numericValue": "2024",
+    "textValue": "2024",
+    "dropdownValue": "2024",
+    "preferredOptions": ["2024"]
+  },
+  {
+    "pattern": "join.*immediately|immediate.*joiner|can\\s+you\\s+join|join.*within",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": ["Yes"]
+  },
+  {
+    "pattern": "what\\s+area\\s+have\\s+you\\s+most\\s+experience\\s+in|primary\\s+area\\s+of\\s+expertise|most\\s+experience\\s+in",
+    "numericValue": "Full-stack",
+    "textValue": "Full-stack",
+    "dropdownValue": "Full-stack",
+    "preferredOptions": ["Full-stack", "Backend", "Frontend", "AI/ML", "Database"]
+  },
+  {
+    "pattern": "aiml|ai\\/ml|artificial\\s+intelligence|machine\\s+learning",
+    "numericValue": "1",
+    "textValue": "1",
+    "dropdownValue": "1"
+  },
+  {
+    "pattern": "why.*(?:want\\s+to\\s+)?(?:join|work|apply|be\\s+a\\s+part\\s+of)|what\\s+makes\\s+you\\s+a\\s+good\\s+fit|why\\s+are\\s+you\\s+interested|why\\s+should\\s+we\\s+hire\\s+you",
+    "numericValue": "I am passionate about building impactful products and leveraging my full-stack and AI engineering skills to solve complex problems. I thrive in dynamic environments and am eager to contribute to the company's growth.",
+    "textValue": "I am passionate about building impactful products and leveraging my full-stack and AI engineering skills to solve complex problems. I thrive in dynamic environments and am eager to contribute to the company's growth.",
+    "dropdownValue": "Career growth"
+  },
+  {
+    "pattern": "(?:do\\s+you\\s+have|have\\s+you\\s+(?:worked|used|developed)|are\\s+you\\s+(?:experienced|familiar|proficient|comfortable|currently|willing|ok|interested)|do\\s+you\\s+(?:know|possess)|is\\s+your\\s+(?:primary\\s+)?experience)",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": ["Yes"]
   }
 ]

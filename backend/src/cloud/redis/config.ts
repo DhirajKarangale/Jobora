@@ -17,9 +17,7 @@ redis.on("error", (err: Error) => {
 
 export async function connectRedis(): Promise<Redis> {
   try {
-    if (redis.status !== "ready" && redis.status !== "connect") {
-      await redis.connect();
-    }
+    if (redis.status === "wait") await redis.connect();
     return redis;
   } catch (error) {
     throw error;
