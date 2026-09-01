@@ -85,14 +85,19 @@ export async function handleQuestions(page: Page): Promise<boolean> {
                     }
 
                     if (!match && preferredOptions) {
-                      match = opts.find(o => {
-                        const txt = o.text.toLowerCase();
-                        return txt.includes('other') || txt.includes('none') || txt.includes('not listed');
-                      });
-                      if (!match) {
+                      if (preferredOptions.includes('FIRST_OPTION')) {
                         const validOpts = opts.filter(o => o.value && o.value !== 'Select an option' && o.value.trim() !== '');
-                        if (validOpts.length > 0) {
-                          match = validOpts[validOpts.length - 1];
+                        if (validOpts.length > 0) match = validOpts[0];
+                      } else {
+                        match = opts.find(o => {
+                          const txt = o.text.toLowerCase();
+                          return txt.includes('other') || txt.includes('none') || txt.includes('not listed');
+                        });
+                        if (!match) {
+                          const validOpts = opts.filter(o => o.value && o.value !== 'Select an option' && o.value.trim() !== '');
+                          if (validOpts.length > 0) {
+                            match = validOpts[validOpts.length - 1];
+                          }
                         }
                       }
                     }
@@ -134,19 +139,26 @@ export async function handleQuestions(page: Page): Promise<boolean> {
 
                   await delay(300);
 
-                  const hasError = await page.evaluate((id) => {
+                  const errorMsg = await page.evaluate((id) => {
                     const errorEl = document.getElementById(`${id}-error`);
-                    return errorEl && errorEl.textContent && errorEl.textContent.trim().length > 0;
+                    return errorEl && errorEl.textContent ? errorEl.textContent.trim() : '';
                   }, inputId);
 
-                  const fallbackNumeric = resolveDynamicValue((config as any).fallbackNumericValue);
-                  const fallbackText = resolveDynamicValue((config as any).fallbackTextValue);
+                  let fallbackNumeric = resolveDynamicValue((config as any).fallbackNumericValue);
+                  let fallbackText = resolveDynamicValue((config as any).fallbackTextValue);
 
-                  if (hasError && (fallbackNumeric || fallbackText)) {
+                  if (errorMsg.toLowerCase().includes('number') || errorMsg.toLowerCase().includes('decimal')) {
+                    fallbackNumeric = fallbackNumeric || "2";
+                    fallbackText = fallbackText || "2";
+                  }
+
+                  if (errorMsg.length > 0 && (fallbackNumeric || fallbackText)) {
                     await inputEl.evaluate(el => (el as HTMLInputElement).select());
                     await inputEl.press('Backspace');
 
-                    if (inputId.toLowerCase().includes('numeric') && fallbackNumeric) {
+                    if (errorMsg.toLowerCase().includes('number') || errorMsg.toLowerCase().includes('decimal')) {
+                      await inputEl.type(fallbackNumeric);
+                    } else if (inputId.toLowerCase().includes('numeric') && fallbackNumeric) {
                       await inputEl.type(fallbackNumeric);
                     } else if (fallbackText) {
                       await inputEl.type(fallbackText);
@@ -167,7 +179,7 @@ export async function handleQuestions(page: Page): Promise<boolean> {
             const fieldset = fieldsetHandle.asElement() as import('puppeteer-core').ElementHandle<Element> | null;
 
             if (fieldset) {
-              const clicked = await page.evaluate((fs, textToMatch, fallbackToMatch, preferredOptions) => {
+              const clicked = await page.evaluate((fs, textToMatch, fallbackToMatch, preferredOptions, numericValue) => {
                 const radioLabels = Array.from(fs.querySelectorAll('label'));
                 let targetLabel: HTMLLabelElement | undefined = undefined;
 
@@ -205,21 +217,57 @@ export async function handleQuestions(page: Page): Promise<boolean> {
                 }
 
                 if (!targetLabel && preferredOptions && radioLabels.length > 0) {
-                  targetLabel = radioLabels.find(l => {
-                    const txt = l.textContent?.trim().toLowerCase() || '';
-                    return txt.includes('other') || txt.includes('none') || txt.includes('not listed');
-                  });
+                  if (preferredOptions.includes('FIRST_OPTION')) {
+                    targetLabel = radioLabels[0];
+                  } else if (preferredOptions.includes('SMALLEST_GREATER_THAN_NUMERIC') && numericValue) {
+                    const targetNum = parseFloat(numericValue);
+                    if (!isNaN(targetNum)) {
+                      let bestLabel = null;
+                      let minDiff = Infinity;
+                      for (const l of radioLabels) {
+                        const txt = l.textContent || '';
+                        const matches = txt.match(/\d+/g);
+                        if (matches) {
+                          const nums = matches.map(m => parseInt(m, 10));
+                          const optMax = Math.max(...nums);
+                          if (optMax >= targetNum) {
+                            const diff = optMax - targetNum;
+                            if (diff < minDiff) {
+                              minDiff = diff;
+                              bestLabel = l;
+                            }
+                          }
+                        }
+                      }
+                      if (bestLabel) targetLabel = bestLabel;
+                    }
+                  }
+                  
                   if (!targetLabel) {
-                    targetLabel = radioLabels[radioLabels.length - 1];
+                    targetLabel = radioLabels.find(l => {
+                      const txt = l.textContent?.trim().toLowerCase() || '';
+                      return txt.includes('other') || txt.includes('none') || txt.includes('not listed');
+                    });
+                    if (!targetLabel) {
+                      targetLabel = radioLabels[radioLabels.length - 1];
+                    }
                   }
                 }
 
                 if (targetLabel) {
+                  let input = targetLabel.querySelector('input');
+                  if (!input) {
+                    const forAttr = targetLabel.getAttribute('for');
+                    if (forAttr) input = document.getElementById(forAttr) as HTMLInputElement;
+                  }
+                  if (input && (input as HTMLInputElement).checked) {
+                    return false;
+                  }
                   targetLabel.click();
                   return true;
                 }
                 return false;
-              }, fieldset, config.textValue, (config as any).dropdownValue, (config as any).preferredOptions);
+              }, fieldset, config.textValue, (config as any).dropdownValue, (config as any).preferredOptions, config.numericValue);
 
               if (clicked) await delay(500);
             }
@@ -230,34 +278,150 @@ export async function handleQuestions(page: Page): Promise<boolean> {
         }
       }
 
-      if (!matchedConfig && tagName === 'legend') {
-        const clickedFallback = await page.evaluate((el) => {
-          const fs = el.closest('fieldset');
-          if (fs) {
-            const options = fs.querySelectorAll('label');
-            if (options.length === 1) {
-              const input = fs.querySelector('input');
-              if (input && !(input as HTMLInputElement).checked) {
-                (options[0] as HTMLElement).click();
-                return true;
+      if (!matchedConfig) {
+        if (tagName === 'legend') {
+          const clickedFallback = await page.evaluate((el) => {
+            const fs = el.closest('fieldset');
+            if (fs) {
+              const options = Array.from(fs.querySelectorAll('label'));
+              if (options.length === 1) {
+                const input = fs.querySelector('input');
+                if (input && !(input as HTMLInputElement).checked) {
+                  (options[0] as HTMLElement).click();
+                  return true;
+                }
+              }
+              if (options.length >= 2) {
+                const yesLabel = options.find(l => l.textContent?.trim().toLowerCase() === 'yes');
+                if (yesLabel) {
+                  let input = yesLabel.querySelector('input');
+                  if (!input) {
+                    const forAttr = yesLabel.getAttribute('for');
+                    if (forAttr) input = document.getElementById(forAttr) as HTMLInputElement;
+                  }
+                  if (!input || !(input as HTMLInputElement).checked) {
+                    yesLabel.click();
+                    return true;
+                  }
+                }
+                
+                const firstLabel = options[0];
+                let input = firstLabel.querySelector('input');
+                if (!input) {
+                  const forAttr = firstLabel.getAttribute('for');
+                  if (forAttr) input = document.getElementById(forAttr) as HTMLInputElement;
+                }
+                if (!input || !(input as HTMLInputElement).checked) {
+                  (firstLabel as HTMLElement).click();
+                  return true;
+                }
               }
             }
-          }
-          return false;
-        }, labelEl);
+            return false;
+          }, labelEl);
 
-        if (clickedFallback) {
-          await delay(500);
+          if (clickedFallback) {
+            await delay(500);
+          }
+        } else if (tagName === 'label') {
+          const fallbackSelect = await page.evaluate((el) => {
+            const forAttr = el.getAttribute('for');
+            if (forAttr) {
+              const input = document.getElementById(forAttr);
+              if (input && input.tagName.toLowerCase() === 'select') {
+                const select = input as HTMLSelectElement;
+                if (!select.value || select.value === 'Select an option') {
+                  const validOpts = Array.from(select.options).filter(o => o.value && o.value !== 'Select an option' && o.value.trim() !== '');
+                  if (validOpts.length > 0) {
+                    select.value = validOpts[0].value;
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    select.dispatchEvent(new Event('input', { bubbles: true }));
+                    return true;
+                  }
+                }
+              }
+            }
+            return false;
+          }, labelEl);
+          
+          if (fallbackSelect) {
+            await delay(500);
+          }
         }
       }
     }
 
-    const emptyInputs = await page.evaluate(() => {
-      const inputs = Array.from(document.querySelectorAll('input[type="text"][required], input[type="text"][aria-required="true"]'));
-      return inputs.some(input => !(input as HTMLInputElement).value.trim());
+    const fallbackResult = await page.evaluate(() => {
+      let filledSomething = false;
+
+      const selects = Array.from(document.querySelectorAll('select'));
+      for (const select of selects) {
+        if (!select.value || select.value === 'Select an option' || select.value.trim() === '') {
+          const validOpts = Array.from(select.options).filter(o => o.value && o.value !== 'Select an option' && o.value.trim() !== '');
+          if (validOpts.length > 0) {
+            select.value = validOpts[0].value;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            select.dispatchEvent(new Event('input', { bubbles: true }));
+            filledSomething = true;
+          }
+        }
+      }
+
+      const textInputs = Array.from(document.querySelectorAll('input[type="text"], input:not([type]), textarea'));
+      for (const input of textInputs) {
+        const el = input as HTMLInputElement | HTMLTextAreaElement;
+        const isRequired = el.required || el.getAttribute('aria-required') === 'true';
+        if (isRequired && !el.value.trim()) {
+          el.value = 'NA';
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+          filledSomething = true;
+        }
+      }
+
+      const numberInputs = Array.from(document.querySelectorAll('input[type="number"], input[type="tel"]'));
+      for (const input of numberInputs) {
+        const el = input as HTMLInputElement;
+        const isRequired = el.required || el.getAttribute('aria-required') === 'true';
+        if (isRequired && !el.value.trim()) {
+          el.value = '1';
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+          filledSomething = true;
+        }
+      }
+      
+      const fieldsets = Array.from(document.querySelectorAll('fieldset'));
+      for (const fs of fieldsets) {
+        const inputs = Array.from(fs.querySelectorAll('input[type="radio"], input[type="checkbox"]')) as HTMLInputElement[];
+        const anyChecked = inputs.some(i => i.checked);
+        
+        if (!anyChecked && inputs.length > 0) {
+          const labels = Array.from(fs.querySelectorAll('label'));
+          if (labels.length > 0) {
+             const yesLabel = labels.find(l => l.textContent?.trim().toLowerCase() === 'yes');
+             if (yesLabel) {
+               yesLabel.click();
+               filledSomething = true;
+             } else {
+               labels[0].click();
+               filledSomething = true;
+             }
+          }
+        }
+      }
+
+      const remainingInputs = Array.from(document.querySelectorAll('input[type="text"][required], input[type="text"][aria-required="true"]'));
+      const stillEmpty = remainingInputs.some(input => !(input as HTMLInputElement).value.trim());
+
+      return { filledSomething, stillEmpty };
     });
 
-    if (emptyInputs) return false;
+    if (fallbackResult.filledSomething) {
+      await delay(500);
+    }
+
+    if (fallbackResult.stillEmpty) return false;
 
     return true;
   } catch (error) {
