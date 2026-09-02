@@ -437,13 +437,13 @@ export async function getAnalyticsData(filters: AnalyticsFilter): Promise<Analyt
   const actionableJobsBySourceQuery = `
     SELECT 
       source as name, 
-      COUNT(CASE WHEN applied_date IS NULL AND (is_expired IS NULL OR is_expired = false) THEN 1 END) as to_apply,
+      COUNT(CASE WHEN applied_date IS NULL AND (is_expired IS NULL OR is_expired = false) AND (fit_resume IS NOT NULL AND fit_resume != 'NONE') THEN 1 END) as to_apply,
       COUNT(CASE WHEN applied_date IS NOT NULL AND is_auto_apply = true THEN 1 END) as auto_applied,
       COUNT(CASE WHEN applied_date IS NOT NULL AND (is_auto_apply IS NULL OR is_auto_apply = false) THEN 1 END) as manual_applied
     FROM jobs
-    ${filterQuery} AND source IS NOT NULL AND (fit_resume IS NOT NULL AND fit_resume != 'NONE')
+    ${filterQuery} AND source IS NOT NULL AND ((fit_resume IS NOT NULL AND fit_resume != 'NONE') OR applied_date IS NOT NULL)
     GROUP BY source
-    ORDER BY (COUNT(CASE WHEN applied_date IS NULL AND (is_expired IS NULL OR is_expired = false) THEN 1 END) + COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END)) DESC
+    ORDER BY (COUNT(CASE WHEN applied_date IS NULL AND (is_expired IS NULL OR is_expired = false) AND (fit_resume IS NOT NULL AND fit_resume != 'NONE') THEN 1 END) + COUNT(CASE WHEN applied_date IS NOT NULL THEN 1 END)) DESC
   `;
 
   const totalJobsListQuery = `

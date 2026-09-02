@@ -71,13 +71,35 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="currentColor" opacity={0.5} />
                 <YAxis tick={{ fontSize: 12 }} stroke="currentColor" opacity={0.5} allowDecimals={false} />
                 <Tooltip
-                  contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
-                  labelStyle={{ fontWeight: 'bold', color: 'var(--foreground)', marginBottom: '8px' }}
                   cursor={{ fill: 'var(--muted)', opacity: 0.4 }}
-                  itemSorter={(item) => {
-                    if (item.name === 'Manual Applied') return 1;
-                    if (item.name === 'Auto Applied') return 2;
-                    return 3;
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      const totalApplied = (data.manualApplied || 0) + (data.autoApplied || 0);
+                      const sortedPayload = [...payload].sort((a, b) => {
+                        const getRank = (name: any) => {
+                          if (name === 'Manual Applied') return 1;
+                          if (name === 'Auto Applied') return 2;
+                          return 3;
+                        };
+                        return getRank(a.name) - getRank(b.name);
+                      });
+
+                      return (
+                        <div className="p-3 border rounded-xl shadow-sm text-sm" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}>
+                          <p className="font-bold mb-2" style={{ color: 'var(--foreground)' }}>{label}</p>
+                          {sortedPayload.map((entry: any, index: number) => (
+                            <p key={`item-${index}`} style={{ color: entry.color }} className="mb-1.5">
+                              {entry.name} : {entry.value}
+                            </p>
+                          ))}
+                          <div className="mt-2 pt-2 font-semibold" style={{ color: 'var(--foreground)', borderTop: '1px solid var(--border)' }}>
+                            Total Applied : {totalApplied}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
                   }}
                 />
                 <Legend

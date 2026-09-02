@@ -30,8 +30,8 @@ export function AnalyticsFilters({ filters, filterOptions, onFilterChange }: Ana
             { value: '1y', label: 'Last 1 Year' },
             { value: '1.5y', label: 'Last 1.5 Years' }
           ]}
-          value={filters.dateRange || '1w'}
-          onChange={(val) => onFilterChange('dateRange', val || '1w')}
+          value={filters.dateRange ?? '1w'}
+          onChange={(val) => onFilterChange('dateRange', val)}
           placeholder="Select Date Range"
         />
       </div>
