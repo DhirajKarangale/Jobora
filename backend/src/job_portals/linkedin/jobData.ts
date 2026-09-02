@@ -145,20 +145,33 @@ async function extractData(browser: Browser, jobId: string) {
 }
 
 export async function getJobData(browser: Browser, jobIds: string[]) {
+  const executing = new Set<Promise<void>>();
+  
   for (const jobId of jobIds) {
-    try {
-      const cleanJobId = jobId ? jobId.trim().toLowerCase() : "";
-      if (!cleanJobId || await isJobExisting(cleanJobId)) continue;
+    const processJob = async () => {
+      try {
+        const cleanJobId = jobId ? jobId.trim().toLowerCase() : "";
+        if (!cleanJobId || await isJobExisting(cleanJobId)) return;
 
-      const result = await extractData(browser, cleanJobId);
-      // incrementJobsAutoApplied();
-      if (result && result.id) {
-        if (result.autoApplied) incrementJobsAutoApplied();
-        else await addToProcessStream({ id: result.id });
-        incrementJobsScraped();
+        const result = await extractData(browser, cleanJobId);
+        if (result && result.id) {
+          if (result.autoApplied) incrementJobsAutoApplied();
+          else await addToProcessStream({ id: result.id });
+          incrementJobsScraped();
+        }
+      } catch (err) {
+        console.error(`Error processing job ${jobId}:`, err);
       }
-    } catch (err) {
+    };
+
+    const p = processJob();
+    executing.add(p);
+    p.finally(() => executing.delete(p));
+
+    if (executing.size >= 3) {
+      await Promise.race(executing);
     }
   }
+  
+  await Promise.all(executing);
 }
-

@@ -359,7 +359,12 @@ export async function handleQuestions(page: Page): Promise<boolean> {
         if (!select.value || select.value === 'Select an option' || select.value.trim() === '') {
           const validOpts = Array.from(select.options).filter(o => o.value && o.value !== 'Select an option' && o.value.trim() !== '');
           if (validOpts.length > 0) {
-            select.value = validOpts[0].value;
+            const yesOpt = validOpts.find(o => o.text.trim().toLowerCase() === 'yes');
+            if (yesOpt) {
+              select.value = yesOpt.value;
+            } else {
+              select.value = validOpts[0].value;
+            }
             select.dispatchEvent(new Event('change', { bubbles: true }));
             select.dispatchEvent(new Event('input', { bubbles: true }));
             filledSomething = true;

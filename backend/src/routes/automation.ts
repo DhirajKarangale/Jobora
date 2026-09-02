@@ -30,11 +30,13 @@ export async function getAutomationStatus(_req: Request, res: Response): Promise
 async function runWithConcurrency(tasks: (() => Promise<void>)[], concurrencyLimit: number) {
   const executing = new Set<Promise<void>>();
   for (const task of tasks) {
-    const p = Promise.resolve().then(() => task());
+    const p = Promise.resolve().then(() => task()).catch(err => {
+      console.error("Task execution failed:", err);
+    });
     executing.add(p);
 
     const clean = () => executing.delete(p);
-    p.then(clean).catch(clean);
+    p.then(clean);
 
     if (executing.size >= concurrencyLimit) {
       await Promise.race(executing);
@@ -58,14 +60,15 @@ export async function startAutomationProcess(_req: Request, res: Response): Prom
       const browser = await getGlobalBrowser();
 
       const portals = [
-        async () => { await linkedin(browser); },
-        async () => { await instahyre(browser); },
-        async () => { await wellfound(browser); },
-        async () => { await cutshort(browser); },
-        async () => { await naukri(browser); },
+        async () => { try { await linkedin(browser); } catch(e) { console.error("LinkedIn error:", e); } },
+        async () => { try { await instahyre(browser); } catch(e) { console.error("Instahyre error:", e); } },
+        async () => { try { await wellfound(browser); } catch(e) { console.error("Wellfound error:", e); } },
+        async () => { try { await cutshort(browser); } catch(e) { console.error("Cutshort error:", e); } },
+        async () => { try { await naukri(browser); } catch(e) { console.error("Naukri error:", e); } },
       ];
       await runWithConcurrency(portals, MAX_CONCURRENT_PORTALS);
     } catch (error) {
+      console.error("Global automation error:", error);
     } finally {
       setProcessStarted(false);
       if (globalBrowser) {

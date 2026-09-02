@@ -6,6 +6,25 @@
     "dropdownValue": "04/24/2002"
   },
   {
+    "pattern": "phone\\s+country\\s+code|country\\s+code|phone\\s+code",
+    "numericValue": "+91",
+    "textValue": "+91",
+    "dropdownValue": "+91",
+    "preferredOptions": [
+      "India (+91)",
+      "+91",
+      "91",
+      "IN",
+      "India"
+    ]
+  },
+  {
+    "pattern": "mobile\\s*(?:phone)?\\s*number|phone\\s*number|contact\\s*number|cell\\s*(?:phone)?\\s*number|cell\\s*phone",
+    "numericValue": "7620320595",
+    "textValue": "7620320595",
+    "dropdownValue": "7620320595"
+  },
+  {
     "pattern": "years?.*experience|experience.*years?|how\\s+many\\s+years|total\\s+exp\\b",
     "numericValue": "2",
     "fallbackNumericValue": "2",
@@ -641,6 +660,21 @@
     "numericValue": "Satyamark: Built an open-source multi-modal content verification platform combining LLM-based fact-checking, RAG, web search, and AI image detection. Designed LangGraph multi-stage workflows for claim extraction, evidence retrieval, scoring, re-evaluation, and grounded verdict generation. Implemented Map-Reduce fact-checking to extract relevant evidence and produce evidence-based verification results. Built asynchronous AI processing using Redis Streams, worker architecture, retries, abandoned-job handling, and API failover. Published a reusable React SDK with 3.5K+ downloads for streaming live verification results into applications.",
     "textValue": "Satyamark: Built an open-source multi-modal content verification platform combining LLM-based fact-checking, RAG, web search, and AI image detection. Designed LangGraph multi-stage workflows for claim extraction, evidence retrieval, scoring, re-evaluation, and grounded verdict generation. Implemented Map-Reduce fact-checking to extract relevant evidence and produce evidence-based verification results. Built asynchronous AI processing using Redis Streams, worker architecture, retries, abandoned-job handling, and API failover. Published a reusable React SDK with 3.5K+ downloads for streaming live verification results into applications.",
     "dropdownValue": "Satyamark: Built an open-source multi-modal content verification platform combining LLM-based fact-checking, RAG, web search, and AI image detection. Designed LangGraph multi-stage workflows for claim extraction, evidence retrieval, scoring, re-evaluation, and grounded verdict generation. Implemented Map-Reduce fact-checking to extract relevant evidence and produce evidence-based verification results. Built asynchronous AI processing using Redis Streams, worker architecture, retries, abandoned-job handling, and API failover. Published a reusable React SDK with 3.5K+ downloads for streaming live verification results into applications."
+  },
+  {
+    "pattern": "\\bctc\\b|compensation|salary|expected\\s+salary",
+    "numericValue": "10.48 LPA",
+    "textValue": "10.48 LPA",
+    "dropdownValue": "10.48 LPA"
+  },
+  {
+    "pattern": "hands-on\\s+experience|hands\\s+on\\s+experience",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": [
+      "Yes"
+    ]
   },
   {
     "pattern": "(?:do\\s+you\\s+have|have\\s+you\\s+(?:worked|used|developed)|are\\s+you\\s+(?:experienced|familiar|proficient|comfortable|currently|willing|ok|interested)|do\\s+you\\s+(?:know|possess)|is\\s+your\\s+(?:primary\\s+)?experience)",
