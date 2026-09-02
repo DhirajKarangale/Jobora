@@ -1,6 +1,6 @@
-import { edge } from "./src/utils/browserManager.ts";
+import { edge } from "../../../utils/browserManager.ts";
 import { setTimeout as delay } from "node:timers/promises";
-import { handleEasyApply } from "./src/job_portals/linkedin/auto_apply/index.ts";
+import { handleEasyApply } from "./index.ts";
 
 async function run() {
   console.log("Starting browser connection...");
