@@ -90,7 +90,7 @@
     ]
   },
   {
-    "pattern": "notice\\s+period",
+    "pattern": "notice\\s+period|how\\s+soon.*join",
     "numericValue": "30",
     "fallbackNumericValue": "30",
     "textValue": "30",
