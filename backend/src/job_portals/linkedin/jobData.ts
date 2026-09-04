@@ -99,7 +99,10 @@ async function extractData(browser: Browser, jobId: string) {
 
   await delay(WAIT_TIME);
   const companyName = (await extractCompanyName(page))?.trim();
-  const link = (await extractLink(page, jobId))?.trim();
+  let link = (await extractLink(page, jobId))?.trim();
+  if (!link) {
+    link = applicationLink;
+  }
   const description = (await extractDescription(page))?.trim();
   const role = (await extractRole(page))?.trim() || '';
 
@@ -114,11 +117,22 @@ async function extractData(browser: Browser, jobId: string) {
 
   let autoApplySuccess = false;
   if (isEasyApply) {
-    autoApplySuccess = await handleEasyApply(page, jobId);
+    try {
+      autoApplySuccess = await handleEasyApply(page, jobId);
+    } catch (error) {
+      console.error(`[LinkedIn] Auto apply encountered an error for job ${jobId}:`, error);
+      autoApplySuccess = false;
+    }
   }
 
   await delay(WAIT_TIME);
-  await page.close();
+  try {
+    if (!page.isClosed()) {
+      await page.close();
+    }
+  } catch (error) {
+    console.error(`[LinkedIn] Error closing page for job ${jobId}:`, error);
+  }
 
   if (!companyName || !link || !description) return;
   if (isBlacklistedCompany(companyName)) return;
