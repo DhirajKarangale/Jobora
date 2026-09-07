@@ -1,5 +1,19 @@
 [
   {
+    "pattern": "monthly\\s+(?:take-home|in-hand|take\\s*home)\\s+salary|take-home.*salary|monthly.*salary(?!.*expect)",
+    "numericValue": "69000",
+    "fallbackNumericValue": "69000",
+    "textValue": "69000",
+    "fallbackTextValue": "69000"
+  },
+  {
+    "pattern": "monthly\\s+expected\\s+salary|expected\\s+monthly\\s+salary",
+    "numericValue": "110000",
+    "fallbackNumericValue": "110000",
+    "textValue": "110000",
+    "fallbackTextValue": "110000"
+  },
+  {
     "pattern": "date\\s+of\\s+birth|\\bdob\\b",
     "numericValue": "04/24/2002",
     "textValue": "04/24/2002",
@@ -25,7 +39,7 @@
     "dropdownValue": "7620320595"
   },
   {
-    "pattern": "years?.*experience|experience.*years?|how\\s+many\\s+years|total\\s+exp\\b",
+    "pattern": "years?.*experience|experience.*years?|how\\s+many\\s+years|total\\s+exp\\b|relevant\\s+experience",
     "numericValue": "2",
     "fallbackNumericValue": "2",
     "textValue": "2",
