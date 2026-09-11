@@ -29,7 +29,7 @@ export default async function linkedin(browser: Browser): Promise<void> {
   };
 
   await Promise.all([
-    autoApplyPipeline(),
+    // autoApplyPipeline(),
     manualApplyPipeline()
   ]);
 }
