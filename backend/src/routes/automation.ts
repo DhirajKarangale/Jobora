@@ -60,11 +60,11 @@ export async function startAutomationProcess(_req: Request, res: Response): Prom
       const browser = await getGlobalBrowser();
 
       const portals = [
-        async () => { try { await linkedin(browser); } catch(e) { console.error("LinkedIn error:", e); } },
-        async () => { try { await instahyre(browser); } catch(e) { console.error("Instahyre error:", e); } },
-        async () => { try { await wellfound(browser); } catch(e) { console.error("Wellfound error:", e); } },
-        async () => { try { await cutshort(browser); } catch(e) { console.error("Cutshort error:", e); } },
-        async () => { try { await naukri(browser); } catch(e) { console.error("Naukri error:", e); } },
+        async () => { try { await linkedin(browser); } catch (e) { console.error("LinkedIn error:", e); } },
+        async () => { try { await instahyre(browser); } catch (e) { console.error("Instahyre error:", e); } },
+        async () => { try { await wellfound(browser); } catch (e) { console.error("Wellfound error:", e); } },
+        async () => { try { await cutshort(browser); } catch (e) { console.error("Cutshort error:", e); } },
+        async () => { try { await naukri(browser); } catch (e) { console.error("Naukri error:", e); } },
       ];
       await runWithConcurrency(portals, MAX_CONCURRENT_PORTALS);
     } catch (error) {
