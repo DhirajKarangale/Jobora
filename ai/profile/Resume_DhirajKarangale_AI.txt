@@ -95,8 +95,8 @@
 \section{Achievements}
 \begin{itemize}
     \item Demonstrated advanced Data Structures \& Algorithms proficiency by achieving \href{https://leetcode.com/u/DhirajKarangale/}{\underline{\textbf{LeetCode Knight}}} (2,012 Rating), ranked in the top \textbf{2.45\%} globally with \textbf{1K+} solved problems.
-    \item Developed and shipped Android applications, achieving over \textbf{211K+ Play Store downloads}.
-    \item Published open-source \href{https://www.npmjs.com/~dhirajkarangale}{\underline{\textbf{npm libraries}}} with \textbf{3.3K+} downloads.
+    \item Developed and shipped Android applications, achieving over \textbf{1.4M+ Play Store downloads}.
+    \item Published open-source \href{https://www.npmjs.com/~dhirajkarangale}{\underline{\textbf{npm libraries}}} with \textbf{4.6K+} downloads.
     \item Selected as a \textbf{HackWithInfy Finalist}, and one of 150 builders chosen from 5K+ applicants at \textbf{Push to Prod 2026}, an Anthropic Claude hackathon.
 \end{itemize}
 
@@ -126,7 +126,7 @@
     \item Designed \textbf{LangGraph multi-stage workflows} for claim extraction, evidence retrieval, scoring, re-evaluation, and grounded verdict generation.
     \item Implemented Map-Reduce fact-checking to extract relevant evidence and produce evidence-based verification results.
     \item Built asynchronous AI processing using \textbf{Redis Streams}, worker architecture, retries, abandoned-job handling, and API failover.
-    \item Published a reusable React SDK with \textbf{2.3K+ downloads} for streaming live verification results into applications.
+    \item Published a reusable React SDK with \textbf{3.6K+ downloads} for streaming live verification results into applications.
 \end{itemize}
 
 \subsection{\href{https://github.com/DhirajKarangale/Jobora}{\underline{Jobora}} $|$ \normalfont\footnotesize\emph{Python, LangGraph, LangChain, Node.js, Redis, PostgreSQL, Puppeteer} \hspace*{\fill} \normalfont\small 2026}

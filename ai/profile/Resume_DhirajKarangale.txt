@@ -96,8 +96,8 @@
 \section{Achievements}
 \begin{itemize}
     \item Demonstrated advanced Data Structures \& Algorithms (DSA) proficiency by achieving \href{https://leetcode.com/u/DhirajKarangale/}{\underline{\textbf{LeetCode Knight}}} (2,012 Rating), ranked in the top \textbf{2.45\%} globally with \textbf{1K+} solved problems.
-    \item Developed and shipped Android applications, achieving over \textbf{211K+ Play Store downloads}.
-    \item Published \href{https://www.npmjs.com/~dhirajkarangale}{\underline{\textbf{npm libraries}}} with \textbf{3.3K+} downloads, including \href{https://satyamark.vercel.app/}{\underline{SatyaMark}} and \href{https://pdfppt-export.vercel.app/}{\underline{PDF \& PPT Export}}.
+    \item Developed and shipped Android applications, achieving over \textbf{1.4M+ Play Store downloads}.
+    \item Published \href{https://www.npmjs.com/~dhirajkarangale}{\underline{\textbf{npm libraries}}} with \textbf{4.6K+} downloads, including \href{https://satyamark.vercel.app/}{\underline{SatyaMark}} and \href{https://pdfppt-export.vercel.app/}{\underline{PDF \& PPT Export}}.
     \item Selected as a \textbf{HackWithInfy Finalist}, and one of 150 builders chosen from 5K+ applicants at \textbf{Push to Prod 2026}, an Anthropic Claude hackathon.
 \end{itemize}
 
@@ -127,7 +127,7 @@
     \item Built an open-source multi-modal content verification platform combining LLM-based fact-checking (RAG) and AI image detection.
     \item Developed distributed verification pipelines using Python, Node.js, Redis Streams, and WebSockets to orchestrate independent AI workers and stream live results.
     \item Implemented multi-stage LLM workflows for claim extraction, evidence retrieval, scoring, and re-evaluation to improve verification reliability.
-    \item Published a reusable React SDK (\href{https://www.npmjs.com/package/satyamark-react}{\underline{\texttt{satyamark-react}}}) with \textbf{2.3K+ downloads}, enabling integration of live verification signals into third-party applications.
+    \item Published a reusable React SDK (\href{https://www.npmjs.com/package/satyamark-react}{\underline{\texttt{satyamark-react}}}) with \textbf{3.6K+ downloads}, enabling integration of live verification signals into third-party applications.
 \end{itemize}
 
 \subsection{\href{https://github.com/DhirajKarangale/Jobora}{\underline{Jobora}} $|$ \normalfont\footnotesize\emph{Python, LangGraph, LangChain, React, TypeScript, Node.js, Redis, PostgreSQL} \hspace*{\fill} \normalfont\small 2026}
