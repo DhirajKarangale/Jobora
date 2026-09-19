@@ -1,5 +1,33 @@
 [
   {
+    "pattern": "kerala",
+    "numericValue": "No",
+    "textValue": "No",
+    "dropdownValue": "No",
+    "preferredOptions": ["No"]
+  },
+  {
+    "pattern": "kochi|ernakulam",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": ["Yes"]
+  },
+  {
+    "pattern": "fast-paced",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": ["Yes"]
+  },
+  {
+    "pattern": "budgeted\\s+range",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": ["Yes"]
+  },
+  {
     "pattern": "monthly\\s+(?:take-home|in-hand|take\\s*home)\\s+salary|take-home.*salary|monthly.*salary(?!.*expect)",
     "numericValue": "69000",
     "fallbackNumericValue": "69000",
@@ -57,10 +85,35 @@
     ]
   },
   {
+    "pattern": "additional\\s+months?.*experience",
+    "numericValue": "0",
+    "textValue": "0",
+    "dropdownValue": "0",
+    "preferredOptions": [
+      "0 month",
+      "0",
+      "0 months"
+    ]
+  },
+  {
+    "pattern": "months?.*(?:hands-on|hands\\s+on).*experience|months?.*experience.*(?:software|backend|engineering|development|total|with)",
+    "numericValue": "24",
+    "textValue": "24",
+    "dropdownValue": "24",
+    "preferredOptions": [
+      "24",
+      "24 months"
+    ]
+  },
+  {
     "pattern": "months?.*experience",
-    "numericValue": "1",
-    "textValue": "1 month",
-    "dropdownValue": "1"
+    "numericValue": "24",
+    "textValue": "24",
+    "dropdownValue": "24",
+    "preferredOptions": [
+      "24",
+      "24 months"
+    ]
   },
   {
     "pattern": "(?:details|breakdown)\\s+of.*(?:ctc|package|salary|compensation)|(?:ctc|package|salary|compensation).*breakdown|(?:ctc|package|salary|compensation)\\s+structure|(?:fixed|variable).*component",
@@ -69,11 +122,39 @@
     "dropdownValue": "Total CTC: ₹10.48 LPA | Fixed: ₹8.02 LPA | Variable: ₹2.46 LPA"
   },
   {
+    "pattern": "current.*(?:package|compensation|ctc|salary|drawn).*inr",
+    "numericValue": "1048000",
+    "fallbackNumericValue": "1048000",
+    "textValue": "1048000",
+    "fallbackTextValue": "1048000"
+  },
+  {
+    "pattern": "current.*(?:package|compensation|ctc|salary|drawn).*lpa",
+    "numericValue": "10.48",
+    "fallbackNumericValue": "10.48",
+    "textValue": "10.48",
+    "fallbackTextValue": "10.48"
+  },
+  {
     "pattern": "^ctc\\s*\\*?$|\\bctc\\b(?!.*expected)|current.*(?:package|compensation|ctc|salary|drawn)|(?:package|compensation|ctc|salary).*current",
     "numericValue": "1048000",
-    "fallbackNumericValue": "10",
+    "fallbackNumericValue": "10.48",
     "textValue": "1048000",
-    "fallbackTextValue": "10"
+    "fallbackTextValue": "10.48"
+  },
+  {
+    "pattern": "(?:expected|desired|target).*(?:package|compensation|ctc|salary|pay).*inr",
+    "numericValue": "2000000",
+    "fallbackNumericValue": "2000000",
+    "textValue": "2000000",
+    "fallbackTextValue": "2000000"
+  },
+  {
+    "pattern": "(?:expected|desired|target).*(?:package|compensation|ctc|salary|pay).*lpa",
+    "numericValue": "20",
+    "fallbackNumericValue": "20",
+    "textValue": "20",
+    "fallbackTextValue": "20"
   },
   {
     "pattern": "^ectc\\s*\\*?$|\\bectc\\b|(?:expected|desired|target).*(?:package|compensation|ctc|salary|pay)|(?:package|compensation|ctc|salary|pay).*(?:expect|expectations?|desired|target)",
