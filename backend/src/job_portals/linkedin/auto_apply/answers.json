@@ -1,5 +1,19 @@
 [
   {
+    "pattern": "interview\\s+link|within\\s+24\\s+hours|external\\s+help|assessment",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": ["Yes"]
+  },
+  {
+    "pattern": "llm|shipped|bayesian|hierarchical|sparse|rare-event",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": ["Yes"]
+  },
+  {
     "pattern": "kerala",
     "numericValue": "No",
     "textValue": "No",
@@ -86,10 +100,13 @@
   },
   {
     "pattern": "additional\\s+months?.*experience",
-    "numericValue": "0",
-    "textValue": "0",
-    "dropdownValue": "0",
+    "numericValue": "1",
+    "textValue": "1",
+    "dropdownValue": "1",
     "preferredOptions": [
+      "1 month",
+      "1",
+      "1 months",
       "0 month",
       "0",
       "0 months"
@@ -194,8 +211,13 @@
     "preferredOptions": [
       "30 Days",
       "1 Month",
+      "1 month",
       "30",
       "Less than 30 Days",
+      "Less than a month",
+      "1",
+      "2 months",
+      "2 Months",
       "Immediate Joiner"
     ]
   },
@@ -301,15 +323,15 @@
   },
   {
     "pattern": "portfolio|website|blog|link\\s+to.*work",
-    "numericValue": "https://dhirajkarangale.vercel.app/",
-    "textValue": "https://dhirajkarangale.vercel.app/",
-    "dropdownValue": "https://dhirajkarangale.vercel.app/"
+    "numericValue": "https://dhirajkarangale.vercel.app",
+    "textValue": "https://dhirajkarangale.vercel.app",
+    "dropdownValue": "https://dhirajkarangale.vercel.app"
   },
   {
     "pattern": "linkedin|social\\s+media",
-    "numericValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb/",
-    "textValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb/",
-    "dropdownValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb/"
+    "numericValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb",
+    "textValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb",
+    "dropdownValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb"
   },
   {
     "pattern": "git|github|version\\s*control|code\\s*review",

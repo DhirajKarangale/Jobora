@@ -87,9 +87,9 @@
 \section{Skills}
 \begin{skillslist}
     \item \textbf{Languages:} JavaScript, TypeScript, Java, Python, SQL
-    \item \textbf{Frameworks \& Libraries:} React, Node.js, Express.js, LangChain, LangGraph, Tailwind CSS
+    \item \textbf{Frameworks \& Libraries:} React, Node.js, Express.js, LangChain, LangGraph, RAG, Text-to-SQL
     \item \textbf{Databases \& Cloud:} MySQL, PostgreSQL, MongoDB, Redis, AWS, GCP, Cloudinary
-    \item \textbf{Tools:} Git, Docker, Jenkins (CI/CD), Webpack (Micro Frontends), REST APIs, WebSockets, Jest, Vitest
+    \item \textbf{Tools:} Git, Docker, Jenkins (CI/CD), Webpack (Micro Frontends), REST APIs, WebSockets, RBAC, OKF, LLM wikis, Jest, Vitest
 \end{skillslist}
 
 % --- Achievements ---
@@ -108,9 +108,9 @@
 \begin{itemize}
     \item Built a React library to export complex dashboards into fully editable PPT and PDF documents, adopted across 7+ projects by 3 teams, reducing manual report creation from hours to one click.
     \item Developed an AI-powered platform transforming meeting transcripts and videos into structured Process Design Documents, reducing creation time from hours to under 5 minutes.
+    \item Built a centralized AI knowledge base using RAG, LLM wikis, and OKF, featuring natural language database querying (Text-to-SQL) and strict role-based access control for organizational data.
     \item Led system design for micro-frontend applications using React and Webpack Module Federation.
-    \item Optimized MySQL queries and implemented database indexing, reducing API response times by 25\%.
-    \item Integrated AWS (S3, Parameter Store) and GCP (Cloud SQL, Redis, Cloud Storage) for configuration management and data storage.
+    \item Optimized MySQL queries reducing API response times by 25\%, and integrated AWS/GCP services (S3, Cloud SQL, Redis) for configuration and data management.
 \end{itemize}
 
 \subsection{SaralTech $|$ \normalfont\footnotesize\emph{Software Engineer Intern} \hspace*{\fill} \normalfont\small Jan 2024 -- Jun 2024}
@@ -134,8 +134,7 @@
 \begin{itemize}
     \item Built an Agentic AI job automation platform that discovers jobs across multiple platforms, evaluates candidate fit using LLMs, and automatically applies to eligible roles.
     \item Developed browser automation pipelines using Puppeteer to scrape job postings and submit applications.
-    \item Designed a distributed processing pipeline with Node.js, Python, PostgreSQL, Redis, and LangGraph to clean, structure, and evaluate job data.
-    \item Built a React-based analytics dashboard to track eligible opportunities, application status, and job insights through interactive visualizations.
+    \item Designed distributed pipelines (Node.js, LangGraph, Redis) to clean and evaluate job data, and built a React dashboard tracking applications, eligibility, and insights.
 \end{itemize}
 
 % --- EDUCATION ---

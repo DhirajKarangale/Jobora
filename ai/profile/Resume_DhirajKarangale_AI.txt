@@ -85,9 +85,9 @@
 % --- Skills ---
 \section{Skills}
 \begin{skillslist}
-    \item \textbf{AI \& LLMs:} Python, LLMs, Agentic AI, RAG, LangChain, LangGraph, Claude, Hugging Face, AI/ML
-    \item \textbf{AI Engineering:} LLM Integration, Multi-Stage Workflows, Map-Reduce, Prompt Pipelines, AI Image Detection, AI Image Verification
-    \item \textbf{Backend \& Data:} Node.js, FastAPI, REST APIs, WebSockets, PostgreSQL, MySQL, Redis, Redis Streams
+    \item \textbf{AI \& LLMs:} Python, LLMs, Agentic AI, RAG, LangChain, LangGraph, Claude, Hugging Face, AI/ML, OKF
+    \item \textbf{AI Engineering:} LLM Integration, Multi-Stage Workflows, Map-Reduce, Prompt Pipelines, Text-to-SQL, LLM wikis, AI Image Detection, AI Image Verification
+    \item \textbf{Backend \& Data:} Node.js, FastAPI, REST APIs, WebSockets, RBAC, PostgreSQL, pgvector, MySQL, Redis
     \item \textbf{Engineering:} JavaScript, TypeScript, SQL, React, Docker, AWS, GCP, System Design, DSA
 \end{skillslist}
 
@@ -106,7 +106,9 @@
 \subsection{Infosys $|$ \normalfont\footnotesize\emph{Specialist Programmer – Software Development Engineer} \hspace*{\fill} \normalfont\small Aug 2024 -- Present}
 \begin{itemize}
     \item Developed an \textbf{AI-powered PDD generation platform} transforming meeting transcripts and videos into structured Process Design Documents, reducing creation time from hours or days to under \textbf{5 minutes}.
-    \item Built a reusable React dashboard export library adopted across 7+ projects by 3 teams, reducing manual report creation from hours to one click.
+    \item Architected a centralized \textbf{AI Knowledge Base} using \textbf{RAG, LLM wikis, OKF, Text-to-SQL}, enabling secure natural language querying of organizational data with strict \textbf{role-based access control}.
+    \item Implemented semantic search using \textbf{Vector Databases (pgvector)} and cosine similarity for optimized \textbf{Vector Embedding} retrieval, applying advanced chunking to significantly reduce AI hallucinations.
+    \item Built a reusable \textbf{React library} converting complex dashboards into fully editable PPT and PDF documents, adopted across 7+ projects by 3 teams and reducing report creation from hours to one click.
     \item Led system design for micro-frontend applications using React and Webpack Module Federation.
     \item Optimized MySQL queries and implemented database indexing, reducing API response times by \textbf{25\%}.
 \end{itemize}
@@ -123,10 +125,9 @@
 \subsection{\href{https://satyamark.vercel.app/}{\underline{SatyaMark}} $|$ \normalfont\footnotesize\emph{Python, LangGraph, LangChain, RAG, Claude, Hugging Face, Redis Streams, PostgreSQL} \hspace*{\fill} \normalfont\small 2025}
 \begin{itemize}
     \item Built an open-source \textbf{multi-modal content verification platform} combining LLM-based fact-checking, RAG, web search, and AI image detection.
-    \item Designed \textbf{LangGraph multi-stage workflows} for claim extraction, evidence retrieval, scoring, re-evaluation, and grounded verdict generation.
-    \item Implemented Map-Reduce fact-checking to extract relevant evidence and produce evidence-based verification results.
-    \item Built asynchronous AI processing using \textbf{Redis Streams}, worker architecture, retries, abandoned-job handling, and API failover.
-    \item Published a reusable React SDK with \textbf{3.6K+ downloads} for streaming live verification results into applications.
+    \item Designed \textbf{LangGraph multi-stage workflows} for claim extraction and evidence scoring, processed asynchronously via \textbf{Redis Streams} workers featuring retries and failover.
+    \item Implemented Map-Reduce fact-checking to extract evidence and generate verification results.
+    \item Published a reusable React SDK with \textbf{3.6K+ downloads} for streaming live verification results.
 \end{itemize}
 
 \subsection{\href{https://github.com/DhirajKarangale/Jobora}{\underline{Jobora}} $|$ \normalfont\footnotesize\emph{Python, LangGraph, LangChain, Node.js, Redis, PostgreSQL, Puppeteer} \hspace*{\fill} \normalfont\small 2026}

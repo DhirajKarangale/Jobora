@@ -88,7 +88,7 @@
     \item \textbf{Languages:} Java, JavaScript, TypeScript, Python, SQL
     \item \textbf{Backend:} Spring Boot, Spring Security, Spring Data JPA, Node.js, Express.js, REST APIs, gRPC, WebSockets
     \item \textbf{Databases \& Cloud:} PostgreSQL, MySQL, Redis, MongoDB, AWS, GCP
-    \item \textbf{Tools \& Concepts:} Git, Docker, Jenkins (CI/CD), Microservices, System Design, OOP
+    \item \textbf{Tools \& Concepts:} Git, Docker, Jenkins (CI/CD), JUnit, Mockito, Microservices, System Design, OOP, Agentic AI, RAG, Text-to-SQL, RBAC
 \end{skillslist}
 
 % --- Achievements ---
@@ -105,18 +105,18 @@
 
 \subsection{Infosys $|$ \normalfont\footnotesize\emph{Specialist Programmer – Software Development Engineer} \hspace*{\fill} \normalfont\small Aug 2024 -- Present}
 \begin{itemize}
-    \item Developed POCs using \textbf{Java and Spring Boot}, including \textbf{gRPC}-based service communication and backend service integration.
-    \item Built a React library to export complex dashboards into fully editable PPT and PDF documents, adopted across 7+ projects by 3 teams, reducing manual report creation from hours to one click.
+    \item Architected scalable backend services and POCs using \textbf{Java, Spring Boot, REST APIs, and gRPC} to support decoupled \textbf{React micro-frontend} deployments.
+    \item Optimized \textbf{MySQL queries} reducing API response times by \textbf{25\%}, and integrated AWS/GCP services (S3, Cloud SQL, Redis) for configuration and data storage.
+    \item Containerized \textbf{Spring Boot microservices} using \textbf{Docker}, automated deployments via \textbf{Jenkins CI/CD}, and ensured API reliability with \textbf{JUnit and Mockito}.
+    \item Built a centralized \textbf{Agentic AI} knowledge base using RAG, LLM wikis, and OKF, featuring natural language database querying (Text-to-SQL) and strict role-based access control.
     \item Developed an AI-powered platform transforming meeting transcripts and videos into structured Process Design Documents, reducing creation time from hours to under 5 minutes.
-    \item Architected applications using \textbf{REST APIs, MySQL, and Webpack Module Federation}, enabling scalable backend integration and independent frontend deployments.
-    \item Optimized \textbf{MySQL queries} and implemented database indexing, reducing API response times by \textbf{25\%}.
-    \item Integrated AWS (S3, Parameter Store) and GCP (Cloud SQL, Redis, Cloud Storage) for configuration management and data storage.
+    \item Built a React library to export complex dashboards into fully editable PPT and PDF documents, adopted across 7+ projects by 3 teams, reducing manual report creation from hours to one click.
 \end{itemize}
 
 \subsection{SaralTech $|$ \normalfont\footnotesize\emph{Software Engineer Intern} \hspace*{\fill} \normalfont\small Jan 2024 -- Jun 2024}
 \begin{itemize}
-    \item Developed REST APIs and React-based application workflows for a real-time application, integrating WebSockets for live updates and state synchronization.
-    \item Implemented \textbf{JWT authentication, session management, and Google OAuth} for application access.
+    \item Developed React UIs and implemented WebSockets, ensuring real-time state synchronization for 10K+ users.
+    \item Integrated JWT authentication and session management workflows to strictly secure application access.
 \end{itemize}
 
 % --- PROJECTS ---
@@ -132,8 +132,8 @@
 
 \subsection{\href{https://satyamark.vercel.app/}{\underline{SatyaMark}} $|$ \normalfont\footnotesize\emph{Python, Node.js, PostgreSQL, Redis Streams, WebSockets, LangGraph} \hspace*{\fill} \normalfont\small 2025}
 \begin{itemize}
-    \item Built an open-source multi-modal content verification platform using distributed processing and asynchronous worker architecture.
-    \item Designed verification pipelines using \textbf{PostgreSQL, Redis Streams, WebSockets}, and independent workers with retries and API failover.
+    \item Built an open-source multi-modal content verification platform with distributed asynchronous workers.
+    \item Designed data pipelines using \textbf{PostgreSQL, Redis Streams, WebSockets} with retries and API failover.
     \item Implemented processing workflows for claim extraction, evidence retrieval, scoring, and re-evaluation.
     \item Published a reusable React SDK with \textbf{3.6K+ downloads} for integrating live verification results.
 \end{itemize}

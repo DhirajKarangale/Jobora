@@ -99,6 +99,7 @@ Interested in scalable software, distributed systems, developer tools, AI/agenti
 - WebSockets
 - Browser Automation
 - Web Scraping
+- Role-Based Access Control (RBAC)
 
 ### AI
 
@@ -108,6 +109,9 @@ Interested in scalable software, distributed systems, developer tools, AI/agenti
 - LangChain
 - LangGraph
 - RAG
+- Text-to-SQL
+- LLM wikis
+- OKF
 - Claude
 - Hugging Face
 - AI/ML
@@ -164,6 +168,7 @@ Location: India (On-site)
 
 - Built a reusable dashboard export library that converts complex React dashboards into fully editable PowerPoint and PDF documents, adopted across 7+ projects by 3 teams and reducing report creation from hours of manual slide preparation to a single export action.
 - Developed an AI-powered PDD generation platform that transforms meeting transcripts and videos into structured Process Design Documents, reducing document creation time from hours or days to under 5 minutes.
+- Built a centralized enterprise AI knowledge base using RAG, LLM wikis, and OKF, enabling users to query organizational data and databases via natural language (Text-to-SQL) with strict role-based access control and data privacy.
 - Architected and developed micro-frontend applications using React and Webpack Module Federation, enabling independent deployments across teams.
 - Developed POCs using Java and Spring Boot, including gRPC-based service communication and integration for backend service development.
 - Improved application performance by 25% through MySQL query optimization, database indexing, and REST API improvements.

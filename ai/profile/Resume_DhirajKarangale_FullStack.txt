@@ -85,9 +85,9 @@
 \section{Skills}
 \begin{skillslist}
     \item \textbf{Frontend:} React, TypeScript, JavaScript, Redux Toolkit, React Query, React Router, React Flow, Tailwind CSS, Bootstrap, Framer Motion
-    \item \textbf{Backend:} Node.js, Express.js, REST APIs, WebSockets, JWT, OAuth, Browser Automation
+    \item \textbf{Backend:} Node.js, Express.js, REST APIs, WebSockets, JWT, OAuth, RBAC, Browser Automation
     \item \textbf{Databases \& Cloud:} PostgreSQL, MySQL, MongoDB, Redis, AWS, GCP, Cloudinary
-    \item \textbf{Tools:} Git, Docker, Jenkins (CI/CD), Webpack Module Federation, Micro-frontends, Jest, Vitest, SQL
+    \item \textbf{Tools:} Git, Docker, Jenkins (CI/CD), Webpack Module Federation, Micro-frontends, RAG, Text-to-SQL, LLM wikis, OKF, Jest, Vitest, SQL
 \end{skillslist}
 
 % --- Achievements ---
@@ -105,10 +105,10 @@
 \subsection{Infosys $|$ \normalfont\footnotesize\emph{Specialist Programmer – Software Development Engineer} \hspace*{\fill} \normalfont\small Aug 2024 -- Present}
 \begin{itemize}
     \item Built a reusable \textbf{React library} converting complex dashboards into fully editable PPT and PDF documents, adopted across 7+ projects by 3 teams and reducing report creation from hours to one click.
-    \item Architected and developed \textbf{micro-frontend applications} using React and Webpack Module Federation, enabling independent deployments across teams.
+    \item Architected \textbf{React micro-frontend} applications via Webpack Module Federation, ensuring UI reliability with \textbf{Jest} and automating independent deployments using \textbf{Jenkins CI/CD}.
     \item Developed an AI-powered platform transforming meeting transcripts and videos into structured Process Design Documents, reducing creation time to under \textbf{5 minutes}.
-    \item Improved application performance by \textbf{25\%} through MySQL query optimization, database indexing.
-    \item Integrated AWS S3, Parameter Store, GCP Cloud SQL, Redis, and Cloud Storage for application infrastructure and data management.
+    \item Built a centralized AI knowledge base using RAG, LLM wikis, and OKF, featuring natural language database querying (Text-to-SQL) and strict role-based access control for organizational data.
+    \item Containerized Node.js backend services with \textbf{Docker}, optimized MySQL queries for a \textbf{25\%} performance boost, and integrated AWS/GCP (S3, Redis) for scalable data management.
 \end{itemize}
 
 \subsection{SaralTech $|$ \normalfont\footnotesize\emph{Software Engineer Intern} \hspace*{\fill} \normalfont\small Jan 2024 -- Jun 2024}
@@ -130,9 +130,9 @@
 
 \subsection{\href{https://github.com/DhirajKarangale/FUSE}{\underline{FUSE}} $|$ \normalfont\footnotesize\emph{React, TypeScript, Node.js, Express.js, PostgreSQL, WebSockets, Redux Toolkit} \hspace*{\fill} \normalfont\small 2025}
 \begin{itemize}
-    \item Built a full-stack social platform with interest-based feeds, personalized content discovery, trending posts, and real-time messaging.
-    \item Developed REST APIs with Node.js, Express.js, and PostgreSQL and implemented real-time text and image messaging using WebSockets.
-    \item Integrated Cloudinary for optimized image storage and delivery and built responsive interfaces with Redux Toolkit and Tailwind CSS.
+    \item Built a full-stack social platform featuring interest-based feeds, trending posts, and real-time messaging.
+    \item Developed REST APIs using Node.js, Express.js, PostgreSQL, and implemented real-time messaging via WebSockets.
+    \item Integrated Cloudinary for image storage, building responsive interfaces with Redux Toolkit and Tailwind CSS.
 \end{itemize}
 
 % --- EDUCATION ---
