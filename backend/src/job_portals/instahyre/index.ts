@@ -62,8 +62,8 @@ export default async function instahyer(browser: Browser): Promise<void> {
       await delay(WAIT_TIME);
 
       try {
-        await page.waitForSelector('button#interested-btn', { visible: true, timeout: 5000 });
-        await page.click('button#interested-btn');
+        await page.waitForSelector('.btn-interested', { visible: true, timeout: 5000 });
+        await page.click('.btn-interested');
         await delay(WAIT_TIME);
       } catch (e) {
         // console.log("No 'View »' button found on root page. Proceeding anyway.");
@@ -77,7 +77,7 @@ export default async function instahyer(browser: Browser): Promise<void> {
     try {
       let isSearchDkVisible = false;
       try {
-        await page.waitForSelector('li#search-dk', { visible: true, timeout: 1000 });
+        await page.waitForSelector('#saved-search-dk', { visible: true, timeout: 1000 });
         isSearchDkVisible = true;
       } catch (e) {
         isSearchDkVisible = false;
@@ -91,8 +91,8 @@ export default async function instahyer(browser: Browser): Promise<void> {
         }
       }
 
-      await page.waitForSelector('li#search-dk', { visible: true, timeout: 5000 });
-      await page.click('li#search-dk');
+      await page.waitForSelector('#saved-search-dk .search-btn a', { visible: true, timeout: 5000 });
+      await page.click('#saved-search-dk .search-btn a');
       await delay(WAIT_TIME);
 
       await page.waitForSelector('.employer-row #employer-profile-opportunity', { timeout: 10000 });
