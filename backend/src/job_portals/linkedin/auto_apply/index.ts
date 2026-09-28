@@ -8,13 +8,13 @@ import { unfollowCompany, clickNextOrSubmit } from "./navigation.ts";
 
 export async function handleEasyApply(page: Page, jobId: string, targetResumeName: string = "DhirajKarangale.pdf"): Promise<boolean> {
   try {
-    await page.waitForSelector('.jobs-apply-button, [aria-label="LinkedIn Apply to this job"]', { timeout: 10000 });
+    await page.waitForSelector('.jobs-apply-button, [aria-label="LinkedIn Apply to this job"], [aria-label="Easy Apply to this job"]', { timeout: 10000 });
   } catch (e) {
     return false;
   }
 
   const easyApplyBtnHandle = await page.evaluateHandle(() => {
-    const btns = Array.from(document.querySelectorAll('.jobs-apply-button, [aria-label="LinkedIn Apply to this job"]'));
+    const btns = Array.from(document.querySelectorAll('.jobs-apply-button, [aria-label="LinkedIn Apply to this job"], [aria-label="Easy Apply to this job"]'));
     return btns.find(b => (b as HTMLElement).offsetParent !== null) || btns[0] || null;
   });
 
@@ -37,8 +37,8 @@ export async function handleEasyApply(page: Page, jobId: string, targetResumeNam
   }
 
   try {
-    await page.waitForSelector('.jobs-easy-apply-modal, button[aria-label="Continue to next step"], button[aria-label="Submit application"]', { timeout: 15000 });
-    await delay(1500);
+    await page.waitForSelector('.jobs-easy-apply-modal', { timeout: 15000 });
+    await delay(WAIT_TIME_AUTO_APPLY);
   } catch (e) {
   }
 
@@ -47,7 +47,7 @@ export async function handleEasyApply(page: Page, jobId: string, targetResumeNam
 
   for (let i = 0; i < 10; i++) {
     const currentFields = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('label, legend')).map(el => el.textContent?.trim()).join('|');
+      return Array.from(document.querySelectorAll('input, select, textarea, label, legend')).map(el => (el as any).name || el.id || el.textContent?.trim() || '').join('|');
     });
 
     if (currentFields && currentFields === previousFields) {

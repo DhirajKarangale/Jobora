@@ -1,24 +1,21 @@
 import { edge } from "../../../utils/browserManager.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { handleEasyApply } from "./index.ts";
+import { WAIT_TIME } from "../../../utils/constants.ts";
 
 async function run() {
   console.log("Starting browser connection...");
   const browser = await edge();
   const page = await browser.newPage();
   const jobIds = [
-    "4460215707",
-    "4459286123",
-    "4456882420",
-    "4461718163",
-    "4414752650"
+    "4471301228"
   ];
 
   for (const jobId of jobIds) {
     console.log(`Navigating to job ${jobId}...`);
     try {
       await page.goto(`https://www.linkedin.com/jobs/view/${jobId}`, { waitUntil: "domcontentloaded" });
-      await delay(4000);
+      await delay(WAIT_TIME);
 
       const result = await handleEasyApply(page, jobId);
       console.log(`Auto Apply Result for ${jobId}: ${result}`);

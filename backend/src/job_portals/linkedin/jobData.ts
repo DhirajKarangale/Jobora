@@ -111,7 +111,7 @@ async function extractData(browser: Browser, jobId: string) {
     isEasyApply = true;
   } else {
     isEasyApply = await page.evaluate(() => {
-      return !!document.querySelector('[aria-label="LinkedIn Apply to this job"]') || !!document.querySelector('svg#linkedin-bug-medium');
+      return !!document.querySelector('[aria-label="LinkedIn Apply to this job"]') || !!document.querySelector('[aria-label="Easy Apply to this job"]') || !!document.querySelector('svg#linkedin-bug-medium');
     });
   }
 

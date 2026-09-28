@@ -88,6 +88,9 @@
     "fallbackTextValue": "2 years",
     "dropdownValue": "2",
     "preferredOptions": [
+      "2 years and 0 month",
+      "2 years and 0 months",
+      "2 years",
       "2",
       "2+",
       "2-3",

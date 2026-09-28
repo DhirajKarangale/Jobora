@@ -1,6 +1,7 @@
 import { type Page } from "puppeteer-core";
 import { setTimeout as delay } from "node:timers/promises";
 import answersConfig from "./answers.json" with { type: "json" };
+import { WAIT_TIME_AUTO_APPLY } from "../../../utils/constants.ts";
 
 function resolveDynamicValue(value: string | undefined): string {
   if (!value) return '';
@@ -17,11 +18,37 @@ function resolveDynamicValue(value: string | undefined): string {
 
 export async function handleQuestions(page: Page): Promise<boolean> {
   try {
-    const labels = await page.$$('label, legend');
+    const formFields = await page.$$('input:not([type="hidden"]), select, textarea, fieldset');
 
-    for (const labelEl of labels) {
-      const labelText = await page.evaluate(el => el.textContent?.trim().toLowerCase() || '', labelEl);
-      const tagName = await page.evaluate(el => el.tagName.toLowerCase(), labelEl);
+    const processedContainers = new Set<string>();
+
+    for (const field of formFields) {
+      const fieldData = await page.evaluate(el => {
+        let text = '';
+        const tagName = el.tagName.toLowerCase();
+        
+        if (tagName === 'fieldset') {
+           const legend = el.querySelector('legend');
+           text = legend ? legend.textContent || '' : el.textContent || '';
+        } else {
+           text = el.getAttribute('aria-label') || '';
+           if (!text) {
+              const id = el.id;
+              if (id) {
+                  const label = document.querySelector(`label[for="${id}"]`);
+                  if (label) text = label.textContent || '';
+              }
+           }
+           if (!text || text.length < 4) {
+              const container = el.closest('.fb-dash-form-element, .jobs-easy-apply-form-element, .pb4') || el.parentElement?.parentElement;
+              if (container) text = container.textContent || '';
+           }
+        }
+        return { text: text.trim().toLowerCase(), isFieldset: tagName === 'fieldset' };
+      }, field);
+      
+      if (!fieldData.text) continue;
+      const labelText = fieldData.text;
       let matchedConfig = false;
 
       for (const config of answersConfig) {
@@ -29,12 +56,8 @@ export async function handleQuestions(page: Page): Promise<boolean> {
 
         if (regex.test(labelText)) {
 
-          if (tagName === 'label') {
-            const forAttr = await page.evaluate(el => el.getAttribute('for'), labelEl);
-
-            if (forAttr) {
-              const inputElHandle = await page.evaluateHandle((id) => document.getElementById(id), forAttr);
-              const inputEl = inputElHandle.asElement() as import('puppeteer-core').ElementHandle<Element> | null;
+          if (!fieldData.isFieldset) {
+              const inputEl = field as import('puppeteer-core').ElementHandle<Element>;
 
               if (inputEl) {
                 const nodeInfo = await page.evaluate(el => {
@@ -105,14 +128,17 @@ export async function handleQuestions(page: Page): Promise<boolean> {
                     return match ? match.value : null;
                   }, inputEl, config.textValue, (config as any).dropdownValue, (config as any).preferredOptions);
 
-                  if (optionValue) {
-                    await page.evaluate((select, val) => {
-                      (select as HTMLSelectElement).value = val;
-                      select.dispatchEvent(new Event('change', { bubbles: true }));
-                    }, inputEl, optionValue);
-                    await delay(500);
-                  }
-                } else if ((nodeInfo.tagName === 'input' && nodeInfo.type === 'text') || nodeInfo.tagName === 'textarea') {
+                    if (optionValue) {
+                      await page.evaluate((select, val) => {
+                        (select as HTMLSelectElement).value = val;
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
+                      }, inputEl, optionValue);
+                      await delay(WAIT_TIME_AUTO_APPLY);
+                    }
+                } else if (
+                  (nodeInfo.tagName === 'input' && ['text', 'tel', 'number', 'email'].includes(nodeInfo.type.toLowerCase())) ||
+                  nodeInfo.tagName === 'textarea'
+                ) {
                   const inputId = await page.evaluate(el => el.getAttribute('id') || '', inputEl);
 
                   await inputEl.evaluate(el => (el as HTMLInputElement | HTMLTextAreaElement).select());
@@ -126,7 +152,7 @@ export async function handleQuestions(page: Page): Promise<boolean> {
 
                   const isCombobox = await page.evaluate(el => el.getAttribute('role') === 'combobox', inputEl);
                   if (isCombobox) {
-                    await delay(1500);
+                    await delay(WAIT_TIME_AUTO_APPLY);
                     await inputEl.press('ArrowDown');
                     await inputEl.press('Enter');
                   }
@@ -137,7 +163,7 @@ export async function handleQuestions(page: Page): Promise<boolean> {
                     el.dispatchEvent(new Event('blur', { bubbles: true }));
                   }, inputEl);
 
-                  await delay(300);
+                  await delay(WAIT_TIME_AUTO_APPLY);
 
                   const errorMsg = await page.evaluate((id) => {
                     const errorEl = document.getElementById(`${id}-error`);
@@ -170,13 +196,11 @@ export async function handleQuestions(page: Page): Promise<boolean> {
                     }, inputEl);
                   }
 
-                  await delay(300);
+                  await delay(WAIT_TIME_AUTO_APPLY);
                 }
               }
-            }
-          } else if (tagName === 'legend') {
-            const fieldsetHandle = await page.evaluateHandle(el => el.closest('fieldset'), labelEl);
-            const fieldset = fieldsetHandle.asElement() as import('puppeteer-core').ElementHandle<Element> | null;
+          } else if (fieldData.isFieldset) {
+            const fieldset = field as import('puppeteer-core').ElementHandle<Element>;
 
             if (fieldset) {
               const clicked = await page.evaluate((fs, textToMatch, fallbackToMatch, preferredOptions, numericValue) => {
@@ -269,7 +293,7 @@ export async function handleQuestions(page: Page): Promise<boolean> {
                 return false;
               }, fieldset, config.textValue, (config as any).dropdownValue, (config as any).preferredOptions, config.numericValue);
 
-              if (clicked) await delay(500);
+              if (clicked) await delay(WAIT_TIME_AUTO_APPLY);
             }
           }
 
@@ -279,9 +303,8 @@ export async function handleQuestions(page: Page): Promise<boolean> {
       }
 
       if (!matchedConfig) {
-        if (tagName === 'legend') {
-          const clickedFallback = await page.evaluate((el) => {
-            const fs = el.closest('fieldset');
+        if (fieldData.isFieldset) {
+          const clickedFallback = await page.evaluate((fs) => {
             if (fs) {
               const options = Array.from(fs.querySelectorAll('label'));
               if (options.length === 1) {
@@ -318,17 +341,14 @@ export async function handleQuestions(page: Page): Promise<boolean> {
               }
             }
             return false;
-          }, labelEl);
+          }, field);
 
           if (clickedFallback) {
-            await delay(500);
+            await delay(WAIT_TIME_AUTO_APPLY);
           }
-        } else if (tagName === 'label') {
-          const fallbackSelect = await page.evaluate((el) => {
-            const forAttr = el.getAttribute('for');
-            if (forAttr) {
-              const input = document.getElementById(forAttr);
-              if (input && input.tagName.toLowerCase() === 'select') {
+        } else if (!fieldData.isFieldset) {
+          const fallbackSelect = await page.evaluate((input) => {
+            if (input && input.tagName.toLowerCase() === 'select') {
                 const select = input as HTMLSelectElement;
                 if (!select.value || select.value === 'Select an option') {
                   const validOpts = Array.from(select.options).filter(o => o.value && o.value !== 'Select an option' && o.value.trim() !== '');
@@ -340,12 +360,11 @@ export async function handleQuestions(page: Page): Promise<boolean> {
                   }
                 }
               }
-            }
             return false;
-          }, labelEl);
+          }, field);
           
           if (fallbackSelect) {
-            await delay(500);
+            await delay(WAIT_TIME_AUTO_APPLY);
           }
         }
       }
@@ -377,7 +396,10 @@ export async function handleQuestions(page: Page): Promise<boolean> {
         const el = input as HTMLInputElement | HTMLTextAreaElement;
         const isRequired = el.required || el.getAttribute('aria-required') === 'true';
         if (isRequired && !el.value.trim()) {
-          el.value = 'NA';
+          const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set || 
+                                         Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+          if (nativeInputValueSetter) nativeInputValueSetter.call(el, 'NA');
+          else el.value = 'NA';
           el.dispatchEvent(new Event('input', { bubbles: true }));
           el.dispatchEvent(new Event('change', { bubbles: true }));
           filledSomething = true;
@@ -389,7 +411,9 @@ export async function handleQuestions(page: Page): Promise<boolean> {
         const el = input as HTMLInputElement;
         const isRequired = el.required || el.getAttribute('aria-required') === 'true';
         if (isRequired && !el.value.trim()) {
-          el.value = '1';
+          const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+          if (nativeInputValueSetter) nativeInputValueSetter.call(el, '1');
+          else el.value = '1';
           el.dispatchEvent(new Event('input', { bubbles: true }));
           el.dispatchEvent(new Event('change', { bubbles: true }));
           filledSomething = true;
@@ -423,7 +447,7 @@ export async function handleQuestions(page: Page): Promise<boolean> {
     });
 
     if (fallbackResult.filledSomething) {
-      await delay(500);
+      await delay(WAIT_TIME_AUTO_APPLY);
     }
 
     if (fallbackResult.stillEmpty) return false;
