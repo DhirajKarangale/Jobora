@@ -168,18 +168,21 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
       await delay(WAIT_TIME);
 
       const isAlreadyApplied = await page.evaluate(() => {
-          const btn = document.querySelector('.apply-button, #apply-button');
-          if (btn) {
-              const text = btn.textContent?.trim().toLowerCase() || '';
-              if (text === 'already applied' || text === 'applied') return true;
-          }
-          return !!document.querySelector('.already-applied') || !!document.querySelector('.applied-job-content');
+        const companyBtn = document.querySelector('#company-site-button');
+        if (companyBtn) return false;
+
+        const btn = document.querySelector('.apply-button, #apply-button');
+        if (btn) {
+          const text = btn.textContent?.trim().toLowerCase() || '';
+          if (text === 'already applied' || text === 'applied') return true;
+        }
+        return !!document.querySelector('.already-applied') || !!document.querySelector('.applied-job-content');
       });
 
       if (isAlreadyApplied) {
-          console.log(`[Naukri] Job ${cleanJobId} is already applied. Skipping.`);
-          await page.close();
-          continue;
+        console.log(`[Naukri] Job ${cleanJobId} is already applied. Skipping.`);
+        await page.close();
+        continue;
       }
 
       const data = await extractData(page, jobId);

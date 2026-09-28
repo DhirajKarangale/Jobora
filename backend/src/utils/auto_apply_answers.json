@@ -238,9 +238,9 @@
   },
   {
     "pattern": "last\\s+working\\s+day",
-    "numericValue": "NA",
-    "textValue": "NA",
-    "dropdownValue": "NA"
+    "numericValue": "0",
+    "textValue": "0",
+    "dropdownValue": "0"
   },
   {
     "pattern": "(?:serving|on)\\s+notice",
@@ -264,7 +264,7 @@
     "dropdownValue": "Yes"
   },
   {
-    "pattern": "(?:authorized|eligible).*work",
+    "pattern": "(?:authorized|eligible|legally).*work|legally.*authorized",
     "numericValue": "Yes",
     "textValue": "Yes",
     "dropdownValue": "Yes"
@@ -276,7 +276,7 @@
     "dropdownValue": "No"
   },
   {
-    "pattern": "city|what\\s+is\\s+your\\s+(?:current\\s+)?location|current\\s+city|where\\s+are\\s+you\\s+located",
+    "pattern": "city|what\\s+is\\s+your\\s+(?:current\\s+)?location|current\\s+location|current\\s+city|where\\s+are\\s+you\\s+located",
     "numericValue": "Pune",
     "textValue": "Pune",
     "dropdownValue": "Pune",
@@ -361,7 +361,7 @@
     "dropdownValue": "https://leetcode.com/u/DhirajKarangale/"
   },
   {
-    "pattern": "(?:background\\s+check|accurate\\s+and\\s+truthful|acknowledge\\s+and\\s+agree|identity\\s+verification|terms\\s+and\\s+conditions|privacy\\s+policy|allow.*contact|consent.*contact|future\\s+job\\s+opportunities|contact\\s+me\\s+about|keep\\s+my\\s+resume|keep\\s+me\\s+in\\s+mind)",
+    "pattern": "(?:background\\s+check|accurate\\s+and\\s+truthful|acknowledge\\s+and\\s+agree|identity\\s+verification|terms\\s+(?:and|&)\\s+conditions|terms\\s+of\\s+service|privacy\\s+policy|allow.*contact|consent.*contact|future\\s+job\\s+opportunities|contact\\s+me\\s+about|keep\\s+my\\s+resume|keep\\s+me\\s+in\\s+mind)",
     "numericValue": "Yes",
     "textValue": "Yes",
     "dropdownValue": "Yes",
