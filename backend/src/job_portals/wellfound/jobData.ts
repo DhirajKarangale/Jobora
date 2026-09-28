@@ -7,12 +7,40 @@ import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/auto
 
 async function extractData(page: Page, jobId: string) {
   return await page.evaluate(() => {
-    const role = document.querySelector('h1.text-xl.font-semibold.text-black')?.textContent?.trim() || '';
+    // 1. Locate the Slide-In Container to avoid extracting from the background feed
+    const submitBtn = document.querySelector('button[data-test="JobDescriptionSlideIn--SubmitButton"]');
+    let container: Element | Document = document;
+    if (submitBtn) {
+        let curr: Element | null = submitBtn;
+        while (curr && curr.tagName !== 'BODY') {
+            if (curr.querySelector('h1')) {
+                container = curr;
+                break;
+            }
+            curr = curr.parentElement;
+        }
+    }
 
-    const companyAnchor = document.querySelector('a[href^="/company/"] span');
-    const companyName = companyAnchor ? companyAnchor.textContent?.trim() || null : null;
+    const role = container.querySelector('h1')?.textContent?.trim() || '';
 
-    const topListItems = Array.from(document.querySelectorAll('ul.flex.flex-wrap.text-md.text-black li'));
+    // 2. Extract Company Name from within the container
+    let companyName = null;
+    const companyAnchors = Array.from(container.querySelectorAll('a[href^="/company/"]'));
+    for (const a of companyAnchors) {
+      const text = a.textContent?.trim();
+      if (text && !a.querySelector('img')) {
+        companyName = text;
+        break;
+      }
+    }
+
+    // Fallback if the anchor text is wrapped in an element
+    if (!companyName) {
+        const companyAnchorWithText = Array.from(container.querySelectorAll('a[href^="/company/"]')).find(a => a.textContent?.trim());
+        if (companyAnchorWithText) companyName = companyAnchorWithText.textContent?.trim() || null;
+    }
+
+    const topListItems = Array.from(container.querySelectorAll('ul.flex.flex-wrap.text-md.text-black li, ul.flex.flex-wrap li'));
     let salary = '';
     let experience = '';
 
@@ -26,15 +54,15 @@ async function extractData(page: Page, jobId: string) {
       }
     }
 
-    const locationSpan = Array.from(document.querySelectorAll('span.text-md.font-semibold')).find(el => el.textContent?.trim() === 'Job Location');
+    const locationSpan = Array.from(container.querySelectorAll('span')).find(el => el.textContent?.trim() === 'Job Location' || el.textContent?.trim() === 'Location');
     const location = locationSpan?.nextElementSibling?.textContent?.trim() || '';
 
-    const skillsSpan = Array.from(document.querySelectorAll('span.text-md.font-semibold')).find(el => el.textContent?.trim() === 'Skills');
+    const skillsSpan = Array.from(container.querySelectorAll('span')).find(el => el.textContent?.trim() === 'Skills');
     const skillsContainer = skillsSpan?.nextElementSibling;
-    const skillsElements = skillsContainer ? Array.from(skillsContainer.querySelectorAll('div.mr-2.mt-2')) : [];
+    const skillsElements = skillsContainer ? Array.from(skillsContainer.querySelectorAll('div')) : [];
     const skills = skillsElements.map(el => el.textContent?.trim()).filter(Boolean).join(', ');
 
-    const about = document.querySelector('#job-description')?.textContent?.trim() || '';
+    const about = container.querySelector('#job-description')?.textContent?.trim() || '';
 
     return {
       role,

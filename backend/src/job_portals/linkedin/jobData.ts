@@ -100,6 +100,8 @@ async function extractData(browser: Browser, jobId: string) {
   await delay(WAIT_TIME);
   const companyName = (await extractCompanyName(page))?.trim();
   let link = (await extractLink(page, jobId))?.trim();
+  const hasApplyLink = !!link;
+
   if (!link) {
     link = applicationLink;
   }
@@ -107,12 +109,27 @@ async function extractData(browser: Browser, jobId: string) {
   const role = (await extractRole(page))?.trim() || '';
 
   let isEasyApply = false;
-  if (link && link.includes("/jobs/view/") && link.includes("/apply")) {
+  if (hasApplyLink && link.includes("/jobs/view/") && link.includes("/apply")) {
     isEasyApply = true;
   } else {
     isEasyApply = await page.evaluate(() => {
       return !!document.querySelector('[aria-label="LinkedIn Apply to this job"]') || !!document.querySelector('[aria-label="Easy Apply to this job"]') || !!document.querySelector('svg#linkedin-bug-medium');
     });
+  }
+
+  const hasAnyApplyButton = await page.evaluate(() => {
+      if (document.querySelector('.jobs-apply-button')) return true;
+      const allBtns = Array.from(document.querySelectorAll('button, a'));
+      return allBtns.some(b => {
+          const t = b.textContent?.trim().toLowerCase();
+          return t === 'apply' || t === 'easy apply';
+      });
+  });
+
+  if (!hasApplyLink && !isEasyApply && !hasAnyApplyButton) {
+      console.log(`[LinkedIn] No Apply or Easy Apply button found for job ${jobId}. Skipping.`);
+      try { if (!page.isClosed()) await page.close(); } catch (error) {}
+      return;
   }
 
   let autoApplySuccess = false;

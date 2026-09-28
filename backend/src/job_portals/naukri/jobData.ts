@@ -167,6 +167,21 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
       await page.goto(applicationLink, { waitUntil: "load" });
       await delay(WAIT_TIME);
 
+      const isAlreadyApplied = await page.evaluate(() => {
+          const btn = document.querySelector('.apply-button, #apply-button');
+          if (btn) {
+              const text = btn.textContent?.trim().toLowerCase() || '';
+              if (text === 'already applied' || text === 'applied') return true;
+          }
+          return !!document.querySelector('.already-applied') || !!document.querySelector('.applied-job-content');
+      });
+
+      if (isAlreadyApplied) {
+          console.log(`[Naukri] Job ${cleanJobId} is already applied. Skipping.`);
+          await page.close();
+          continue;
+      }
+
       const data = await extractData(page, jobId);
       await delay(WAIT_TIME);
 
