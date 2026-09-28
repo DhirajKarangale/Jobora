@@ -1,6 +1,6 @@
 import { type Page } from "puppeteer-core";
 import { setTimeout as delay } from "node:timers/promises";
-import answersConfig from "./answers.json" with { type: "json" };
+import answersConfig from "../../../utils/auto_apply_answers.json" with { type: "json" };
 import { WAIT_TIME_AUTO_APPLY } from "../../../utils/constants.ts";
 
 function resolveDynamicValue(value: string | undefined): string {

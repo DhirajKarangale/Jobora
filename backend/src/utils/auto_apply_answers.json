@@ -4,42 +4,54 @@
     "numericValue": "Yes",
     "textValue": "Yes",
     "dropdownValue": "Yes",
-    "preferredOptions": ["Yes"]
+    "preferredOptions": [
+      "Yes"
+    ]
   },
   {
     "pattern": "llm|shipped|bayesian|hierarchical|sparse|rare-event",
     "numericValue": "Yes",
     "textValue": "Yes",
     "dropdownValue": "Yes",
-    "preferredOptions": ["Yes"]
+    "preferredOptions": [
+      "Yes"
+    ]
   },
   {
     "pattern": "kerala",
     "numericValue": "No",
     "textValue": "No",
     "dropdownValue": "No",
-    "preferredOptions": ["No"]
+    "preferredOptions": [
+      "No"
+    ]
   },
   {
     "pattern": "kochi|ernakulam",
     "numericValue": "Yes",
     "textValue": "Yes",
     "dropdownValue": "Yes",
-    "preferredOptions": ["Yes"]
+    "preferredOptions": [
+      "Yes"
+    ]
   },
   {
     "pattern": "fast-paced",
     "numericValue": "Yes",
     "textValue": "Yes",
     "dropdownValue": "Yes",
-    "preferredOptions": ["Yes"]
+    "preferredOptions": [
+      "Yes"
+    ]
   },
   {
     "pattern": "budgeted\\s+range",
     "numericValue": "Yes",
     "textValue": "Yes",
     "dropdownValue": "Yes",
-    "preferredOptions": ["Yes"]
+    "preferredOptions": [
+      "Yes"
+    ]
   },
   {
     "pattern": "monthly\\s+(?:take-home|in-hand|take\\s*home)\\s+salary|take-home.*salary|monthly.*salary(?!.*expect)",
@@ -803,6 +815,162 @@
     "dropdownValue": "Yes",
     "preferredOptions": [
       "Yes"
+    ]
+  },
+  {
+    "pattern": "linkedin",
+    "numericValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb",
+    "textValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb",
+    "dropdownValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb",
+    "preferredOptions": [
+      "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb"
+    ]
+  },
+  {
+    "pattern": "portfolio|website",
+    "numericValue": "https://dhirajkarangale.vercel.app",
+    "textValue": "https://dhirajkarangale.vercel.app",
+    "dropdownValue": "https://dhirajkarangale.vercel.app",
+    "preferredOptions": [
+      "https://dhirajkarangale.vercel.app"
+    ]
+  },
+  {
+    "pattern": "github|git\\b|version control",
+    "numericValue": "https://github.com/DhirajKarangale",
+    "textValue": "https://github.com/DhirajKarangale",
+    "dropdownValue": "https://github.com/DhirajKarangale",
+    "preferredOptions": [
+      "https://github.com/DhirajKarangale"
+    ]
+  },
+  {
+    "pattern": "resid|locat|relocat|available for",
+    "numericValue": "Yes",
+    "textValue": "Pune",
+    "dropdownValue": "Yes",
+    "preferredOptions": [
+      "Yes",
+      "Pune"
+    ]
+  },
+  {
+    "pattern": "year|experience|how many",
+    "numericValue": "2",
+    "textValue": "2",
+    "dropdownValue": "2",
+    "preferredOptions": [
+      "2",
+      "1-2",
+      "2-3",
+      "2+"
+    ]
+  },
+  {
+    "pattern": "notice|join",
+    "numericValue": "15 Days",
+    "textValue": "15 Days",
+    "dropdownValue": "15 Days",
+    "preferredOptions": [
+      "15",
+      "1 month",
+      "immediate"
+    ]
+  },
+  {
+    "pattern": "current ctc|current salary",
+    "numericValue": "10",
+    "textValue": "10",
+    "dropdownValue": "10",
+    "preferredOptions": [
+      "10"
+    ]
+  },
+  {
+    "pattern": "ctc|salary|lpa|compensation",
+    "numericValue": "20",
+    "textValue": "20",
+    "dropdownValue": "20",
+    "preferredOptions": [
+      "20",
+      "15"
+    ]
+  },
+  {
+    "pattern": "education|degree|qualification",
+    "numericValue": "B.Tech",
+    "textValue": "B.Tech",
+    "dropdownValue": "B.Tech",
+    "preferredOptions": [
+      "b.tech",
+      "bachelor"
+    ]
+  },
+  {
+    "pattern": "english|proficiency",
+    "numericValue": "Fluent",
+    "textValue": "Fluent",
+    "dropdownValue": "Fluent",
+    "preferredOptions": [
+      "fluent",
+      "expert",
+      "native"
+    ]
+  },
+  {
+    "pattern": "shift|wfo|office|on-site",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": [
+      "yes",
+      "willing",
+      "agree"
+    ]
+  },
+  {
+    "pattern": "gender",
+    "numericValue": "Male",
+    "textValue": "Male",
+    "dropdownValue": "Male",
+    "preferredOptions": [
+      "male"
+    ]
+  },
+  {
+    "pattern": "status.*employment|employment.*status",
+    "numericValue": "Employed",
+    "textValue": "Employed",
+    "dropdownValue": "Employed",
+    "preferredOptions": [
+      "employed",
+      "working",
+      "full-time"
+    ]
+  },
+  {
+    "pattern": "yes|no",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": [
+      "yes"
+    ]
+  },
+  {
+    "pattern": "which of these|skills|areas",
+    "numericValue": "AI",
+    "textValue": "AI",
+    "dropdownValue": "AI",
+    "preferredOptions": [
+      "ai",
+      "artificial intelligence",
+      "machine learning",
+      "react",
+      "frontend",
+      "node",
+      "backend (node)",
+      "java"
     ]
   }
 ]
