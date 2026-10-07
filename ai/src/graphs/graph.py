@@ -4,7 +4,10 @@ import json
 from typing import TypedDict, Dict, Any
 from langgraph.graph import StateGraph, START, END
 
-from utils.huggingface import invoke_llm, AllTokensExhaustedException
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+from utils.generic_llm import invoke_llm, AllTokensExhaustedException
 from graphs.prompts import (
     get_cleaning_prompt,
     get_structuring_prompt,

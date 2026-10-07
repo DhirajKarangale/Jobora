@@ -11,7 +11,9 @@ if current_dir not in sys.path:
 
 from workflow import manage_job_workflow
 from utils.redis import RedisClient
-from utils.huggingface import AllTokensExhaustedException
+import sys
+sys.path.append(os.path.abspath(os.path.join(current_dir, "..")))
+from utils.generic_llm import AllTokensExhaustedException
 
 load_dotenv()
 
