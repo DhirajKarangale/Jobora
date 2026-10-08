@@ -43,12 +43,68 @@ async function applyJobs(page: Page): Promise<void> {
 
       if (companyName) {
         await page.evaluate((btn: any) => btn.click(), applyBtn);
-        incrementJobsAutoApplied();
+        
+        await delay(WAIT_TIME);
+        
+        // Strictly check and dismiss the 'Follow us / premium' modal if it appeared after applying
+        await page.evaluate(() => {
+          const modalWraps = document.querySelectorAll('.application-modal-wrap');
+          for (const wrap of Array.from(modalWraps)) {
+            const text = wrap.textContent?.toLowerCase() || '';
+            if (text.includes('follow us') || text.includes('premium') || text.includes('move your application to the top')) {
+              if ((wrap as HTMLElement).offsetWidth > 0) {
+                const closeBtn = wrap.querySelector('.application-modal-close, .fa-close') as HTMLElement;
+                if (closeBtn) closeBtn.click();
+              }
+            }
+          }
+        });
+        await delay(500);
+
+        const isSuccess = await page.evaluate((oldName) => {
+          const currentName = document.querySelector("h2.company-name")?.textContent?.trim();
+          const applyBtnExists = !!document.querySelector('.apply button');
+          return !applyBtnExists || currentName !== oldName;
+        }, companyName);
+
+        if (isSuccess) {
+          incrementJobsAutoApplied();
+        }
       }
-      await delay(WAIT_TIME);
+
     } catch (error) {
       break;
     }
+  }
+}
+
+async function processAllVisibleJobs(page: Page) {
+  let consecutiveNoJobs = 0;
+  while (consecutiveNoJobs < 2) {
+    let clicked = false;
+    try {
+      clicked = await page.evaluate(() => {
+        const btns = Array.from(document.querySelectorAll('.btn-interested')) as HTMLElement[];
+        const visibleBtn = btns.find(b => b.offsetWidth > 0 && b.offsetHeight > 0 && !b.hasAttribute('data-clicked'));
+        if (visibleBtn) {
+           visibleBtn.click();
+           visibleBtn.setAttribute('data-clicked', 'true');
+           return true;
+        }
+        return false;
+      });
+    } catch (e) {}
+
+    if (!clicked) {
+      consecutiveNoJobs++;
+      await delay(WAIT_TIME);
+      continue;
+    }
+    
+    consecutiveNoJobs = 0;
+    await delay(WAIT_TIME);
+    await applyJobs(page);
+    await delay(WAIT_TIME);
   }
 }
 
@@ -60,48 +116,50 @@ export default async function instahyer(browser: Browser): Promise<void> {
 
     try {
       await delay(WAIT_TIME);
-
-      try {
-        await page.waitForSelector('.btn-interested', { visible: true, timeout: 5000 });
-        await page.click('.btn-interested');
-        await delay(WAIT_TIME);
-      } catch (e) {
-        // console.log("No 'View »' button found on root page. Proceeding anyway.");
-      }
-
-      await applyJobs(page);
+      await processAllVisibleJobs(page);
     } catch (error) {
-      // console.error("Failed to apply on root page", error);
+      console.error("Failed to apply on root page", error);
     }
 
     try {
-      let isSearchDkVisible = false;
-      try {
-        await page.waitForSelector('#saved-search-dk', { visible: true, timeout: 1000 });
-        isSearchDkVisible = true;
-      } catch (e) {
-        isSearchDkVisible = false;
-      }
+      const clickedDk = await page.evaluate(() => {
+        const searchNames = Array.from(document.querySelectorAll('.saved-search-name, span, div.ng-binding, a'));
+        const dkElement = searchNames.find(el => el.textContent?.trim().toLowerCase() === 'dk');
+        
+        if (dkElement) {
+          let container = dkElement.parentElement;
+          let searchBtn = null;
+          
+          for (let i = 0; i < 5 && container; i++) {
+            searchBtn = container.querySelector('a[ng-click*="selectSearch"]');
+            if (searchBtn) break;
+            container = container.parentElement;
+          }
+          
+          if (searchBtn) {
+            (searchBtn as HTMLElement).click();
+          } else {
+            (dkElement as HTMLElement).click();
+          }
+          
+          return true;
+        }
+        return false;
+      });
 
-      if (!isSearchDkVisible) {
-        const searchPanelHeading = await page.$('.job-search-heading');
-        if (searchPanelHeading) {
-          await searchPanelHeading.click();
-          await delay(WAIT_TIME);
+      if (!clickedDk) {
+        console.log("[Instahyre] Could not find 'dk' saved search.");
+      } else {
+        await delay(WAIT_TIME * 2);
+        
+        try {
+          await processAllVisibleJobs(page);
+        } catch (e) {
+          console.log("[Instahyre] No jobs found in dk search.");
         }
       }
-
-      await page.waitForSelector('#saved-search-dk .search-btn a', { visible: true, timeout: 5000 });
-      await page.click('#saved-search-dk .search-btn a');
-      await delay(WAIT_TIME);
-
-      await page.waitForSelector('.employer-row #employer-profile-opportunity', { timeout: 10000 });
-      await page.click('.employer-row #employer-profile-opportunity');
-      await delay(WAIT_TIME);
-
-      await applyJobs(page);
     } catch (error) {
-      // console.log("No search results found, or search took too long.");
+      console.log("Error processing dk search:", error);
     }
   } finally {
     await page.close();

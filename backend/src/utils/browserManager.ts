@@ -11,6 +11,7 @@ export async function edge() {
     [
       "--remote-debugging-port=9222",
       "--user-data-dir=C:\\temp\\edge-debug-profile",
+      "--start-maximized",
     ],
     {
       detached: true,
@@ -23,6 +24,7 @@ export async function edge() {
   const browser = await puppeteer.connect({
     browserURL: "http://127.0.0.1:9222",
     protocolTimeout: 1200000,
+    defaultViewport: null,
   });
 
   return browser;
