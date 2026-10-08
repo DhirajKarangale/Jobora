@@ -24,7 +24,7 @@ async function extractJobIds(page: Page): Promise<string[]> {
     } catch {
     }
 
-    await page.reload({ waitUntil: "networkidle2" });
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 45000 }).catch(() => {});
   }
 
   return [];
@@ -60,7 +60,13 @@ async function waitForNextPage(
 
 export async function getJobIds(browser: Browser, searchUrl: string) {
   const page = await browser.newPage();
-  await page.goto(searchUrl, { waitUntil: "load" });
+  try {
+    await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
+  } catch (error) {
+    console.error("[LinkedIn] Search page navigation timeout.");
+    await page.close();
+    return [];
+  }
 
   let pageCount = JOB_PORTAL_PAGINATATION;
   const jobIds = new Set<string>();

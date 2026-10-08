@@ -68,7 +68,7 @@ export async function handleEasyApply(page: Page, jobId: string, targetResumeNam
     await delay(WAIT_TIME_AUTO_APPLY);
 
     if (!allQuestionsHandled) {
-      console.log(jobId);
+      console.log(`[LinkedIn AutoApply] Failed to answer all questions for job ${jobId}`);
       return false;
     }
 
@@ -78,13 +78,13 @@ export async function handleEasyApply(page: Page, jobId: string, targetResumeNam
     const { success, isSubmit } = await clickNextOrSubmit(page);
 
     if (!success) {
-      console.log(jobId);
+      console.log(`[LinkedIn AutoApply] Failed to click Next or Submit for job ${jobId}`);
       return false;
     }
 
     if (isSubmit) return true;
   }
 
-  console.log(jobId);
+  console.log(`[LinkedIn AutoApply] Exceeded maximum pagination steps (stuck) for job ${jobId}`);
   return false;
 }
