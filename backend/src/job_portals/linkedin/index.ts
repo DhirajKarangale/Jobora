@@ -1,9 +1,9 @@
-import { type Browser } from "puppeteer-core";
+import { ResilientBrowser } from "../../utils/resilientBrowser.ts";
 import { getJobIds } from "./jobIds.ts";
 import { getJobData } from "./jobData.ts";
 import { LINKEDIN_URL_JOB_SEARCH, LINKEDIN_URL_JOB_SEARCH_EASY_APPLY } from "../../utils/constants.ts";
 
-export default async function linkedin(browser: Browser): Promise<void> {
+export default async function linkedin(browser: ResilientBrowser): Promise<void> {
   console.log("Starting LinkedIn Pipelines in parallel...");
 
   const autoApplyPipeline = async () => {

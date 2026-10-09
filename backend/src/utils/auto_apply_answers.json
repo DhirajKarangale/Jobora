@@ -217,7 +217,7 @@
     ]
   },
   {
-    "pattern": "notice\\s+period|how\\s+soon.*join",
+    "pattern": "notice\\s+period|how\\s+soon.*(?:join|fill|start|begin)",
     "numericValue": "30",
     "fallbackNumericValue": "30",
     "textValue": "30",

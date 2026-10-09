@@ -1,4 +1,5 @@
-import { type Browser, Page } from "puppeteer-core";
+import { type Page } from "puppeteer-core";
+import { ResilientBrowser } from "../../utils/resilientBrowser.ts";
 import { filterExistingJobIds } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { JOB_PORTAL_PAGINATATION, NAUKRI_URL_JOB_SEARCH, WAIT_TIME } from "../../utils/constants.ts";
@@ -31,7 +32,7 @@ async function extractJobIds(page: Page): Promise<string[]> {
   }
 }
 
-export async function getJobIds(browser: Browser): Promise<string[]> {
+export async function getJobIds(browser: ResilientBrowser): Promise<string[]> {
   const page = await browser.newPage();
   await page.goto(NAUKRI_URL_JOB_SEARCH, { waitUntil: "load" });
   await delay(WAIT_TIME);

@@ -1,6 +1,7 @@
 import { type Request, type Response } from "express";
 import { type Browser } from "puppeteer-core";
 import { edge } from "../utils/browserManager.ts";
+import { ResilientBrowser } from "../utils/resilientBrowser.ts";
 import linkedin from "../job_portals/linkedin/index.ts";
 import instahyre from "../job_portals/instahyre/index.ts";
 import wellfound from "../job_portals/wellfound/index.ts";
@@ -58,13 +59,14 @@ export async function startAutomationProcess(_req: Request, res: Response): Prom
   (async () => {
     try {
       const browser = await getGlobalBrowser();
+      const resilientBrowser = new ResilientBrowser(browser, "Global");
 
       const portals = [
-        // async () => { try { await linkedin(browser); } catch (e) { console.error("LinkedIn error:", e); } },
-        async () => { try { await instahyre(browser); } catch (e) { console.error("Instahyre error:", e); } },
-        // async () => { try { await wellfound(browser); } catch (e) { console.error("Wellfound error:", e); } },
-        // async () => { try { await cutshort(browser); } catch (e) { console.error("Cutshort error:", e); } },
-        // async () => { try { await naukri(browser); } catch (e) { console.error("Naukri error:", e); } },
+        async () => { try { await linkedin(resilientBrowser); } catch (e) { console.error("LinkedIn error:", e); } },
+        async () => { try { await instahyre(resilientBrowser); } catch (e) { console.error("Instahyre error:", e); } },
+        async () => { try { await wellfound(resilientBrowser); } catch (e) { console.error("Wellfound error:", e); } },
+        async () => { try { await cutshort(resilientBrowser); } catch (e) { console.error("Cutshort error:", e); } },
+        async () => { try { await naukri(resilientBrowser); } catch (e) { console.error("Naukri error:", e); } },
       ];
       await runWithConcurrency(portals, MAX_CONCURRENT_PORTALS);
     } catch (error) {

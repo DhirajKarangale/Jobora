@@ -1,12 +1,13 @@
-import { type Browser, type Page } from "puppeteer-core";
+import { type Page } from "puppeteer-core";
+import { ResilientBrowser } from "../../utils/resilientBrowser.ts";
 import { saveJob, saveEligibleAndAppliedJob, isJobExisting } from "../../cloud/db/index.ts";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { DataJob, CURSHORT_URL_JOB, CURSHORT_URL_JOB_SEARCH, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/automationState.ts";
 
-export default async function cutshort(browser: Browser): Promise<void> {
-  const page = await browser.newPage();
+export default async function cutshort(resilientBrowser: ResilientBrowser): Promise<void> {
+  const page = await resilientBrowser.newPage();
   try {
     await page.goto(CURSHORT_URL_JOB, { waitUntil: "networkidle2", timeout: 60000 });
     await delay(WAIT_TIME);
@@ -14,6 +15,20 @@ export default async function cutshort(browser: Browser): Promise<void> {
     const jobContainersCount = await page.evaluate(() => {
       return document.querySelectorAll('h3 a[href*="/job/"]').length;
     });
+
+    // Check strictly for the "Submit feedback" modal and dismiss it
+    await page.evaluate(() => {
+      const modal = document.getElementById('modal__content');
+      if (modal && modal.textContent?.includes('Submit feedback to companies')) {
+        const buttons = Array.from(modal.querySelectorAll('button'));
+        const skipButton = buttons.find(b => b.textContent?.trim() === 'Skip');
+        if (skipButton) {
+          (skipButton as HTMLElement).click();
+        }
+      }
+    });
+    
+    await delay(1000);
 
     for (let i = 0; i < jobContainersCount; i++) {
       const jobData = await page.evaluate(async (index) => {

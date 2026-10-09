@@ -1,8 +1,8 @@
-import { type Browser } from "puppeteer-core";
+import { ResilientBrowser } from "../../utils/resilientBrowser.ts";
 import { getJobIds } from "./jobIds.ts";
 import { getJobData } from "./jobData.ts";
 
-export default async function wellfound(browser: Browser) {
-    const jobIds = await getJobIds(browser);
-    await getJobData(browser, jobIds);
+export default async function wellfound(resilientBrowser: ResilientBrowser) {
+    const jobIds = await getJobIds(resilientBrowser);
+    await getJobData(resilientBrowser, jobIds);
 }

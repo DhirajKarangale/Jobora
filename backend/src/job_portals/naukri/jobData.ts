@@ -1,4 +1,5 @@
-import { type Browser, Page } from "puppeteer-core";
+import { type Page } from "puppeteer-core";
+import { ResilientBrowser } from "../../utils/resilientBrowser.ts";
 import { saveJob, saveEligibleAndAppliedJob, isJobExisting } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
@@ -82,7 +83,7 @@ async function extractData(page: Page, jobId: string) {
   });
 }
 
-async function handleApply(browser: Browser, page: Page, currentUrl: string): Promise<{ applied: boolean, applyLink: string }> {
+async function handleApply(browser: ResilientBrowser, page: Page, currentUrl: string): Promise<{ applied: boolean, applyLink: string }> {
   try {
     await delay(WAIT_TIME);
 
@@ -156,7 +157,7 @@ async function handleApply(browser: Browser, page: Page, currentUrl: string): Pr
   return { applied: false, applyLink: currentUrl };
 }
 
-export async function getJobData(browser: Browser, jobIds: string[]) {
+export async function getJobData(browser: ResilientBrowser, jobIds: string[]) {
   for (const jobId of jobIds) {
     try {
       const cleanJobId = jobId ? jobId.trim().toLowerCase() : "";

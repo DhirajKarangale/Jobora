@@ -1,4 +1,5 @@
-import { type Browser, type Page } from "puppeteer-core";
+import { type Page } from "puppeteer-core";
+import { ResilientBrowser } from "../../utils/resilientBrowser.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { extractJobData } from "./jobData.ts";
 import { INSTAHYRE_URL_JOB_SEARCH, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
@@ -108,8 +109,8 @@ async function processAllVisibleJobs(page: Page) {
   }
 }
 
-export default async function instahyer(browser: Browser): Promise<void> {
-  const page = await browser.newPage();
+export default async function instahyer(resilientBrowser: ResilientBrowser): Promise<void> {
+  const page = await resilientBrowser.newPage();
 
   try {
     await page.goto(INSTAHYRE_URL_JOB_SEARCH, { waitUntil: "load" });

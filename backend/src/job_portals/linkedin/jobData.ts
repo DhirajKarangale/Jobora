@@ -1,4 +1,5 @@
-import { type Page, Browser } from "puppeteer-core";
+import { type Page } from "puppeteer-core";
+import { ResilientBrowser } from "../../utils/resilientBrowser.ts";
 import { saveJob, isJobExisting, saveEligibleAndAppliedJob } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
@@ -84,6 +85,11 @@ async function extractCompanyName(page: Page) {
 
 async function extractRole(page: Page) {
   return page.evaluate(() => {
+    const roleEl = document.querySelector('div[data-display-contents="true"] p');
+    if (roleEl && roleEl.textContent) {
+       return roleEl.textContent.trim();
+    }
+
     const h1s = Array.from(document.querySelectorAll('h1'));
     for (const h1 of h1s) {
       if (h1.closest('header') || h1.closest('#global-nav')) continue;
@@ -110,7 +116,7 @@ async function extractRole(page: Page) {
   });
 }
 
-async function extractData(browser: Browser, jobId: string) {
+async function extractData(browser: ResilientBrowser, jobId: string) {
   const page = await browser.newPage();
   const applicationLink = `${LINKEDIN_URL_JOB}${jobId}`;
   try {
@@ -220,7 +226,7 @@ async function extractData(browser: Browser, jobId: string) {
   // return null;
 }
 
-export async function getJobData(browser: Browser, jobIds: string[]) {
+export async function getJobData(browser: ResilientBrowser, jobIds: string[]) {
   const executing = new Set<Promise<void>>();
   
   for (const jobId of jobIds) {

@@ -1,4 +1,5 @@
-import { type Browser, Page } from "puppeteer-core";
+import { type Page } from "puppeteer-core";
+import { ResilientBrowser } from "../../utils/resilientBrowser.ts";
 import { filterExistingJobIds } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { WAIT_TIME } from "../../utils/constants.ts";
@@ -58,7 +59,7 @@ async function waitForNextPage(
   }
 }
 
-export async function getJobIds(browser: Browser, searchUrl: string) {
+export async function getJobIds(browser: ResilientBrowser, searchUrl: string) {
   const page = await browser.newPage();
   try {
     await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 45000 });

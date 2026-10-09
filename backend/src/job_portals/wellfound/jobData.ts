@@ -1,4 +1,5 @@
-import { type Browser, Page } from "puppeteer-core";
+import { type Page } from "puppeteer-core";
+import { ResilientBrowser } from "../../utils/resilientBrowser.ts";
 import { saveJob, saveEligibleAndAppliedJob, isJobExisting } from "../../cloud/db/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
@@ -27,17 +28,14 @@ async function extractData(page: Page, jobId: string) {
     let companyName = null;
     const companyAnchors = Array.from(container.querySelectorAll('a[href^="/company/"]'));
     for (const a of companyAnchors) {
-      const text = a.textContent?.trim();
+      // Prioritize span text if it exists (new UI)
+      const span = a.querySelector('span');
+      const text = span ? span.textContent?.trim() : a.textContent?.trim();
+      
       if (text && !a.querySelector('img')) {
         companyName = text;
         break;
       }
-    }
-
-    // Fallback if the anchor text is wrapped in an element
-    if (!companyName) {
-        const companyAnchorWithText = Array.from(container.querySelectorAll('a[href^="/company/"]')).find(a => a.textContent?.trim());
-        if (companyAnchorWithText) companyName = companyAnchorWithText.textContent?.trim() || null;
     }
 
     const topListItems = Array.from(container.querySelectorAll('ul.flex.flex-wrap.text-md.text-black li, ul.flex.flex-wrap li'));
@@ -55,12 +53,13 @@ async function extractData(page: Page, jobId: string) {
     }
 
     const locationSpan = Array.from(container.querySelectorAll('span')).find(el => el.textContent?.trim() === 'Job Location' || el.textContent?.trim() === 'Location');
+    // For location, the text is inside a sibling div, sometimes wrapped in an anchor
     const location = locationSpan?.nextElementSibling?.textContent?.trim() || '';
 
     const skillsSpan = Array.from(container.querySelectorAll('span')).find(el => el.textContent?.trim() === 'Skills');
     const skillsContainer = skillsSpan?.nextElementSibling;
-    const skillsElements = skillsContainer ? Array.from(skillsContainer.querySelectorAll('div')) : [];
-    const skills = skillsElements.map(el => el.textContent?.trim()).filter(Boolean).join(', ');
+    // Use immediate children instead of querying all divs to prevent nested text duplication
+    const skills = skillsContainer ? Array.from(skillsContainer.children).map(el => el.textContent?.trim()).filter(Boolean).join(', ') : '';
 
     const about = container.querySelector('#job-description')?.textContent?.trim() || '';
 
@@ -111,13 +110,19 @@ async function tryApplyJob(page: Page): Promise<boolean> {
   }
 }
 
-export async function getJobData(browser: Browser, jobIds: string[]) {
+export async function getJobData(resilientBrowser: ResilientBrowser, jobIds: string[]) {
+  console.log(`[Wellfound] Starting to process ${jobIds.length} job(s)...`);
+
   for (const jobId of jobIds) {
     try {
       const cleanJobId = jobId ? jobId.trim().toLowerCase() : "";
-      if (!cleanJobId || await isJobExisting(cleanJobId)) continue;
+      if (!cleanJobId || await isJobExisting(cleanJobId)) {
+        console.log(`[Wellfound] Skipping ${cleanJobId}: Already exists in DB or empty.`);
+        continue;
+      }
+      console.log(`[Wellfound] Navigating to apply for job ID: ${cleanJobId}`);
 
-      const page = await browser.newPage();
+      const page = await resilientBrowser.newPage();
       const applicationLink = `${WELLFOUND_URL_JOB}${cleanJobId}`;
       await page.goto(applicationLink, { waitUntil: "load" });
       await delay(WAIT_TIME);
@@ -128,12 +133,14 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
       const { role, companyName, salary, experience, location, skills, about } = data;
 
       if (!companyName || !about) {
+        console.log(`[Wellfound] Missing company name or description for job ID: ${cleanJobId}. Skipping.`);
         await delay(WAIT_TIME);
         await page.close();
         continue;
       }
 
       if (isBlacklistedCompany(companyName)) {
+        console.log(`[Wellfound] Company ${companyName} is blacklisted for job ID: ${cleanJobId}. Skipping.`);
         await delay(WAIT_TIME);
         await page.close();
         continue;
@@ -162,9 +169,11 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
       const applied = await tryApplyJob(page);
 
       if (applied) {
+        console.log(`[Wellfound] Applied successfully for job ID: ${cleanJobId}`);
         await saveEligibleAndAppliedJob(jobData);
         incrementJobsAutoApplied();
       } else {
+        console.log(`[Wellfound] Failed to auto-apply for job ID: ${cleanJobId}. Saving to DB and stream.`);
         const id = await saveJob(jobData);
         if (id) {
           await addToProcessStream({ id });
@@ -175,6 +184,7 @@ export async function getJobData(browser: Browser, jobIds: string[]) {
       await delay(WAIT_TIME);
       await page.close();
     } catch (err) {
+      console.error(`[Wellfound] Error processing job ID ${jobId}:`, err);
     }
   }
 }
