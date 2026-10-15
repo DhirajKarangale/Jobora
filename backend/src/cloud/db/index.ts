@@ -593,6 +593,8 @@ export async function getJobsByIds(jobIds: string[]): Promise<any[]> {
     SELECT id, role, company, source, apply_link AS link, portal_link
     FROM jobs
     WHERE id = ANY($1::uuid[])
+      AND fit_resume IS NULL
+      AND applied_date IS NULL
   `;
 
   const { rows } = await pool.query(query, [uuidIds]);

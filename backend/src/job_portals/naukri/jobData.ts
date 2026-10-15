@@ -228,6 +228,7 @@ export async function getJobData(browser: ResilientBrowser, jobIds: string[]) {
       if (applied) {
         await saveEligibleAndAppliedJob(jobData);
         incrementJobsAutoApplied();
+        incrementJobsScraped();
       } else {
         const id = await saveJob(jobData);
         if (id) {

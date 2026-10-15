@@ -35,24 +35,29 @@ export function JobFinder() {
   const [busyDbId, setBusyDbId] = useState<string | null>(null);
 
   React.useEffect(() => {
-    if (jobs && jobs.length > 0) {
-      setAllJobsMap((prev) => {
-        const next = { ...prev };
+    setAllJobsMap((prev) => {
+      const next: Record<string, any> = {};
+      // Retain items with user action states so undo remains accessible
+      for (const dbId of Object.keys(actionStates)) {
+        if (prev[dbId]) {
+          next[dbId] = prev[dbId];
+        }
+      }
+      // Add current active pending jobs from backend
+      if (jobs) {
         for (const j of jobs) {
           next[j.dbId] = j;
         }
-        return next;
-      });
-    }
-  }, [jobs]);
+      }
+      return next;
+    });
+  }, [jobs, actionStates]);
 
   const displayJobs = React.useMemo(() => {
-    const map = { ...allJobsMap };
-    for (const j of jobs) {
-      map[j.dbId] = j;
-    }
-    return Object.values(map);
-  }, [jobs, allJobsMap]);
+    return Object.values(allJobsMap);
+  }, [allJobsMap]);
+
+  const pendingCount = (jobs || []).filter((j) => !actionStates[j.dbId]).length;
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -229,7 +234,7 @@ export function JobFinder() {
         </div>
         <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex flex-col gap-1 select-none cursor-default">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pending AI Check</span>
-          <span className="text-3xl font-black text-amber-500">{displayJobs.length}</span>
+          <span className="text-3xl font-black text-amber-500">{pendingCount}</span>
         </div>
       </div>
 

@@ -137,6 +137,8 @@ export async function getPendingJobs(_req: Request, res: Response): Promise<void
           link: jobDbData.link || null,
           portalLink: jobDbData.portal_link || null
         });
+      } else {
+        redis.xdel(GLOBAL_STREAM_KEY, messageId).catch(() => {});
       }
     }
 
