@@ -105,18 +105,39 @@ Interested in scalable software, distributed systems, developer tools, AI/agenti
 
 - Agentic AI Development
 - Large Language Models (LLMs)
-- LLM Integration
+- LLM Integration & Orchestration
 - LangChain
 - LangGraph
-- RAG
-- Text-to-SQL
+- Agentic AI & Autonomous Agent Workflows
+- Large Language Models (LLMs) & Transformer Architecture
+- LLM Inference, Model Routing & Multi-Provider Failover
+- Prompt Engineering & Advanced Context Engineering
+- Retrieval-Augmented Generation (RAG) & Graph-RAG Concepts
+- Hybrid Retrieval, Dense/Sparse Search & Semantic Ranking
+- Embeddings, Vector Search & Similarity Metrics
+- Knowledge Base Ingestion, Chunking & Metadata Enrichment
+- Short-Term, Long-Term, Episodic & Semantic Memory
+- Agent Memory, Contextual Recall & Temporal Retrieval
+- Multi-Agent Systems & Agent Orchestration
+- Tool Calling, Function Calling & Agent Tool Integration
+- MCP (Model Context Protocol) & Agent Interoperability Concepts
+- Structured Outputs, JSON Schema & Output Validation
+- LLM Gateway, Model Routing & Fallback Strategies
+- Semantic Caching, Prompt Caching & Retrieval Optimization
+- LLM Evaluation, Evaluation Harnesses & AI-as-a-Judge
+- Agent Tracing, LLM Observability & Token/Latency Monitoring
+- AI Guardrails, Prompt-Injection Defense & Output Sanitization
+- Context Minimization, Privacy-by-Design & Data Isolation
+- Role-Based Access Control (RBAC) & Authorization Boundaries
+- Text-to-SQL & Safe Query Generation
+- Local Embedding Inference (Qwen3-Embedding-0.6B)
+- Vector Databases (Qdrant, FAISS)
+- Multimodal AI, OCR & Vision-Language Model (VLM) Pipelines
+- Claude, Hugging Face, PyTorch & Transformers
+- AI Image Detection & AI Image Verification
 - LLM wikis
 - OKF
-- Claude
-- Hugging Face
 - AI/ML
-- AI Image Detection
-- AI Image Verification
 
 ### Databases & Infrastructure
 
@@ -199,6 +220,32 @@ Location: Bangalore (Remote)
 ------------------------------------------------------------------------
 
 ## Projects
+
+### MIRA — Privacy-First Personal Agentic AI Assistant (2026)
+
+Developing a local-first personal AI assistant that builds a centralized personal knowledge base from digital activity, supports contextual chat and voice interaction, recalls past work, and proactively generates daily plans and recommendations. Designed with privacy-by-design context retrieval, modular microservices, and persistent personal memory.
+
+**Highlights**
+
+- Built a multimodal personal knowledge-base ingestion pipeline for desktop activity, combining screenshot capture, window/application metadata, OCR text, and OS accessibility/UI metadata before indexing semantic embeddings in a local Qdrant vector database.
+- Implemented OCR extraction with word-level bounding boxes, coordinates, confidence scores, and layout-aware grouping; organized recognized content into screen regions and UI blocks for spatially grounded retrieval.
+- Designed screenshot-diff and perceptual-hash based change detection, OCR-result comparison, cross-capture deduplication, and an LRU OCR cache to suppress redundant processing and noisy activity records.
+- Developed a vision enrichment flow that can route relevant screenshot crops and structured OCR/layout context to a Vision-Language Model (VLM) for higher-level UI and activity interpretation.
+- Implemented Retrieval-Augmented Generation (RAG), semantic vector search, metadata-filtered retrieval, and temporal search for contextual recall across historical activities, conversations, and project work, with application, operating-system, and timestamp range filters.
+- Applied activity-aware content enrichment, semantic summarization, embedding-based retrieval, and time-windowed context assembly to support queries such as historical task recall and project-progress tracking.
+- Developed contextual multi-turn AI chat with WebSocket token streaming, session history, and retrieval of relevant memory snippets to ground responses.
+- Designed layered memory architecture spanning short-term conversational/session state, long-term persistent activity memory, and agent memory for contextual continuity and recall.
+- Built proactive daily suggestions and briefing workflows that generate project-continuation agendas, unfinished-task summaries, personalized daily plans, and curated news/weather context.
+- Integrated local Qwen3-Embedding-0.6B inference for 1024-dimensional embeddings and local Faster-Whisper speech-to-text for privacy-oriented voice interaction.
+- Implemented context minimization and privacy guardrails that retrieve only a small set of relevant excerpts before cloud LLM inference; centralized sensitive credentials and configuration in an encrypted Vault.
+- Architected cache-aware chat and retrieval flows using Redis for transient session state, queue coordination, and image-comparison data; incorporated semantic caching, prompt-cache-aware request design, and duplicate-query suppression to reduce redundant retrieval and inference.
+- Designed asynchronous event-driven processing with Redis Streams, batch ingestion, worker orchestration, retry-aware job processing, and decoupled service boundaries for capture-to-memory pipelines.
+- Designed scoped access-control and RBAC-ready boundaries for knowledge-base and service access, alongside request validation, secure credential handling, and data-retention controls.
+- Built a modular microservice architecture with Rust-based desktop operations, FastAPI AI services, Redis Streams asynchronous event processing, and centralized configuration/logging.
+
+**Tech:** Python, Rust, React, TypeScript, Tauri 2, FastAPI, LangChain, LangGraph, Agentic AI, RAG, Multimodal Retrieval, Qdrant, Qwen3-Embedding-0.6B, PyTorch, Hugging Face Transformers, Tesseract OCR, OpenCV, OCR Bounding Boxes, Confidence Scoring, Layout-Aware OCR, UI Region Detection, Screenshot Diffing, Perceptual Hashing, OCR Deduplication, LRU Cache, Vision-Language Models (VLM), Faster-Whisper, Redis, Redis Streams, WebSockets, SQLite, SQLCipher, Local-First AI, Agent Memory, Short-Term Memory, Long-Term Memory, Episodic Memory, Temporal Retrieval, Context Engineering, Semantic Retrieval, Hybrid Search Concepts, Semantic Caching, Prompt Caching, Structured Outputs, Tool Calling, AI Guardrails, Prompt-Injection Protection, Privacy-by-Design, RBAC, Microservices, Event-Driven Architecture, Asynchronous Processing, Observability.
+
+**GitHub:** https://github.com/DhirajKarangale/Mira
 
 ### Customer 360 & Next Best Action Engine — Enterprise Multi-Agent AI Copilot (2026)
 
