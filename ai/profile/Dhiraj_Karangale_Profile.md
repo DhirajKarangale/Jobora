@@ -214,6 +214,32 @@ Designed and developed an AI-powered platform that converts meeting transcripts 
 - **Distributed Processing:** Redis Streams, consumer groups, multiprocessing, asynchronous job processing
 - **Database & Storage:** Microsoft SQL Server (MSSQL), AWS S3
 - **Document & Media Processing:** `python-docx`, OpenCV, OCR, RapidOCR, perceptual hashing, ImageHash
+
+#### Universal Document Extraction — Schema-Driven Multimodal Data Intelligence
+
+**Project Overview**  
+Designed and developed a universal, schema-driven document intelligence solution that extracts, normalizes, validates, and maps information from images, PDFs, Excel workbooks, and CSV files into user-defined structured output. The pipeline adapts processing strategies based on image quality, document complexity, layout characteristics, and schema requirements, reducing business processing time by **80%**. The solution participated in a Google Buildathon, won the buildathon, was featured on Google Marketplace, and received recognition for **Best GenAI Solution** and an **Infosys Cohere award**.
+
+**Key Technical Contributions**
+
+- Architected a configurable extraction pipeline supporting heterogeneous inputs—raster images, scanned and digital PDFs, Excel spreadsheets, and CSV datasets—through a unified schema-driven processing interface.
+- Designed schema-first extraction with predefined and user-defined schemas, dynamic field definitions, required/optional attributes, type constraints, field descriptions, and semantic mapping rules for business-specific output structures.
+- Implemented adaptive image-quality assessment with **low / medium / high** quality classification and tier-specific preprocessing, including contrast enhancement, image normalization, denoising, sharpening, and other OCR-oriented adjustments.
+- Developed bounding-box-based document understanding with OCR, text-region localization, spatial coordinates, field association, and region-level extraction to improve data accuracy and preserve the relationship between detected text and document layout.
+- Applied document-layout analysis and complexity classification to PDFs based on tables, images, charts, graphs, readability, and structural density; routed documents through differentiated extraction strategies according to their complexity tier.
+- Built extraction and mapping workflows for tabular and visual content, including table structure recognition, row/column association, key-value pairing, and context-aware interpretation of charts and graphs where applicable.
+- Implemented spreadsheet intelligence for Excel and CSV files, including header detection, sheet and column profiling, data-type inference, field identification, column-to-schema mapping, and handling of irregular or missing headers.
+- Developed schema-alignment and data-normalization logic to map extracted values to target fields, reconcile inconsistent formats, and produce structured, schema-conformant output across document types.
+- Incorporated extraction validation and confidence-aware processing to identify missing, ambiguous, malformed, or low-confidence fields and support targeted reprocessing or review.
+- Designed a modular, extensible processing workflow to support new document formats, custom schemas, configurable extraction strategies, and reusable field-mapping rules.
+
+**Technology & Technical Keywords**  
+- **Document AI:** Multimodal Document Intelligence, Schema-Driven Extraction, Intelligent Document Processing (IDP), Document Classification, Layout Analysis, Complexity-Based Routing
+- **Image & OCR:** OCR, Bounding Boxes, Text-Region Detection, Image Quality Classification, Adaptive Preprocessing, Contrast Enhancement, Denoising, Image Normalization, Spatial Text Mapping
+- **PDF & Visual Content:** PDF Parsing, Table Extraction, Table Structure Recognition, Chart and Graph Analysis, Key-Value Extraction, Scanned Document Processing
+- **Spreadsheet Intelligence:** Excel / CSV Parsing, Header Detection, Column Profiling, Data-Type Inference, Schema Mapping, Tabular Data Normalization
+- **Structured Extraction:** Custom Schemas, Field Mapping, Data Validation, Structured Outputs, Confidence-Aware Extraction, Data Normalization
+- **Recognition:** Google Buildathon Winner, Featured on Google Marketplace, Best GenAI Solution Award, Infosys Cohere Award; reduced business processing time by 80%.
 - Built a centralized enterprise AI knowledge base using RAG, LLM wikis, and OKF, enabling users to query organizational data and databases via natural language (Text-to-SQL) with strict role-based access control and data privacy.
 - Architected and developed micro-frontend applications using React and Webpack Module Federation, enabling independent deployments across teams.
 - Developed POCs using Java and Spring Boot, including gRPC-based service communication and integration for backend service development.
