@@ -22,7 +22,7 @@ Software Engineer with 2+ years of full-time experience building scalable full-s
 
 Built a dashboard export library adopted across 7+ projects, an AI-powered platform that generates Process Design Documents in under 5 minutes, and micro-frontend applications using Webpack Module Federation.
 
-Built and published open-source AI and developer tools including SatyaMark, Jobora, and PDF/PPT Export, with npm libraries reaching 4.6K+ downloads. Developed Android applications with 1.4M+ Play Store downloads.
+Built and published open-source AI and developer tools including SatyaMark, Jobora, and PDF/PPT Export, with npm libraries reaching 5K+ downloads. Developed Android applications with 1.5M+ Play Store downloads.
 
 Selected as a HackWithInfy Finalist, LeetCode Knight, and one of 150 builders chosen from 5K+ applicants for Push to Prod 2026, an Anthropic Claude hackathon.
 
@@ -232,7 +232,7 @@ Open-source trust infrastructure providing real-time, explainable verification a
 - Detects AI-generated and manipulated images using external detection APIs and local forensic verification pipelines.
 - Processes verification jobs asynchronously using Redis Streams with worker-based architecture, retries, abandoned-job handling, and API failover.
 - Streams real-time verification results through WebSockets with confidence scores, evidence, reasoning, and verification marks.
-- Built and published a React SDK (satyamark-react) with 3.6K+ npm downloads for integrating live verification marks into React applications.
+- Built and published a React SDK (satyamark-react) with 4K+ npm downloads for integrating live verification marks into React applications.
 - Designed a modular architecture supporting multiple AI models, verification engines, external APIs, and fallback pipelines.
 
 **Tech:** Python, React, Node.js, PostgreSQL, Redis Streams, WebSockets, LangGraph, LangChain, RAG, Claude, Hugging Face, LLMs, AI/ML, Google Search, Google Serper API, Web Scraping, Async Processing, Worker Architecture, API Failover, Image Verification, AI Image Detection, Image Forensics.
@@ -253,7 +253,7 @@ Open-source React export engine that converts real rendered DOM dashboards into 
 - Implements smart PDF pagination with A4 sizing, no-split cards, headers, and fallback handling.
 - Rebuilds dashboards as native PowerPoint elements including text boxes, shapes, and editable charts.
 - Uses DOM analysis and chart metadata pipelines to preserve dashboard structure and layout fidelity.
-- Built and published pdf-ppt-export-react as a reusable React library with 1K+ npm downloads, a minimal API, and production-ready defaults.
+- Built and published pdf-ppt-export-react as a reusable React library with 1.1K+ npm downloads, a minimal API, and production-ready defaults.
 - Includes a complete demo and reference implementation covering real-world usage, limitations, and extensibility.
 - Focused on developer experience, layout fidelity, and true editability after export.
 
@@ -387,8 +387,8 @@ Job-matching platform for students to discover part-time and internship opportun
 ## Achievements
 
 - LeetCode Knight (2,012 Rating), ranked in the top 2.45% globally with 1K+ solved problems.
-- Developed and shipped Android applications with 1.4M+ Play Store downloads.
-- Published open-source npm libraries with 4.6K+ downloads, including SatyaMark and PDF & PPT Export.
+- Developed and shipped Android applications with 1.5M+ Play Store downloads.
+- Published open-source npm libraries with 5K+ downloads, including SatyaMark and PDF & PPT Export.
 - HackWithInfy Finalist.
 - Selected as 1 of 150 builders from 5K+ applicants for Push to Prod 2026, an Anthropic Claude hackathon.
 
