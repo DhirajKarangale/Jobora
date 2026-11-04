@@ -216,6 +216,47 @@ Interested in scalable software, distributed systems, developer tools, AI/agenti
 - OKF
 - AI/ML
 
+### LLM & Agentic AI Keyword Focus
+
+> This keyword catalog is for tailoring resumes and profiles. Include a keyword as a claimed skill only when it is supported by hands-on implementation, project work, or demonstrable knowledge.
+
+#### LLM Fundamentals & Model Optimization
+- Large Language Models (LLMs), Transformer Architecture, Tokens, Context Windows
+- Temperature, Top-p, Top-k, Seed
+- Prompt Engineering, Context Engineering, Context Compaction
+- Fine-Tuning, Model Distillation, Quantization
+
+#### LLM APIs, Gateway & Inference
+- OpenAI APIs, Anthropic APIs, Gemini APIs
+- LLM Gateway, Model Routing, Chat Completions
+- Structured Outputs, Streaming, Function Calling, Tool Calling
+- Prompt Caching, Semantic Caching, Cost Optimization, Latency Optimization
+- Retry & Fallback Mechanisms, Headroom Management
+
+#### Agent Architecture & Orchestration
+- Single-Agent Systems, Multi-Agent Systems, Agent Harness
+- Agent Memory, Short-Term Memory, Long-Term Memory, Persistent Memory
+- Conversation State Management, State Management
+- Supervisor Patterns, Sequential Agents, Parallel Agents
+- Human-in-the-Loop, Multi-Step Agent Execution
+- Tool Selection & Orchestration, Tool Selection & Routing
+- Google ADK, Claude Agent SDK, Model Context Protocol (MCP), Agent-to-Agent Protocol (A2A)
+- Tool Definition & Schemas, API & Database Integration
+- Web Search Tools, Information Retrieval Tools, Tool Error Handling
+
+#### RAG, Retrieval & Evaluation
+- Retrieval-Augmented Generation (RAG), Document Loading & Chunking, Embeddings
+- Vector Databases, Semantic Retrieval, Reranking
+- RAG Evaluation, Retrieval Optimization
+- LLM Evaluation (Evals), Evaluation Harness, AI-as-a-Judge
+- Agent Tracing, LLM Observability, Logging & Monitoring
+- Performance Evaluation, Cost & Latency Monitoring
+
+#### AI Security & Reliability
+- AI Guardrails, Prompt-Injection Protection, Data Leakage Prevention
+- Tool & API Security, Authentication & Authorization
+- Input/Output Validation, Secure Tool Execution
+
 ### Databases & Infrastructure
 
 - PostgreSQL
