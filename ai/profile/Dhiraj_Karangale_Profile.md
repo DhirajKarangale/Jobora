@@ -32,14 +32,91 @@ Interested in scalable software, distributed systems, developer tools, AI/agenti
 
 ## Target Roles
 
+### AI / Agentic AI
+- Forward Deployed AI Engineer
 - Agentic AI Engineer
+- AI Application Engineer
+- Applied AI Engineer
+- AI Product Engineer
+- AI Solutions Engineer
+- LLM Application Engineer
+- AI Full-Stack Engineer
+- AI Agent Developer
+- AI Automation Engineer
+- AI Workflow Engineer
+- AI Integration Engineer
+- AI Systems Engineer
+- AI Orchestration Engineer
+- Generative AI Engineer
+- AI Platform Engineer
+- AI Backend Engineer
+- RAG Engineer
+- AI Copilot Engineer
+- AI Software Engineer
+- AI Transformation Engineer
+- Intelligent Automation Engineer
+- AI Experience Engineer
+- AI Prototyping Engineer
+- AI-Native Software Engineer
 - AI Engineer
-- Software Engineer
-- Software Development Engineer (SDE)
+
+### Full-Stack / Software Engineering
+- Full-Stack Software Engineer
+- Software Engineer (SDE / SDE-1 / SDE-2)
 - Full-Stack Developer
 - Frontend Developer
 - Backend Developer
+- Product Engineer
+- Backend Engineer (Node.js)
+- Frontend Engineer (React)
+- Software Development Engineer
+- Node.js Developer
+- React Developer
+- Web Application Engineer
 - MERN Stack Developer
+- SaaS Product Engineer
+- API Engineer
+- Application Engineer
+- Software Product Engineer
+- Full-Stack Product Engineer
+- Backend Software Engineer
+- Frontend Software Engineer
+- Integration Engineer
+- Cloud Application Developer
+- Platform Engineer
+- Founding Engineer
+
+### Java Backend Engineering
+- Java Backend Engineer
+- Java Backend Developer
+- Backend Software Engineer
+- Software Engineer (SDE-1 / SDE-2)
+- Software Development Engineer
+- Java Software Engineer
+- Spring Boot Developer
+- Spring Boot Engineer
+- Backend Engineer
+- Software Engineer
+- API Developer
+- API Engineer
+- Microservices Engineer
+- Java Microservices Developer
+- Full-Stack Java Developer
+- Application Developer
+- Enterprise Application Developer
+- Software Product Engineer
+- Cloud Backend Engineer
+- Distributed Systems Engineer
+- Platform Engineer
+- Integration Engineer
+- Database Engineer
+- REST API Developer
+- Web Services Developer
+- Systems Engineer
+- Product Engineer
+- Java Application Engineer
+- Cloud Application Developer
+- Technical Solutions Engineer
 
 ------------------------------------------------------------------------
 
