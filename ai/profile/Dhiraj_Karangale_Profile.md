@@ -15,15 +15,17 @@
 
 ## Professional Summary
 
-High-impact Software Engineer with 2+ years of full-time professional experience designing, building, and delivering production-grade full-stack applications, enterprise AI/ML platforms, agentic AI systems, and scalable developer tools. Currently driving innovation at Infosys as a Specialist Programmer, architecting mission-critical enterprise solutions spanning AI-powered document intelligence, multi-agent conversational AI copilots, natural-language-to-SQL analytics engines, and micro-frontend ecosystems.
+AI-focused Software Engineer with 2+ years of full-time professional experience architecting, building, and deploying production-grade agentic AI systems, enterprise AI/ML platforms, LLM-powered applications, and scalable full-stack software. Currently driving AI innovation at Infosys as a Specialist Programmer, leading the design and delivery of enterprise-grade AI solutions — including multi-agent LLM orchestration pipelines, AI-powered document intelligence platforms, natural-language-to-SQL analytics engines with agentic RAG, and schema-driven multimodal data extraction systems.
 
-Proven track record of building and shipping complex software at scale — from an enterprise Customer 360 & Next Best Action AI copilot with hybrid RAG, multi-tier agent memory, semantic caching, zero-trust RBAC, and multi-provider LLM failover, to a reusable dashboard export library adopted across 7+ enterprise projects by 3 cross-functional teams, to an AI-powered platform that slashes Process Design Document creation from hours of manual effort to under 5 minutes.
+At Infosys, architected and shipped an AI-powered Transcript-to-PDD platform that uses LLM-driven semantic processing, LangGraph human-in-the-loop orchestration, and multimodal video analysis to reduce Process Design Document creation from hours to under 5 minutes. Built DB Wiki, an enterprise agentic Text-to-SQL platform with a multi-agent pipeline (Navigator, Planner, Writer, Validator agents), hybrid semantic caching (BM25 + TF-IDF), ReAct reasoning loops, and RBAC-enforced query guardrails across thousands of database tables. Developed a universal schema-driven document intelligence solution that won a Google Buildathon, earned Best GenAI Solution Award and Infosys Cohere Award, and reduced business processing time by 80%. Also built a reusable dashboard export library adopted across 7+ enterprise projects by 3 cross-functional teams.
 
-Passionate open-source contributor and builder — created and published production-grade tools including SatyaMark (real-time multi-modal content verification), Jobora (AI-powered job automation), and PDF/PPT Export (DOM-to-document rendering engine), with npm libraries collectively reaching 5K+ downloads. Shipped Android applications with 1.5M+ Play Store downloads.
+Beyond Infosys, built a Customer 360 & Next Best Action AI copilot with hybrid RAG, multi-tier agent memory (short-term, long-term, episodic, semantic), semantic caching, zero-trust RBAC, multi-provider LLM failover, and safe Text-to-SQL analytics. Developing MIRA, a privacy-first personal agentic AI assistant with local-first RAG, multimodal knowledge-base ingestion, VLM-powered activity understanding, layered agent memory, and proactive daily intelligence. Built SatyaMark, an open-source multi-modal content verification platform using LangGraph-orchestrated LLM pipelines, RAG, and AI image forensics.
 
-Recognized nationally and internationally — HackWithInfy Finalist, LeetCode Knight (top 2.45% globally, 1K+ problems solved), Google Buildathon Winner with Best GenAI Solution Award and Infosys Cohere Award, and hand-picked as 1 of 150 elite builders from 5,000+ applicants for Push to Prod 2026, Anthropic's flagship Claude hackathon.
+Passionate open-source contributor — published production-grade npm libraries with 5K+ cumulative downloads (SatyaMark React SDK, PDF & PPT Export). Shipped Android applications with 1.5M+ Google Play Store downloads. Active builder across AI and developer tooling.
 
-Core strengths: full-stack engineering (React, Node.js, TypeScript, Python, Java, Spring Boot), agentic AI architecture (LangChain, LangGraph, RAG, multi-agent orchestration), distributed systems design, high-performance API development, developer tooling, and shipping production software with speed and quality.
+Recognized nationally and internationally — Google Buildathon Winner (Best GenAI Solution Award, Infosys Cohere Award), HackWithInfy Finalist, LeetCode Knight (top 2.45% globally, 1K+ problems solved), and hand-picked as 1 of 150 elite builders from 5,000+ applicants for Push to Prod 2026, Anthropic's flagship Claude hackathon.
+
+Core strengths: agentic AI architecture (LangChain, LangGraph, RAG, multi-agent orchestration, agent memory, guardrails), LLM integration & inference (prompt engineering, context engineering, semantic caching, structured outputs, tool calling), full-stack engineering (React, Node.js, TypeScript, Python, Java, Spring Boot), distributed systems design, and shipping production AI software with speed, quality, and security.
 
 ---
 
@@ -209,7 +211,7 @@ Building an ambitious local-first personal AI assistant that constructs a centra
 
 **Tech:** Python, Rust, React, TypeScript, Tauri 2, FastAPI, LangChain, LangGraph, Agentic AI, RAG, Multimodal Retrieval, Qdrant, Qwen3-Embedding-0.6B, PyTorch, Hugging Face Transformers, Tesseract OCR, OpenCV, VLM, Faster-Whisper, Redis, Redis Streams, WebSockets, SQLite, SQLCipher, Local-First AI, Agent Memory, Semantic Caching, Prompt Caching, Structured Outputs, Tool Calling, AI Guardrails, Privacy-by-Design, RBAC, Microservices, Event-Driven Architecture.
 
-**GitHub:** https://github.com/DhirajKarangale/Mira
+**Links:** [GitHub](https://github.com/DhirajKarangale/Mira)
 
 ---
 
@@ -231,8 +233,7 @@ Enterprise customer intelligence platform built for the Snowflake CoCo CLI Hacka
 
 **Tech:** Python, FastAPI, React 19, TypeScript, LangGraph, LangChain, RAG, Snowflake Cortex, Snowflake Arctic Embed, FAISS, PostgreSQL, Redis, Redis Streams, SSE, LLM Gateway, Multi-Provider Failover, Semantic Caching, Agent Memory, AI Guardrails, RBAC, Text-to-SQL, Snowpark Container Services, Docker, Vercel.
 
-**Live Demo:** https://customer360-theta.vercel.app/
-**GitHub:** https://github.com/DhirajKarangale/Customer_360/
+**Links:** [Live Demo](https://customer360-theta.vercel.app/) · [GitHub](https://github.com/DhirajKarangale/Customer_360/)
 
 ---
 
@@ -251,7 +252,7 @@ End-to-end AI-powered job automation platform that streamlines the entire job se
 
 **Tech:** React.js, JavaScript, TypeScript, Node.js, Express.js, Python, PostgreSQL, SQL, Redis, Puppeteer, Web Scraping, Browser Automation, Agentic AI, LLMs, LangChain, LangGraph, REST APIs.
 
-**GitHub:** https://github.com/DhirajKarangale/Jobora
+**Links:** [GitHub](https://github.com/DhirajKarangale/Jobora)
 
 ---
 
@@ -359,7 +360,7 @@ Full-stack role-based consent management platform aligned with India's Digital P
 
 **Tech:** ReactJS, TypeScript, Java, Spring Boot, Spring Security, Spring Data JPA, PostgreSQL, React Router, Redux Toolkit, React Query, Bootstrap 5, REST APIs, RBAC, Consent Management, DPDP Act 2023.
 
-**GitHub:** https://github.com/DhirajKarangale/ConsentManagement
+**Links:** [GitHub](https://github.com/DhirajKarangale/ConsentManagement)
 
 ---
 
