@@ -188,7 +188,32 @@ Employment: Full-time
 Location: India (On-site)
 
 - Built a reusable dashboard export library that converts complex React dashboards into fully editable PowerPoint and PDF documents, adopted across 7+ projects by 3 teams and reducing report creation from hours of manual slide preparation to a single export action.
-- Developed an AI-powered PDD generation platform that transforms meeting transcripts and videos into structured Process Design Documents, reducing document creation time from hours or days to under 5 minutes.
+#### AI-Powered Transcript-to-PDD Generation Platform
+
+**Project Overview**  
+Designed and developed an AI-powered platform that converts meeting transcripts and optional process-recording videos into structured Process Design Documents (PDDs). Automated requirement discovery, validation, visual-evidence mapping, and document generation, reducing the creation and editing cycle from several hours to approximately 5 minutes through a human-in-the-loop review and approval workflow.
+
+**Key Technical Contributions**
+
+- Built an LLM-driven semantic processing pipeline for unstructured meeting transcripts, covering requirement classification, normalization, deduplication, and structured information extraction.
+- Implemented context-aware requirement validation to identify missing, ambiguous, conflicting, or incomplete requirements and validate extracted information against source transcripts.
+- Developed automated document-section classification and semantic template mapping to populate custom PDD structures with functional requirements, non-functional requirements, business rules, and exception scenarios.
+- Integrated video processing to extract relevant frames, apply image-quality filtering and perceptual-hash deduplication, and map visual evidence to requirements using OCR and LLM-based analysis.
+- Implemented human-in-the-loop orchestration using LangGraph state management, persistent checkpointing, conditional routing, and pause/resume support for iterative review and approval.
+- Automated DOCX generation with `python-docx`, including custom-template population, structured requirement tables, and contextual screenshot insertion.
+- Built a React dashboard using Micro Frontend (MFE) architecture and integrated it into the organization's main dashboard as an independently deployable application.
+- Developed a Microsoft Teams integration/attachment to retrieve meeting transcripts and video recordings for processing, subject to integration permissions and asset availability.
+- Designed asynchronous, horizontally scalable processing with FastAPI, Redis Streams consumer groups, and Python multiprocessing workers.
+- Implemented persistent workflow state and transcript-content caching in Microsoft SQL Server (MSSQL), with AWS S3 for uploaded source files, templates, extracted media, and generated documents.
+
+**Technology Stack**  
+- **AI & Orchestration:** LLMs, LangGraph, LangChain, prompt engineering, semantic analysis
+- **Frontend & Architecture:** React, Micro Frontends (MFE), Vite, Tailwind CSS, Server-Sent Events (SSE)
+- **Integrations:** Microsoft Teams integration, meeting transcript and recording retrieval
+- **Backend:** Python, FastAPI, Pydantic, SQLAlchemy
+- **Distributed Processing:** Redis Streams, consumer groups, multiprocessing, asynchronous job processing
+- **Database & Storage:** Microsoft SQL Server (MSSQL), AWS S3
+- **Document & Media Processing:** `python-docx`, OpenCV, OCR, RapidOCR, perceptual hashing, ImageHash
 - Built a centralized enterprise AI knowledge base using RAG, LLM wikis, and OKF, enabling users to query organizational data and databases via natural language (Text-to-SQL) with strict role-based access control and data privacy.
 - Architected and developed micro-frontend applications using React and Webpack Module Federation, enabling independent deployments across teams.
 - Developed POCs using Java and Spring Boot, including gRPC-based service communication and integration for backend service development.
