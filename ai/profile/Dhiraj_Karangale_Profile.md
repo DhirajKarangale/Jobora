@@ -240,7 +240,41 @@ Designed and developed a universal, schema-driven document intelligence solution
 - **Spreadsheet Intelligence:** Excel / CSV Parsing, Header Detection, Column Profiling, Data-Type Inference, Schema Mapping, Tabular Data Normalization
 - **Structured Extraction:** Custom Schemas, Field Mapping, Data Validation, Structured Outputs, Confidence-Aware Extraction, Data Normalization
 - **Recognition:** Google Buildathon Winner, Featured on Google Marketplace, Best GenAI Solution Award, Infosys Cohere Award; reduced business processing time by 80%.
-- Built a centralized enterprise AI knowledge base using RAG, LLM wikis, and OKF, enabling users to query organizational data and databases via natural language (Text-to-SQL) with strict role-based access control and data privacy.
+#### DB Wiki — Enterprise Database Knowledge & Natural-Language Text-to-SQL Platform
+
+**Project Overview**  
+Designed and developed DB Wiki, an AI-powered database knowledge and conversational analytics platform for business users working across thousands of SQL and NoSQL tables containing client, project, and product data. It transforms evolving database metadata and complex, often undocumented relationships into searchable LLM-generated wikis, allowing users to ask business questions in natural language and retrieve database-backed answers without relying on static dashboards or manually locating tables. The platform addresses schema drift, implicit relationships, missing foreign-key constraints, and changing business data requirements through frequent synchronization, semantic retrieval, query planning, validation, caching, guardrails, and role-based access control.
+
+**Wiki Generation & Database Intelligence**
+
+- Developed database introspection tooling in Python using PostgreSQL system catalogs to extract schema metadata, tables, columns, data types, primary and foreign keys, constraints, indexes, and representative sample data.
+- Built an LLM-powered wiki generation agent to transform metadata JSON into structured, human-readable Markdown documentation.
+- Generated entity, relationship, domain, enum, and table-digest pages, along with business rules, glossaries, and Mermaid ER diagrams to expose database semantics and cross-table relationships.
+- Created a hierarchical JSON navigation tree representing schemas, tables, columns, domains, and foreign-key relationships to support metadata navigation and agent retrieval.
+- Implemented schema synchronization and staleness detection using MD5-based change tracking, cross-schema column indexing, and regex-based abbreviation mapping to keep generated wiki content aligned with evolving databases.
+- Addressed implicit and undocumented relationships—including relationships not declared through foreign keys—and complex cross-schema joins using metadata, wiki context, domain knowledge, and agent-driven table discovery.
+
+**Agentic Natural-Language SQL Generation Pipeline**
+
+- Implemented business-query preprocessing with abbreviation expansion, regex-based normalization, and terminology mapping to translate user language into database-oriented concepts.
+- Built a two-tier semantic cache using **BM25 lexical retrieval** and **TF-IDF cosine similarity** to reuse prior SQL statements and query plans for semantically or lexically similar requests.
+- Developed a **LangGraph Navigator Agent** combining hierarchical navigation over with programmatic scoring to select relevant schemas, domains, and tables from a large metadata space.
+- Implemented a **Planner Agent** with a ReAct (Reason–Act–Observe) loop to retrieve wiki documentation and construct structured query plans specifying tables, joins, filters, selected columns, grouping, and sorting.
+- Developed a **Writer Agent** for LLM-based SQL synthesis using wiki context, business rules, table whitelists, schema mappings, and prior corrections; supported multi-stage queries and complex Common Table Expressions (CTEs).
+- Built deterministic SQL auto-qualification using regex-based processing to correct schema prefixes and qualify table references across schemas.
+- Implemented a **Validator Agent** for programmatic SQL checks covering syntax structure, table existence, schema qualification, and hallucinated or unauthorized table detection.
+- Added feedback-driven SQL correction and retry loops, packaging validated query results and persisting successful SQL/query patterns into the semantic cache.
+- Integrated guardrails and role-based access controls to enforce authorized database access and constrain query generation to permitted tables and schemas.
+- Designed the solution for frequent metadata refreshes and evolving database schemas, helping maintain query relevance as tables, columns, and relationships change.
+
+**Technology Stack & Keywords**
+
+- **AI & Agent Orchestration:** LLMs, LangGraph, ReAct Agents, Navigator Agent, Planner Agent, Writer Agent, Validator Agent, LLM Wiki Generation, Prompt Engineering, Context-Aware SQL Generation
+- **Database Intelligence:** SQL / NoSQL, PostgreSQL System Catalogs, Database Introspection, Schema Discovery, Metadata Extraction, Cross-Schema Relationships, Implicit Join Discovery, Schema Drift Detection, Business Rules, Mermaid ER Diagrams
+- **Natural Language & Retrieval:** Natural-Language-to-SQL (NL2SQL), Text-to-SQL, Semantic Retrieval, BM25, TF-IDF, Cosine Similarity, Semantic Caching, Abbreviation Expansion, Query-Plan Reuse
+- **SQL Engineering:** Multi-Table Joins, CTEs, Query Planning, Schema Qualification, SQL Validation, Hallucinated Table Detection, Automated SQL Correction, Table Whitelisting
+- **Reliability & Security:** Metadata Synchronization, MD5 Change Detection, Query Guardrails, RBAC, Access-Controlled Retrieval, Retry and Feedback Loops
+
 - Architected and developed micro-frontend applications using React and Webpack Module Federation, enabling independent deployments across teams.
 - Developed POCs using Java and Spring Boot, including gRPC-based service communication and integration for backend service development.
 - Improved application performance by 25% through MySQL query optimization, database indexing, and REST API improvements.
