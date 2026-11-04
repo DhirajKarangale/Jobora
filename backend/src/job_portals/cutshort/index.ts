@@ -155,6 +155,7 @@ export default async function cutshort(resilientBrowser: ResilientBrowser): Prom
       if (applyStatus === 'applied') {
         await saveEligibleAndAppliedJob(dataToSave);
         incrementJobsAutoApplied();
+        incrementJobsScraped();
       } else {
         const id = await saveJob(dataToSave);
         if (id) {

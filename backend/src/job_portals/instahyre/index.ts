@@ -3,7 +3,7 @@ import { ResilientBrowser } from "../../utils/resilientBrowser.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { extractJobData } from "./jobData.ts";
 import { INSTAHYRE_URL_JOB_SEARCH, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
-import { incrementJobsAutoApplied } from "../../utils/automationState.ts";
+import { incrementJobsAutoApplied, incrementJobsScraped } from "../../utils/automationState.ts";
 
 async function applyJobs(page: Page): Promise<void> {
   while (true) {
@@ -70,6 +70,7 @@ async function applyJobs(page: Page): Promise<void> {
 
         if (isSuccess) {
           incrementJobsAutoApplied();
+          incrementJobsScraped();
         }
       }
 

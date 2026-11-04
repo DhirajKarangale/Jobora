@@ -172,6 +172,7 @@ export async function getJobData(resilientBrowser: ResilientBrowser, jobIds: str
         console.log(`[Wellfound] Applied successfully for job ID: ${cleanJobId}`);
         await saveEligibleAndAppliedJob(jobData);
         incrementJobsAutoApplied();
+        incrementJobsScraped();
       } else {
         console.log(`[Wellfound] Failed to auto-apply for job ID: ${cleanJobId}. Saving to DB and stream.`);
         const id = await saveJob(jobData);
