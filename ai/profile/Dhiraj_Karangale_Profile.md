@@ -543,6 +543,14 @@ Job-matching platform for students to discover part-time and internship opportun
 - Developed and shipped Android applications with 1.5M+ Play Store downloads.
 - Published open-source npm libraries with 5K+ downloads, including SatyaMark and PDF & PPT Export.
 - HackWithInfy Finalist.
+- Participated in the Snowflake CoCo CLI Hackathon, Google AI Builder Cup, Y Combinator Buildathon, and micro1 Frontier Engineering Challenge 2026.
 - Selected as 1 of 150 builders from 5K+ applicants for Push to Prod 2026, an Anthropic Claude hackathon.
+
+**Hackathons & Engineering Challenges**
+- HackWithInfy — Finalist.
+- Snowflake CoCo CLI Hackathon — Participant.
+- Google AI Builder Cup — Participant.
+- Y Combinator Buildathon — Participant.
+- micro1 Frontier Engineering Challenge 2026 — Participant.
 
 ------------------------------------------------------------------------
