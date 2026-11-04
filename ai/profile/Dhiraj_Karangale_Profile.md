@@ -18,7 +18,7 @@
 
 ## Summary
 
-Software Engineer with 2+ years of full-time experience building scalable full-stack applications, AI-powered products, and developer tools using React, Node.js, TypeScript, Python, and SQL. Currently working at Infosys, developing enterprise applications, AI-powered solutions, reusable developer tools, and micro-frontend architectures.
+Software Engineer with 2+ years of full-time experience building scalable full-stack applications, AI-powered products, and developer tools using React, Node.js, TypeScript, Python, and SQL. Currently working at Infosys, developing enterprise applications, AI-powered solutions, reusable developer tools, and micro-frontend architectures. Built an enterprise Customer 360 and Next Best Action AI copilot with hybrid RAG, multi-tier agent memory, semantic caching, guardrails, RBAC, and multi-provider LLM failover.
 
 Built a dashboard export library adopted across 7+ projects, an AI-powered platform that generates Process Design Documents in under 5 minutes, and micro-frontend applications using Webpack Module Federation.
 
@@ -199,6 +199,27 @@ Location: Bangalore (Remote)
 ------------------------------------------------------------------------
 
 ## Projects
+
+### Customer 360 & Next Best Action Engine — Enterprise Multi-Agent AI Copilot (2026)
+
+Enterprise customer intelligence platform developed for the Snowflake CoCo CLI Hackathon 2026 – GCC Edition. Unifies structured customer and policy records with unstructured calls, chats, and emails through a centralized knowledge base, enabling insurance agents to retrieve customer context and receive proactive, explainable next-best-action recommendations.
+
+**Highlights**
+
+- Built a centralized enterprise knowledge base combining PostgreSQL customer/policy data with Snowflake-staged customer interactions and semantic vector embeddings.
+- Implemented hybrid RAG using Snowflake Arctic Embed, FAISS vector similarity search, and strict customer, policy, and agent metadata filtering to ground responses in authorized data.
+- Developed an autonomous Daily Suggestion / Next Best Action engine that analyzes expiring policies, customer sentiment, and unresolved action items to generate prioritized recommendations with contextual rationale.
+- Implemented contextual agent chat with multi-turn persistence, customer/policy grounding, and real-time response delivery using Server-Sent Events (SSE).
+- Designed multi-tier memory: LangGraph short-term working memory, Redis sliding-window agent memory, and long-term episodic/semantic memory backed by PostgreSQL, Snowflake, and FAISS.
+- Implemented semantic caching and query optimization to reduce repeated inference and accelerate daily suggestions and retrieval.
+- Enforced multi-layer AI guardrails, zero-trust role-based access control (RBAC), customer/agent data isolation, authorization checks, read-only SQL restrictions, tool-call limits, and output sanitization.
+- Built a LangGraph agent workflow with tools for semantic interaction search, structured customer/policy context retrieval, and safe Text-to-SQL analytics.
+- Implemented an LLM Gateway with multi-provider fallback across Google GenAI, Groq, and Snowflake Cortex.
+- Deployed backend APIs and AI worker services using Snowflake Snowpark Container Services (SPCS), with Redis Streams for asynchronous job processing.
+
+**Tech:** Python, FastAPI, React 19, TypeScript, LangGraph, LangChain, RAG, Snowflake Cortex, Snowflake Arctic Embed, FAISS, PostgreSQL, Redis, Redis Streams, SSE, LLM Gateway, Multi-Provider Failover, Semantic Caching, Agent Memory, Short-Term Memory, Long-Term Memory, AI Guardrails, RBAC, Text-to-SQL, Snowpark Container Services, Docker, Vercel.
+
+**Live Demo:** https://customer360-theta.vercel.app/
 
 ### Jobora — AI-Powered Job Automation Platform (2026)
 
