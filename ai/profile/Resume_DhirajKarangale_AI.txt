@@ -85,19 +85,20 @@
 % --- Skills ---
 \section{Skills}
 \begin{skillslist}
-    \item \textbf{AI \& LLMs:} Python, LLMs, Agentic AI, RAG, LangChain, LangGraph, Claude, Hugging Face, AI/ML, OKF
-    \item \textbf{AI Engineering:} LLM Integration, Multi-Stage Workflows, Map-Reduce, Prompt Pipelines, Text-to-SQL, LLM wikis, AI Image Detection, AI Image Verification
-    \item \textbf{Backend \& Data:} Node.js, FastAPI, REST APIs, WebSockets, RBAC, PostgreSQL, pgvector, MySQL, Redis
-    \item \textbf{Engineering:} JavaScript, TypeScript, SQL, React, Docker, AWS, GCP, System Design, DSA
+    \item \textbf{AI \& LLM Engineering:} Python, Large Language Models (LLMs), Generative AI, Agentic AI, Retrieval-Augmented Generation (RAG), LangChain, LangGraph, Prompt Engineering, Context Engineering, Semantic Caching, Structured Outputs, Tool Calling, Function Calling, AI Guardrails, Prompt-Injection Defense
+    \item \textbf{Agent Architecture:} Multi-Agent Orchestration, ReAct Agents, Human-in-the-Loop (HITL), Agent Memory Systems, Supervisor Patterns, LLM Gateway, Multi-Provider Failover, LangSmith, Langfuse, LLM Observability, Model Context Protocol (MCP), A2A Protocol, Google ADK
+    \item \textbf{RAG \& Multimodal AI:} Hybrid RAG, Dense/Sparse Retrieval, Reranking, Vector Search, FAISS, Qdrant, Embeddings, BM25, TF-IDF, NL2SQL, Text-to-SQL, OCR, Vision-Language Models (VLM), Speech-to-Text (STT), Text-to-Speech (TTS), AI Image Detection, Pydantic
+    \item \textbf{Models \& Platforms:} Claude (Anthropic), Gemini (Google), AWS Bedrock, GCP Vertex AI, Hugging Face, PyTorch, Transformers, Snowflake Cortex, Arctic Embed, Faster-Whisper, Groq, OpenAI
+    \item \textbf{Engineering:} TypeScript, JavaScript, SQL, React, Node.js, FastAPI, PostgreSQL, Redis, Docker, AWS (S3, Lambda, SQS), GCP (Cloud Run, Cloud SQL), Snowflake, Git, CI/CD, Microservices, Event-Driven Architecture, System Design
 \end{skillslist}
 
 % --- Achievements ---
 \section{Achievements}
 \begin{itemize}
-    \item Demonstrated advanced Data Structures \& Algorithms proficiency by achieving \href{https://leetcode.com/u/DhirajKarangale/}{\underline{\textbf{LeetCode Knight}}} (2,012 Rating), ranked in the top \textbf{2.45\%} globally with \textbf{1K+} solved problems.
-    \item Developed and shipped Android applications, achieving over \textbf{1.5M+ Play Store downloads}.
-    \item Published open-source \href{https://www.npmjs.com/~dhirajkarangale}{\underline{\textbf{npm libraries}}} with \textbf{5K+} downloads.
-    \item Selected as a \textbf{HackWithInfy Finalist}, and one of 150 builders chosen from 5K+ applicants at \textbf{Push to Prod 2026}, an Anthropic Claude hackathon.
+    \item \textbf{Google Buildathon Winner} — Built an AI document intelligence platform; awarded \textbf{Best GenAI Solution}, \textbf{Infosys Cohere Award}, and featured on \textbf{Google Marketplace}.
+    \item Selected as \textbf{1 of 150 elite builders} from 5,000+ applicants for \textbf{Push to Prod 2026}, Anthropic's flagship Claude hackathon; \textbf{HackWithInfy Finalist}.
+    \item Achieved \href{https://leetcode.com/u/DhirajKarangale/}{\underline{\textbf{LeetCode Knight}}} (2,012 Rating), ranked in top \textbf{2.45\%} globally with \textbf{1K+} problems solved.
+    \item Published open-source \href{https://www.npmjs.com/~dhirajkarangale}{\underline{\textbf{npm libraries}}} with \textbf{5K+ cumulative downloads}; shipped Android applications with \textbf{1.5M+ Play Store downloads}.
 \end{itemize}
 
 % --- EXPERIENCE ---
@@ -105,37 +106,54 @@
 
 \subsection{Infosys $|$ \normalfont\footnotesize\emph{Specialist Programmer – Software Development Engineer} \hspace*{\fill} \normalfont\small Aug 2024 -- Present}
 \begin{itemize}
-    \item Developed an \textbf{AI-powered PDD generation platform} transforming meeting transcripts and videos into structured Process Design Documents, reducing creation time from hours or days to under \textbf{5 minutes}.
-    \item Architected a centralized \textbf{AI Knowledge Base} using \textbf{RAG, LLM wikis, OKF, Text-to-SQL}, enabling secure natural language querying of organizational data with strict \textbf{role-based access control}.
-    \item Implemented semantic search using \textbf{Vector Databases (pgvector)} and cosine similarity for optimized \textbf{Vector Embedding} retrieval, applying advanced chunking to significantly reduce AI hallucinations.
-    \item Built a reusable \textbf{React library} converting complex dashboards into fully editable PPT and PDF documents, adopted across 7+ projects by 3 teams and reducing report creation from hours to one click.
-    \item Led system design for micro-frontend applications using React and Webpack Module Federation.
-    \item Optimized MySQL queries and implemented database indexing, reducing API response times by \textbf{25\%}.
+    \item Architected \textbf{DB Wiki}, an enterprise \textbf{multi-agent Text-to-SQL} platform using \textbf{LangGraph}-orchestrated \textbf{Navigator, Planner, Writer, and Validator agents} with \textbf{ReAct reasoning loops}, enabling natural-language analytics across \textbf{2,500+ database tables} with \textbf{RBAC}-enforced query guardrails and \textbf{prompt-injection defense}.
+    \item Engineered a two-tier \textbf{semantic cache} (BM25 lexical retrieval + TF-IDF cosine similarity) for query-plan and SQL reuse — reducing average query latency by \textbf{40\%}; implemented deterministic SQL validation with \textbf{hallucination detection} and feedback-driven correction loops.
+    \item Developed an \textbf{AI-powered Transcript-to-PDD platform} using \textbf{LLM-driven semantic processing}, \textbf{LangGraph human-in-the-loop} (HITL) orchestration with persistent checkpointing, and \textbf{multimodal video analysis} — reducing document creation from hours to under \textbf{5 minutes} (\textbf{95\%+ time reduction}).
+    \item Built multi-stage \textbf{NLP pipelines} for automated requirement classification, conflict detection, deduplication, and \textbf{structured information extraction}; integrated \textbf{OCR + Vision-Language Model (VLM)} visual-evidence mapping from process-recording videos.
+    \item Developed a \textbf{schema-driven multimodal document intelligence} solution with adaptive OCR, bounding-box detection, layout-aware extraction, and \textbf{LLM-powered data normalization} — \textbf{won Google Buildathon}, reducing business processing time by \textbf{80\%}.
+    \item Designed horizontally scalable, \textbf{asynchronous processing} architecture with FastAPI, \textbf{Redis Streams} consumer groups, and Python multiprocessing workers; built \textbf{Microsoft Teams integration} for automated transcript and video retrieval.
+    \item Built a reusable \textbf{dashboard export library} converting complex React dashboards into fully editable PowerPoint and PDF documents — adopted across \textbf{7+ enterprise projects by 3 cross-functional teams}, eliminating hours of manual report creation.
+    \item Improved application performance by \textbf{25\%} through database query optimization, indexing strategies, and REST API refinements; architected \textbf{micro-frontend applications} using React and Webpack Module Federation deployed on \textbf{AWS} and \textbf{GCP} cloud infrastructure.
 \end{itemize}
 
-\subsection{SaralTech $|$ \normalfont\footnotesize\emph{Software Engineer Intern} \hspace*{\fill} \normalfont\small Jan 2024 -- Jun 2024}
+\subsection{Saral Group $|$ \normalfont\footnotesize\emph{Developer Intern} \hspace*{\fill} \normalfont\small Jan 2024 -- Jun 2024}
 \begin{itemize}
-    \item Developed REST APIs and React-based application workflows for a real-time application, integrating WebSockets for live updates and state synchronization.
-    \item Implemented \textbf{JWT authentication, session management, and Google OAuth} for application access.
+    \item Developed React-based interfaces for a real-time collaboration platform, integrating WebSockets for live messaging and state synchronization.
+    \item Implemented \textbf{JWT authentication}, secure session management, and \textbf{Google OAuth 2.0} for seamless third-party authentication.
 \end{itemize}
 
 % --- PROJECTS ---
 \section{Projects}
 
-\subsection{\href{https://satyamark.vercel.app/}{\underline{SatyaMark}} $|$ \normalfont\footnotesize\emph{Python, LangGraph, LangChain, RAG, Claude, Hugging Face, Redis Streams, PostgreSQL} \hspace*{\fill} \normalfont\small 2025}
+\subsection{\href{https://github.com/DhirajKarangale/Mira}{\underline{MIRA}} $|$ \normalfont\footnotesize\emph{LangGraph, RAG, Qdrant, VLM, Rust, Tauri 2, FastAPI, Redis Streams} \hspace*{\fill} \normalfont\small 2026}
 \begin{itemize}
-    \item Built an open-source \textbf{multi-modal content verification platform} combining LLM-based fact-checking, RAG, web search, and AI image detection.
-    \item Designed \textbf{LangGraph multi-stage workflows} for claim extraction and evidence scoring, processed asynchronously via \textbf{Redis Streams} workers featuring retries and failover.
-    \item Implemented Map-Reduce fact-checking to extract evidence and generate verification results.
-    \item Published a reusable React SDK with \textbf{4K+ downloads} for streaming live verification results.
+    \item Building a \textbf{privacy-first agentic AI assistant} with \textbf{local-first RAG}, multimodal knowledge-base ingestion from desktop activity, \textbf{VLM-powered} activity understanding, and proactive daily intelligence generation.
+    \item Engineered a multimodal ingestion pipeline — screenshot capture, window/app metadata, word-level \textbf{OCR with bounding boxes}, perceptual-hash deduplication, and \textbf{Vision-Language Model} enrichment — indexing semantic embeddings into a local \textbf{Qdrant} vector database.
+    \item Designed \textbf{layered agent memory} (short-term, long-term, episodic) with local \textbf{Qwen3 embedding inference} (1024-dim), temporal retrieval, metadata-filtered semantic search, local \textbf{Faster-Whisper speech-to-text}, and \textbf{text-to-speech} for fully privacy-oriented \textbf{voice interaction}.
+    \item Implemented \textbf{context minimization} and \textbf{privacy guardrails} — retrieving only relevant excerpts before cloud LLM inference; architected event-driven microservices with \textbf{Redis Streams}, async worker orchestration, and Rust-based desktop operations.
 \end{itemize}
 
-\subsection{\href{https://github.com/DhirajKarangale/Jobora}{\underline{Jobora}} $|$ \normalfont\footnotesize\emph{Python, LangGraph, LangChain, Node.js, Redis, PostgreSQL, Puppeteer} \hspace*{\fill} \normalfont\small 2026}
+\subsection{\href{https://customer360-theta.vercel.app/}{\underline{Customer 360}} $|$ \normalfont\footnotesize\emph{LangGraph, RAG, FAISS, Snowflake Cortex, Arctic Embed, Redis, PostgreSQL} \hspace*{\fill} \normalfont\small 2026}
 \begin{itemize}
-    \item Built an \textbf{Agentic AI job automation platform} for job discovery, LLM-based analysis, candidate-job matching, and application automation.
-    \item Designed \textbf{LangGraph workflows} for job discovery, candidate evaluation, and automated applications.
-    \item Developed distributed pipelines using Python, Node.js, PostgreSQL, Redis, and browser automation.
-    \item Built a React analytics dashboard for job eligibility, application status, matching insights, and job intelligence.
+    \item Built an enterprise \textbf{multi-agent AI copilot} with \textbf{hybrid RAG} (Snowflake Arctic Embed + FAISS vector search), unifying structured customer data with unstructured interactions for context-aware intelligence and \textbf{safe Text-to-SQL} analytics.
+    \item Designed \textbf{multi-tier agent memory} — LangGraph short-term working memory, Redis sliding-window memory, and long-term episodic/semantic memory — with an \textbf{LLM Gateway} featuring \textbf{multi-provider failover} across Google GenAI, Groq, and Snowflake Cortex.
+    \item Developed an autonomous \textbf{Next Best Action engine} with proactive recommendations; enforced \textbf{zero-trust RBAC}, data isolation, tool-call limits, and \textbf{output sanitization} guardrails.
+\end{itemize}
+
+\subsection{\href{https://satyamark.vercel.app/}{\underline{SatyaMark}} $|$ \normalfont\footnotesize\emph{LangGraph, LangChain, RAG, Claude, Hugging Face, Redis Streams, PostgreSQL} \hspace*{\fill} \normalfont\small 2025}
+\begin{itemize}
+    \item Built an open-source \textbf{multi-modal content verification platform} with \textbf{LangGraph-orchestrated LLM pipelines}, \textbf{RAG}, live web search, and \textbf{AI image forensics} for real-time misinformation detection.
+    \item Implemented verifiability assessment and \textbf{Map-Reduce fact-checking} — extracting claims, scoring evidence from multiple sources, and producing source-grounded verdicts with confidence scores.
+    \item Processed verification jobs asynchronously via \textbf{Redis Streams} with worker-based architecture, retries, abandoned-job handling, and API failover; streamed real-time results through \textbf{WebSockets}.
+    \item Published \href{https://www.npmjs.com/package/satyamark-react}{\underline{\textbf{satyamark-react}}} SDK with \textbf{4K+ npm downloads} for embedding live verification marks into React applications.
+\end{itemize}
+
+\subsection{\href{https://github.com/DhirajKarangale/Jobora}{\underline{Jobora}} $|$ \normalfont\footnotesize\emph{LangGraph, LangChain, LLMs, Node.js, Python, Redis, PostgreSQL, Puppeteer} \hspace*{\fill} \normalfont\small 2026}
+\begin{itemize}
+    \item Built an end-to-end \textbf{agentic AI job automation platform} that streamlines the entire job search lifecycle — from intelligent multi-platform job discovery via \textbf{browser automation} (Puppeteer) and web scraping to automated application submission.
+    \item Designed \textbf{LangGraph-based agentic workflows} for job discovery, \textbf{LLM-powered} job description cleaning, structuring, normalization, and \textbf{semantic analysis} of role requirements and qualifications.
+    \item Implemented intelligent candidate-job \textbf{matching and eligibility scoring} by evaluating job opportunities against candidate profiles using LLM-driven semantic comparison and structured evaluation criteria.
+    \item Built a scalable processing pipeline with \textbf{Redis} queues, \textbf{PostgreSQL} persistence, and a React analytics dashboard providing application status tracking, eligibility insights, and job market intelligence.
 \end{itemize}
 
 % --- EDUCATION ---
