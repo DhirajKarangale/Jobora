@@ -81,24 +81,23 @@
     \faIcon{code} \href{https://dhirajkarangale.vercel.app}{\underline{Portfolio}}
 \end{center}
 
-% --- Skills ---
+% --- SKILLS ---
 \section{Skills}
 \begin{skillslist}
-    \item \textbf{Frontend:} React.js, React 18/19, TypeScript, JavaScript (ES6+), Redux Toolkit, React Query (TanStack Query), React Router, React Flow, Zustand, Tailwind CSS, Bootstrap 5, Framer Motion, Webpack Module Federation, Micro-Frontend (MFE) Architecture, Vite, SSE, WebSockets, Responsive Design, SEO, Performance Optimization
-    \item \textbf{Backend:} Node.js, Express.js, Python FastAPI, Java Spring Boot, Spring Security, Spring Data JPA, REST API Design, gRPC, WebSockets, Server-Sent Events (SSE), JWT, OAuth 2.0, RBAC, Middleware Architecture, Browser Automation (Puppeteer), Asynchronous Processing
-    \item \textbf{Databases \& Cloud:} PostgreSQL, MySQL, MSSQL, MongoDB, Redis, Redis Streams, Firebase, Qdrant, FAISS, AWS (S3, Lambda, SQS, Parameter Store), GCP (Cloud SQL, Cloud Run, Cloud Storage), Snowflake, Docker, Jenkins, CI/CD, Vercel, Git
-    \item \textbf{AI \& LLM Integration:} LLMs, Generative AI, Agentic AI, RAG, LangChain, LangGraph, Multi-Agent Systems, Prompt Engineering, Structured Outputs, Tool Calling, Text-to-SQL, OCR, AI Guardrails, Semantic Caching
-    \item \textbf{CS Fundamentals:} Data Structures \& Algorithms (DSA), System Design (HLD/LLD), OOP, SOLID Principles, Distributed Systems, Microservices, Event-Driven Architecture, Graph Algorithms, DAG/Workflow Systems, Concurrency
+    \item \textbf{Languages:} TypeScript, JavaScript (ES6+), Java, SQL, HTML5, CSS3
+    \item \textbf{Frontend Engineering:} React (18/19), Redux Toolkit, React Query, Zustand, React Flow (Node Canvas / Visual Workflows), Webpack Module Federation (Micro-Frontends), Vite, Tailwind CSS, Bootstrap 5, Framer Motion, Real-Time UI, Responsive Web Design
+    \item \textbf{Backend Engineering:} Node.js, Express.js, Java Spring Boot (Spring Security, Spring Data JPA),  RESTful API Design, gRPC, Payment Gateways (Stripe API, Webhooks), Real-Time Messaging (WebSockets, SSE), Browser Automation (Puppeteer)
+    \item \textbf{Databases \& Cloud:} PostgreSQL, MySQL, Microsoft SQL Server (MSSQL), MongoDB, Redis (Streams, Pub/Sub), AWS (S3, Parameter Store), GCP, Docker, Jenkins CI/CD, Git, Database Indexing, Query Optimization, Schema Design
+    \item \textbf{Architecture \& Fundamentals:} System Design (HLD/LLD), Microservices Architecture, Distributed Systems, Role-Based Access Control (RBAC), OAuth 2.0, JWT, Data Structures \& Algorithms, Graph Algorithms, DAG Workflows
 \end{skillslist}
 
-% --- Achievements ---
+% --- ACHIEVEMENTS ---
 \section{Achievements}
 \begin{itemize}
-    \item \textbf{Google Buildathon Winner} — Built an AI document intelligence platform; awarded \textbf{Best GenAI Solution}, \textbf{Infosys Cohere Award}, and featured on \textbf{Google Marketplace}.
-    \item Selected as \textbf{1 of 150 elite builders} from 5,000+ applicants for \textbf{Push to Prod 2026}, Anthropic's flagship Claude hackathon; \textbf{HackWithInfy Finalist}.
-    \item Achieved \href{https://leetcode.com/u/DhirajKarangale/}{\underline{\textbf{LeetCode Knight}}} (2,012 Rating), ranked in top \textbf{2.45\%} globally with \textbf{1K+} problems solved across data structures, algorithms, and system design.
-    \item Published open-source \href{https://www.npmjs.com/~dhirajkarangale}{\underline{\textbf{npm libraries}}} with \textbf{5K+ cumulative downloads} (SatyaMark React SDK, PDF \& PPT Export); shipped Android apps with \textbf{1.5M+ Play Store downloads}.
-    \item Participant in \textbf{Snowflake CoCo CLI Hackathon 2026}, \textbf{Google AI Builder Cup}, \textbf{Y Combinator Buildathon}, and \textbf{micro1 Frontier Engineering Challenge 2026}.
+    \item \textbf{Google Buildathon Winner} — Architected a schema-driven document intelligence engine; honored with \textbf{Best Solution Award}, \textbf{Infosys Cohere Award}, and featured on \textbf{Google Marketplace}.
+    \item \textbf{Push to Prod 2026 (Anthropic)} — Hand-picked as \textbf{1 of 150 elite builders} from 5,000+ global applicants; recognized as a \textbf{HackWithInfy Finalist} in Infosys' flagship national competitive programming contest.
+    \item \href{https://leetcode.com/u/DhirajKarangale/}{\underline{\textbf{LeetCode Knight}}} (2,012 Rating, top \textbf{2.45\%} globally) with \textbf{1,000+} algorithmic problems solved across data structures, graph theory, and system design.
+    \item \textbf{Open-Source \& Scale:} Published production \href{https://www.npmjs.com/~dhirajkarangale}{\underline{\textbf{npm libraries}}} with \textbf{5K+ downloads} (\texttt{satyamark-react}, \texttt{pdf-ppt-export-react}); shipped Android apps exceeding \textbf{1.5M+} Play Store downloads.
 \end{itemize}
 
 % --- EXPERIENCE ---
@@ -106,63 +105,61 @@
 
 \subsection{Infosys $|$ \normalfont\footnotesize\emph{Specialist Programmer – Software Development Engineer} \hspace*{\fill} \normalfont\small Aug 2024 -- Present}
 \begin{itemize}
-    \item Built a high-performance, reusable \textbf{React dashboard export library} that converts complex data-rich dashboards into fully editable \textbf{PowerPoint} presentations and multi-page \textbf{PDF} documents using DOM analysis, chart metadata pipelines, and smart pagination — adopted across \textbf{7+ enterprise projects by 3 cross-functional teams}, eliminating hours of manual report creation.
-    \item Published the library as an open-source \textbf{npm package} (\href{https://www.npmjs.com/package/pdf-ppt-export-react}{\underline{pdf-ppt-export-react}}) with \textbf{1.1K+ downloads}, production-ready defaults, and minimal API surface.
-    \item Architected \textbf{micro-frontend applications} using \textbf{React} and \textbf{Webpack Module Federation} — independently deployable modules integrated into the organization's main dashboard, with \textbf{Jenkins CI/CD} pipelines for automated builds and deployments.
-    \item Developed an \textbf{AI-powered Transcript-to-PDD platform} transforming meeting transcripts and process-recording videos into structured Process Design Documents — reducing creation time from hours to under \textbf{5 minutes} (\textbf{95\%+ reduction}).
-    \item Built the frontend as a \textbf{React Micro Frontend (MFE)} with \textbf{Tailwind CSS}, real-time progress via \textbf{SSE}, and \textbf{Microsoft Teams integration} for automated transcript and video retrieval.
-    \item Designed the backend with \textbf{Python FastAPI}, \textbf{Redis Streams} consumer groups, and async multiprocessing workers; stored workflow state in \textbf{MSSQL} with \textbf{AWS S3} for document and media storage.
-    \item Architected \textbf{DB Wiki}, an enterprise AI-powered database knowledge and \textbf{Text-to-SQL} analytics platform with a \textbf{LangGraph multi-agent pipeline} (Navigator, Planner, Writer, Validator agents), semantic caching, and \textbf{RBAC}-enforced query guardrails across \textbf{2,500+ database tables}.
-    \item Developed a \textbf{schema-driven multimodal document intelligence} solution with adaptive OCR, layout-aware extraction, and LLM-powered normalization — \textbf{won Google Buildathon} and reduced business processing time by \textbf{80\%}.
-    \item Developed POCs with \textbf{Java Spring Boot} including \textbf{gRPC}-based service communication for backend microservices.
-    \item Improved application performance by \textbf{25\%} through \textbf{MySQL query optimization}, database indexing, and \textbf{REST API} refinements; integrated \textbf{AWS} (S3, Parameter Store) and \textbf{GCP} (Cloud SQL, Redis, Cloud Storage) for cloud-native infrastructure.
+    \item Designed and shipped a reusable React export engine converting complex dashboards into editable PowerPoint presentations and multi-page PDFs via DOM traversal and chart metadata pipelines — adopted across \textbf{7+ enterprise projects by 3 cross-functional teams} and published on npm (\href{https://www.npmjs.com/package/pdf-ppt-export-react}{\underline{\textbf{pdf-ppt-export-react}}}, 1.1K+ downloads).
+    \item Architected independently deployable \textbf{Micro Frontends (MFEs)} using \textbf{React} and \textbf{Webpack Module Federation}, integrating disparate enterprise workflows into a unified portal with automated \textbf{Jenkins CI/CD} build and deployment pipelines.
+    \item Engineered an automated document generation platform slashing PDD turnaround from hours to under \textbf{5 minutes} (\textbf{95\%+ reduction}) using a \textbf{React/Tailwind} MFE with real-time \textbf{SSE}, \textbf{Python FastAPI} backend, \textbf{Redis Streams consumer groups}, and async workers with \textbf{MSSQL} and \textbf{AWS S3} persistence.
+    \item Architected an enterprise database catalog across \textbf{2,500+ tables} using \textbf{Python} and \textbf{PostgreSQL system catalogs} for automated schema extraction, constraint mapping, and Mermaid ER diagram generation with MD5-based \textbf{schema drift detection}.
+    \item Built a multi-stage query execution pipeline with a two-tier cache (\textbf{BM25} lexical retrieval + \textbf{TF-IDF} cosine similarity) for SQL reuse, deterministic schema auto-qualification, programmatic SQL syntax validation, and strict \textbf{RBAC} query guardrails.
+    \item Built schema-driven ingestion pipelines with bounding-box \textbf{OCR} and table parsing (\textbf{Google Buildathon winner}, \textbf{80\%} faster processing); developed backend \textbf{Java Spring Boot} microservices with \textbf{gRPC} communication, optimizing MySQL queries and indexing to deliver a \textbf{25\%} performance improvement.
 \end{itemize}
 
 \subsection{Saral Group $|$ \normalfont\footnotesize\emph{Developer Intern} \hspace*{\fill} \normalfont\small Jan 2024 -- Jun 2024}
 \begin{itemize}
-    \item Developed responsive \textbf{React}-based user interfaces for a real-time collaboration platform, integrating Mattermost \textbf{WebSockets} for real-time messaging, live updates, and state synchronization.
-    \item Integrated \textbf{REST APIs} with frontend for reliable data exchange and responsive application behavior.
-    \item Implemented \textbf{JWT}-based authentication, secure session management with token refresh flows, and \textbf{Google OAuth 2.0} login.
+    \item Developed responsive \textbf{React} collaboration interfaces with Mattermost \textbf{WebSockets} for \textbf{real-time messaging}, live chat updates, and cross-client state synchronization; integrated \textbf{RESTful APIs} with optimistic updates for low-latency UX.
+    \item Implemented \textbf{JWT}-based authentication with secure session handling, automatic token refresh flows, and \textbf{Google OAuth 2.0} single sign-on integration.
 \end{itemize}
 
 % --- PROJECTS ---
 \section{Projects}
 
-\subsection{\href{https://satyamark.vercel.app/}{\underline{SatyaMark}} $|$ \normalfont\footnotesize\emph{React, Node.js, Python, TypeScript, PostgreSQL, Redis Streams, WebSockets, LangGraph, RAG} \hspace*{\fill} \normalfont\small 2025}
+\subsection{\href{https://satyamark.vercel.app/}{\underline{SatyaMark}} $|$ \normalfont\footnotesize\emph{React, TypeScript, Node.js, Python, PostgreSQL, Redis Streams, WebSockets} \hspace*{\fill} \normalfont\small 2025}
 \begin{itemize}
-    \item Built an open-source \textbf{full-stack multi-modal content verification platform} with React frontend, Node.js/Python backend services, \textbf{PostgreSQL}, \textbf{Redis Streams} async processing, and \textbf{WebSocket}-based real-time result streaming.
-    \item Designed distributed \textbf{LangGraph} verification workflows with \textbf{RAG}, evidence-based fact-checking, AI image detection, worker-based architecture, retries, and API failover.
-    \item Published \href{https://www.npmjs.com/package/satyamark-react}{\underline{\textbf{satyamark-react}}} React SDK with \textbf{4K+ npm downloads} for embedding live verification marks into third-party applications.
+    \item Architected a distributed, event-driven verification platform leveraging a decoupled microservices architecture with a \textbf{React/TypeScript} frontend, dual \textbf{Node.js} and \textbf{Python} backend services, and \textbf{PostgreSQL} for relational state persistence and query auditing.
+    \item Implemented high-throughput asynchronous job processing using \textbf{Redis Streams} with consumer groups, distributed worker pools, automated retry logic, exponential backoff, and third-party \textbf{API failover handling} to ensure fault tolerance.
+    \item Developed real-time bi-directional communication via \textbf{WebSockets} to stream live progress, verification scores, and structured data payloads; published the open-source \href{https://www.npmjs.com/package/satyamark-react}{\underline{\textbf{satyamark-react}}} SDK on npm (\textbf{4K+ downloads}) for third-party React applications.
 \end{itemize}
 
-\subsection{\href{https://github.com/DhirajKarangale/ConsentManagement}{\underline{Consent Management}} $|$ \normalfont\footnotesize\emph{React, TypeScript, Java, Spring Boot, Spring Security, PostgreSQL, REST APIs} \hspace*{\fill} \normalfont\small 2025}
+\subsection{\href{https://github.com/DhirajKarangale/ConsentManagement}{\underline{Consent Management}} $|$ \normalfont\footnotesize\emph{Java, Spring Boot, Spring Security, Spring Data JPA, React, TypeScript, PostgreSQL} \hspace*{\fill} \normalfont\small 2025}
 \begin{itemize}
-    \item Built a full-stack role-based consent management platform aligned with India's \textbf{Digital Personal Data Protection (DPDP) Act, 2023} with four user roles: User, Company, Consent Manager, and Government.
-    \item Developed backend with \textbf{Java Spring Boot} — layered \textbf{Controller-Service-Repository} architecture, \textbf{Spring Security} session-based authentication, \textbf{Spring Data JPA} with \textbf{PostgreSQL}, and \textbf{REST APIs}.
-    \item Built responsive UIs with \textbf{React}, \textbf{Bootstrap 5}, \textbf{React Query} for efficient API data management, \textbf{Redux Toolkit} for state management, and role-based routing with granular access control.
+    \item Engineered a full-stack enterprise data governance platform aligned with India's \textbf{DPDP Act, 2023}, managing complete consent lifecycles (grant, notice, validation, revocation, and compliance audit trails) with immutable logging for regulatory adherence.
+    \item Developed a modular \textbf{Java Spring Boot} enterprise backend using the \textbf{Controller-Service-Repository} pattern, \textbf{Spring Security} session authentication, granular \textbf{Role-Based Access Control (RBAC)} across 4 user tiers, and \textbf{Spring Data JPA/Hibernate} with \textbf{PostgreSQL} for ACID transactions.
+    \item Built a responsive frontend in \textbf{React} and \textbf{TypeScript} using \textbf{React Query (TanStack Query)} for optimistic updates and server-state caching, \textbf{Redux Toolkit} for client state, and dynamic role-based route guards for page-level access control.
+\end{itemize}
+
+\subsection{\href{https://github.com/DhirajKarangale/Jobora}{\underline{Jobora}} $|$ \normalfont\footnotesize\emph{React, TypeScript, Node.js, Express.js, Python, PostgreSQL, Redis, Puppeteer} \hspace*{\fill} \normalfont\small 2026}
+\begin{itemize}
+    \item Built an end-to-end full-stack job automation platform consisting of an interactive \textbf{React/TypeScript} analytics portal, \textbf{Node.js/Express.js} RESTful API backend, and \textbf{Python} processing services to automate multi-platform job discovery, evaluation, and application tracking.
+    \item Developed scalable data extraction pipelines using headless browser automation (\textbf{Puppeteer}) and web scrapers, transforming unstructured DOM listings into normalized schemas stored in \textbf{PostgreSQL}.
+    \item Orchestrated asynchronous worker queues using \textbf{Redis} for distributed task dispatching and concurrency control; designed rich dashboard views with candidate eligibility scoring and application pipeline analytics.
 \end{itemize}
 
 \subsection{\href{https://puzzle-challenge-eight.vercel.app/}{\underline{PuzzleChallenge}} $|$ \normalfont\footnotesize\emph{React 19, TypeScript, Node.js, Express.js, PostgreSQL, Stripe API, JWT, Redux Toolkit} \hspace*{\fill} \normalfont\small 2025}
 \begin{itemize}
-    \item Built a production-grade \textbf{full-stack} application with email-based \textbf{OTP authentication} (Nodemailer + JWT), \textbf{Stripe Checkout} payment integration with validation and consent-based flows.
-    \item Developed \textbf{REST APIs} with \textbf{Express.js} and \textbf{PostgreSQL}; built responsive, mobile-first UI using \textbf{React 19}, \textbf{Tailwind CSS}, \textbf{Framer Motion}, and \textbf{Redux Toolkit} state management.
-\end{itemize}
-
-\subsection{\href{https://fuse-phi.vercel.app/}{\underline{FUSE}} $|$ \normalfont\footnotesize\emph{React, TypeScript, Node.js, Express.js, PostgreSQL, WebSockets, Cloudinary, Redux Toolkit} \hspace*{\fill} \normalfont\small 2025}
-\begin{itemize}
-    \item Built a full-stack social media platform with interest-based communities, trending posts driven by engagement metrics, and \textbf{real-time messaging} via \textbf{WebSockets} with instant text and image sharing.
-    \item Developed \textbf{REST APIs} with \textbf{Node.js/Express.js} and \textbf{PostgreSQL}; integrated \textbf{Cloudinary} CDN for optimized image storage; built responsive mobile-first UI with \textbf{Redux Toolkit} and \textbf{Tailwind CSS}.
+    \item Architected a production-grade full-stack platform integrating the \textbf{Stripe Payment Gateway} (Stripe Checkout API), featuring cryptographic webhook signature verification, idempotent event processing, and automated payment status reconciliation workflows.
+    \item Developed secure multi-factor authentication incorporating email-based \textbf{OTP} delivery via \textbf{Nodemailer}, \textbf{JWT} token management with automated refresh cycles, and secure session state across distributed client sessions.
+    \item Built backend \textbf{RESTful APIs} in \textbf{Express.js} with \textbf{PostgreSQL} for transactional order persistence, paired with a modern, mobile-first \textbf{React 19} frontend styled with \textbf{Tailwind CSS}, and \textbf{Redux Toolkit}.
 \end{itemize}
 
 \subsection{\href{https://pipeline-x-one.vercel.app/}{\underline{PipelineX}} $|$ \normalfont\footnotesize\emph{React, React Flow, Zustand, TypeScript, FastAPI, Python, Tailwind CSS, Framer Motion} \hspace*{\fill} \normalfont\small 2025}
 \begin{itemize}
-    \item Built a full-stack visual workflow builder for designing, connecting, and validating modular AI pipelines and data-processing \textbf{DAGs} with a \textbf{React Flow}-based drag-and-drop editor, unified node abstraction, and dynamic variable Text nodes.
-    \item Developed \textbf{FastAPI} backend for pipeline structure validation, node/edge counting, and DAG constraint enforcement; polished UX with \textbf{Tailwind CSS}, \textbf{Framer Motion} animations, and keyboard-first interactions.
+    \item Built a full-stack visual pipeline builder featuring an interactive node-based drag-and-drop canvas powered by \textbf{React Flow}, supporting custom node abstractions, dynamic handle generation from \texttt{\{\{variables\}\}}, and high-performance canvas state managed via \textbf{Zustand}.
+    \item Developed a high-performance \textbf{Python FastAPI} backend implementing graph algorithms for \textbf{cycle detection} and \textbf{topological sorting} to validate Directed Acyclic Graph (\textbf{DAG}) structure and enforce execution dependency constraints prior to pipeline dispatch.
+    \item Crafted an accessible, keyboard-first UI using \textbf{Tailwind CSS}, optimizing DOM rendering and canvas event handlers to deliver seamless 60 FPS interactions across complex, multi-node workflows.
 \end{itemize}
 
 % --- EDUCATION ---
 \section{Education}
 
-\subsection{Sinhgad College of Engineering, Pune $|$ \normalfont\footnotesize\emph{B.E. Computer Engineering (CGPA: 8.18)} \hspace*{\fill} \normalfont\small 2021 -- 2024}
+\subsection{Sinhgad College of Engineering, Pune $|$ \normalfont\footnotesize\emph{B.E. in Computer Engineering — CGPA: 8.18 / 10} \hspace*{\fill} \normalfont\small 2021 -- 2024}
 
 \end{document}
