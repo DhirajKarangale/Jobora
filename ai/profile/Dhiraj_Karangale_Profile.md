@@ -215,7 +215,7 @@ Building an ambitious local-first personal AI assistant that constructs a centra
 
 ---
 
-### Customer 360 & Next Best Action Engine — Enterprise Multi-Agent AI Copilot (2026)
+### Customer 360 — Enterprise Multi-Agent AI Copilot (2026)
 
 Enterprise customer intelligence platform built for the Snowflake CoCo CLI Hackathon 2026 – GCC Edition. Unifies structured customer/policy records with unstructured calls, chats, and emails through a centralized knowledge base, enabling insurance agents to retrieve full customer context and receive proactive, explainable next-best-action recommendations.
 
