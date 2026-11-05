@@ -52,19 +52,22 @@ Core strengths: agentic AI architecture (LangChain, LangGraph, RAG, multi-agent 
 - Asynchronous Processing, Event-Driven Architecture, Worker-Based Processing
 
 ### AI / ML & Agentic AI Engineering
-- **LLM Frameworks & Orchestration:** LangChain, LangGraph, LLM Gateway, Multi-Provider Failover (Google GenAI, Groq, Anthropic Claude, Snowflake Cortex)
-- **Agent Architecture:** Single-Agent Systems, Multi-Agent Systems, ReAct Agents, Supervisor Patterns, Sequential & Parallel Agents, Human-in-the-Loop, Agent Harness
-- **Agent Memory Systems:** Short-Term Memory, Long-Term Memory, Episodic Memory, Semantic Memory, Persistent Memory, Sliding-Window Memory, Multi-Tier Agent Memory, Contextual Recall, Temporal Retrieval
-- **Retrieval-Augmented Generation (RAG):** Hybrid RAG, Graph-RAG Concepts, Dense/Sparse Retrieval, BM25 Lexical Retrieval, TF-IDF Cosine Similarity, Semantic Ranking, Reranking
+
+- **LLM Fundamentals & Inference:** Large Language Models (LLMs), Transformer Architecture, Tokens, Context Windows, Temperature, Top-p, Top-k, Seed, Fine-Tuning, Model Distillation, Quantization, OpenAI APIs, Anthropic APIs, Gemini APIs, Chat Completions, Streaming, Structured Outputs
+- **LLM Frameworks & Orchestration:** LangChain, LangGraph, LLM Gateway, Model Routing, Multi-Provider Failover (Google GenAI, Groq, Anthropic Claude, Snowflake Cortex), Retry & Fallback Mechanisms
+- **Agent Architecture:** Single-Agent Systems, Multi-Agent Systems, ReAct Agents, Supervisor Patterns, Sequential Agents, Parallel Agents, Human-in-the-Loop, Multi-Step Agent Execution, Agent Harness, Tool Selection & Orchestration, Google ADK, Claude Agent SDK, Model Context Protocol (MCP), Agent-to-Agent Protocol (A2A)
+- **Agent Memory Systems:** Agent Memory, Short-Term Memory, Long-Term Memory, Episodic Memory, Semantic Memory, Persistent Memory, Conversation State Management, Sliding-Window Memory, Multi-Tier Agent Memory, Contextual Recall, Temporal Retrieval, State Management
+- **Retrieval-Augmented Generation (RAG):** Retrieval-Augmented Generation (RAG), Hybrid RAG, Graph-RAG Concepts, Document Loading & Chunking, Dense/Sparse Retrieval, Embeddings, Vector Databases, BM25 Lexical Retrieval, TF-IDF Cosine Similarity, Semantic Retrieval, Semantic Ranking, Reranking, Retrieval Optimization, Information Retrieval Tools, RAG Evaluation
 - **Embeddings & Vector Search:** Snowflake Arctic Embed, Qwen3-Embedding-0.6B, FAISS, Qdrant, Vector Similarity Search, 1024-Dimensional Embeddings, Local Embedding Inference
-- **Prompt & Context Engineering:** Prompt Engineering, Advanced Context Engineering, Context Compaction, Context Minimization, Prompt Caching, Semantic Caching
-- **Tool & Function Calling:** Tool Calling, Function Calling, Tool Definition & Schemas, Tool Selection & Routing, Agent Tool Integration, API & Database Integration
-- **Structured Outputs:** JSON Schema Validation, Output Validation, Pydantic Models
-- **AI Security & Guardrails:** AI Guardrails, Prompt-Injection Defense, Output Sanitization, Data Leakage Prevention, Input/Output Validation, Privacy-by-Design, Data Isolation
+- **Prompt & Context Engineering:** Prompt Engineering, Context Engineering, Advanced Context Engineering, Context Compaction, Context Minimization, Prompt Caching, Semantic Caching, Headroom Management
+- **Token & Context Efficiency:** Token Consumption Optimization, Token-Efficient Prompting, Token Budgeting, Context-Window Optimization, Context Capacity Planning, Request/Response Token Optimization, Cost Optimization, Latency Optimization, Cost & Latency Optimization
+- **Tool & Function Calling:** Function Calling, Tool Calling, Tool Definition & Schemas, Tool Selection & Routing, Tool Selection & Routing, Tool Error Handling, Tool & API Security, Agent Tool Integration, Tool Selection & Orchestration, API & Database Integration, Web Search Tools
+- **Structured Outputs:** Structured Outputs, JSON Schema Validation, Output Validation, Input/Output Validation, Pydantic Models
+- **AI Security & Guardrails:** AI Guardrails, Prompt-Injection Protection, Prompt-Injection Defense, Output Sanitization, Data Leakage Prevention, Tool & API Security, Authentication & Authorization, Input/Output Validation, Secure Tool Execution, Privacy-by-Design, Data Isolation
 - **Natural Language Processing:** Text-to-SQL (NL2SQL), Semantic Analysis, Claim Verification, Requirement Classification, Terminology Mapping
 - **Multimodal AI:** OCR (Tesseract, RapidOCR), Vision-Language Models (VLM), Image Quality Assessment, Bounding-Box Detection, Layout-Aware OCR, Perceptual Hashing, Image Forensics, AI Image Detection
 - **Voice AI & Speech:** Voice AI, Speech-to-Text (STT), Text-to-Speech (TTS), Faster-Whisper, Real-Time Voice Interaction, Audio Processing
-- **LLM Evaluation & Observability:** Evaluation Harnesses, AI-as-a-Judge, Agent Tracing, LLM Observability, Token/Latency Monitoring, Cost Optimization
+- **LLM Evaluation & Observability:** LLM Evaluation (Evals), Evaluation Harness, Evaluation Harnesses, AI-as-a-Judge, Agent Tracing, LLM Observability, Logging & Monitoring, Performance Evaluation, Token Consumption Monitoring, Token/Latency Monitoring, Context-Window & Headroom Monitoring, Cost & Latency Monitoring, Cost Optimization
 - **Protocols & Standards:** Model Context Protocol (MCP), Agent-to-Agent Protocol (A2A), Google ADK, Claude Agent SDK
 - **Models & Platforms:** Claude (Anthropic), Google Gemini, Hugging Face, PyTorch, Transformers, Faster-Whisper
 
