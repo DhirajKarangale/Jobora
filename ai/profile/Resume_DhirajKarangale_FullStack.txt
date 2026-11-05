@@ -86,7 +86,7 @@
 \begin{skillslist}
     \item \textbf{Languages:} TypeScript, JavaScript (ES6+), Java, SQL, HTML5, CSS3
     \item \textbf{Frontend Engineering:} React (18/19), Redux Toolkit, React Query, Zustand, React Flow (Node Canvas / Visual Workflows), Webpack Module Federation (Micro-Frontends), Vite, Tailwind CSS, Bootstrap 5, Framer Motion, Real-Time UI, Responsive Web Design
-    \item \textbf{Backend Engineering:} Node.js, Express.js, Java Spring Boot (Spring Security, Spring Data JPA),  RESTful API Design, gRPC, Payment Gateways (Stripe API, Webhooks), Real-Time Messaging (WebSockets, SSE), Browser Automation (Puppeteer)
+    \item \textbf{Backend Engineering:} Java (Spring Boot, Spring Security, Spring Data JPA), Node.js, Express.js, RESTful API Design, Microservices, gRPC, Payment Gateways (Stripe API, Webhooks), Real-Time Messaging (WebSockets, SSE), Browser Automation (Puppeteer)
     \item \textbf{Databases \& Cloud:} PostgreSQL, MySQL, Microsoft SQL Server (MSSQL), MongoDB, Redis (Streams, Pub/Sub), AWS (S3, Parameter Store), GCP, Docker, Jenkins CI/CD, Git, Database Indexing, Query Optimization, Schema Design
     \item \textbf{Architecture \& Fundamentals:} System Design (HLD/LLD), Microservices Architecture, Distributed Systems, Role-Based Access Control (RBAC), OAuth 2.0, JWT, Data Structures \& Algorithms, Graph Algorithms, DAG Workflows
 \end{skillslist}
@@ -107,10 +107,10 @@
 \begin{itemize}
     \item Designed and shipped a reusable React export engine converting complex dashboards into editable PowerPoint presentations and multi-page PDFs via DOM traversal and chart metadata pipelines — adopted across \textbf{7+ enterprise projects by 3 cross-functional teams} and published on npm (\href{https://www.npmjs.com/package/pdf-ppt-export-react}{\underline{\textbf{pdf-ppt-export-react}}}, 1.1K+ downloads).
     \item Architected independently deployable \textbf{Micro Frontends (MFEs)} using \textbf{React} and \textbf{Webpack Module Federation}, integrating disparate enterprise workflows into a unified portal with automated \textbf{Jenkins CI/CD} build and deployment pipelines.
+    \item Developed backend \textbf{Java Spring Boot} microservices with \textbf{gRPC} and \textbf{RESTful APIs} for high-throughput inter-service communication; optimized \textbf{MySQL} query execution plans and database indexing strategies to deliver a \textbf{25\% application performance improvement}.
     \item Engineered an automated document generation platform slashing PDD turnaround from hours to under \textbf{5 minutes} (\textbf{95\%+ reduction}) using a \textbf{React/Tailwind} MFE with real-time \textbf{SSE}, \textbf{Python FastAPI} backend, \textbf{Redis Streams consumer groups}, and async workers with \textbf{MSSQL} and \textbf{AWS S3} persistence.
-    \item Architected an enterprise database catalog across \textbf{2,500+ tables} using \textbf{Python} and \textbf{PostgreSQL system catalogs} for automated schema extraction, constraint mapping, and Mermaid ER diagram generation with MD5-based \textbf{schema drift detection}.
-    \item Built a multi-stage query execution pipeline with a two-tier cache (\textbf{BM25} lexical retrieval + \textbf{TF-IDF} cosine similarity) for SQL reuse, deterministic schema auto-qualification, programmatic SQL syntax validation, and strict \textbf{RBAC} query guardrails.
-    \item Built schema-driven ingestion pipelines with bounding-box \textbf{OCR} and table parsing (\textbf{Google Buildathon winner}, \textbf{80\%} faster processing); developed backend \textbf{Java Spring Boot} microservices with \textbf{gRPC} communication, optimizing MySQL queries and indexing to deliver a \textbf{25\%} performance improvement.
+    \item Architected an enterprise database catalog across \textbf{2,500+ tables} using \textbf{PostgreSQL system catalogs} for automated schema extraction; built a multi-stage query pipeline with two-tier caching (\textbf{BM25} + \textbf{TF-IDF}), deterministic SQL validation, and strict \textbf{RBAC} query guardrails.
+    \item Built schema-driven ingestion pipelines with bounding-box \textbf{OCR} and table parsing (\textbf{Google Buildathon winner}), automating structured document data extraction and reducing business processing time by \textbf{80\%}.
 \end{itemize}
 
 \subsection{Saral Group $|$ \normalfont\footnotesize\emph{Developer Intern} \hspace*{\fill} \normalfont\small Jan 2024 -- Jun 2024}
