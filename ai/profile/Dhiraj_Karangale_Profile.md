@@ -63,6 +63,7 @@ Core strengths: agentic AI architecture (LangChain, LangGraph, RAG, multi-agent 
 - **AI Security & Guardrails:** AI Guardrails, Prompt-Injection Defense, Output Sanitization, Data Leakage Prevention, Input/Output Validation, Privacy-by-Design, Data Isolation
 - **Natural Language Processing:** Text-to-SQL (NL2SQL), Semantic Analysis, Claim Verification, Requirement Classification, Terminology Mapping
 - **Multimodal AI:** OCR (Tesseract, RapidOCR), Vision-Language Models (VLM), Image Quality Assessment, Bounding-Box Detection, Layout-Aware OCR, Perceptual Hashing, Image Forensics, AI Image Detection
+- **Voice AI & Speech:** Voice AI, Speech-to-Text (STT), Text-to-Speech (TTS), Faster-Whisper, Real-Time Voice Interaction, Audio Processing
 - **LLM Evaluation & Observability:** Evaluation Harnesses, AI-as-a-Judge, Agent Tracing, LLM Observability, Token/Latency Monitoring, Cost Optimization
 - **Protocols & Standards:** Model Context Protocol (MCP), Agent-to-Agent Protocol (A2A), Google ADK, Claude Agent SDK
 - **Models & Platforms:** Claude (Anthropic), Google Gemini, Hugging Face, PyTorch, Transformers, Faster-Whisper
@@ -203,13 +204,13 @@ Building an ambitious local-first personal AI assistant that constructs a centra
 - Built proactive daily suggestions and briefing workflows — project-continuation agendas, unfinished-task summaries, personalized daily plans, and curated news/weather context.
 - Developed contextual multi-turn AI chat with WebSocket token streaming, session history, and memory-grounded responses.
 - Designed a layered memory architecture: short-term conversational/session state, long-term persistent activity memory, and agent memory for contextual continuity.
-- Integrated local Qwen3-Embedding-0.6B inference (1024-dimensional embeddings) and local Faster-Whisper speech-to-text for fully privacy-oriented voice interaction.
+- Integrated end-to-end Voice AI combining Speech-to-Text (STT via local Faster-Whisper) and Text-to-Speech (TTS) alongside local Qwen3-Embedding-0.6B inference (1024-dimensional embeddings) for fully privacy-oriented voice interaction.
 - Implemented context minimization and privacy guardrails — retrieving only relevant excerpts before cloud LLM inference; centralized sensitive credentials in an encrypted Vault.
 - Architected cache-aware chat and retrieval flows using Redis for transient state, queue coordination, and semantic caching with duplicate-query suppression.
 - Designed asynchronous event-driven processing with Redis Streams, batch ingestion, worker orchestration, retry-aware job processing, and decoupled microservice boundaries.
 - Built a modular microservice architecture: Rust-based desktop operations (Tauri 2), FastAPI AI services, Redis Streams event processing, and centralized config/logging.
 
-**Tech:** Python, Rust, React, TypeScript, Tauri 2, FastAPI, LangChain, LangGraph, Agentic AI, RAG, Multimodal Retrieval, Qdrant, Qwen3-Embedding-0.6B, PyTorch, Hugging Face Transformers, Tesseract OCR, OpenCV, VLM, Faster-Whisper, Redis, Redis Streams, WebSockets, SQLite, SQLCipher, Local-First AI, Agent Memory, Semantic Caching, Prompt Caching, Structured Outputs, Tool Calling, AI Guardrails, Privacy-by-Design, RBAC, Microservices, Event-Driven Architecture.
+**Tech:** Python, Rust, React, TypeScript, Tauri 2, FastAPI, LangChain, LangGraph, Agentic AI, RAG, Multimodal Retrieval, Qdrant, Qwen3-Embedding-0.6B, PyTorch, Hugging Face Transformers, Tesseract OCR, OpenCV, VLM, Voice AI (Speech-to-Text & Text-to-Speech), Faster-Whisper, Redis, Redis Streams, WebSockets, SQLite, SQLCipher, Local-First AI, Agent Memory, Semantic Caching, Prompt Caching, Structured Outputs, Tool Calling, AI Guardrails, Privacy-by-Design, RBAC, Microservices, Event-Driven Architecture.
 
 **Links:** [GitHub](https://github.com/DhirajKarangale/Mira)
 
@@ -410,6 +411,7 @@ Job-matching platform for students to discover part-time and internship opportun
 ### Hackathons & Engineering Challenges
 - **Google Buildathon** — Winner, Best GenAI Solution Award.
 - **HackWithInfy** — Finalist.
+- **Meta Global AI Developer Hackathon** — Participant.
 - **Snowflake CoCo CLI Hackathon 2026 (GCC Edition)** — Participant.
 - **Push to Prod 2026 (Anthropic Claude Hackathon)** — Selected builder (1 of 150 from 5,000+).
 - **Google AI Builder Cup** — Participant.
