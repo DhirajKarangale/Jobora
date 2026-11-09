@@ -146,24 +146,24 @@ def apply_hard_filters(structured_data: Dict[str, Any], raw_text: str = "") -> D
                 "eligible": "NO",
                 "reason": f"Ineligible: JD explicitly requires {min_req_exp}+ years (hard ceiling is {exp_hard_ceiling} years, candidate has {candidate_exp})."
             }
-
-    # 3. High experience patterns in raw text as fallback
-    #    Catches cases where the structured field missed it.
-    full_text_lower = raw_text[:5000].lower() if raw_text else ""
-    high_exp_patterns = [
-        r'\b([5-9]|\d{2,})\s*\+\s*(?:years?|yrs?)',
-        r'\bminimum\s*of\s*([5-9]|\d{2,})\s*(?:years?|yrs?)',
-    ]
-    for pat in high_exp_patterns:
-        match = re.search(pat, full_text_lower)
-        if match:
-            found_val = int(match.group(1))
-            if found_val >= exp_hard_ceiling:
-                return {
-                    "override": True,
-                    "eligible": "NO",
-                    "reason": f"Ineligible: Raw text contains high experience requirement: '{match.group(0)}'."
-                }
+    else:
+        # 3. High experience patterns in raw text as fallback ONLY when experience was not structured.
+        # Ensure we only match genuine candidate experience requirements, NOT company history or boilerplate.
+        full_text_lower = raw_text[:5000].lower() if raw_text else ""
+        candidate_req_patterns = [
+            r'(?:requires?|minimum|at\s+least|with)\s+(?:of\s+)?([5-9]|\d{2,})\s*\+\s*(?:years?|yrs?)(?:\s+(?:of\s+)?(?:relevant\s+|work\s+|professional\s+|software\s+)?experience)?',
+            r'\b([5-9]|\d{2,})\s*\+\s*(?:years?|yrs?)\s+(?:of\s+)?(?:relevant\s+|work\s+|professional\s+|software\s+|hands-on\s+)?experience',
+        ]
+        for pat in candidate_req_patterns:
+            match = re.search(pat, full_text_lower)
+            if match:
+                found_val = int(match.group(1))
+                if found_val >= exp_hard_ceiling:
+                    return {
+                        "override": True,
+                        "eligible": "NO",
+                        "reason": f"Ineligible: Raw text explicitly requires {found_val}+ years candidate experience: '{match.group(0)}'."
+                    }
 
     return {"override": False}
 
@@ -175,6 +175,46 @@ def apply_hard_filters(structured_data: Dict[str, Any], raw_text: str = "") -> D
 # This catches obvious mismatches (C++, Golang, Android, CUDA, etc.)
 # BEFORE the LLM eligibility call, providing a reliable safety net.
 # ---------------------------------------------------------------------------
+
+def _matches_any_skill(cs: str, allowed_skills: set) -> bool:
+    """Check if a core skill string (or its components) matches candidate skills."""
+    if not cs:
+        return False
+    cs_clean = cs.lower().strip()
+    
+    # Direct match or exact substring
+    if cs_clean in allowed_skills:
+        return True
+        
+    for candidate_skill in allowed_skills:
+        if len(cs_clean) >= 3 and len(candidate_skill) >= 3:
+            if cs_clean == candidate_skill or candidate_skill in cs_clean or cs_clean in candidate_skill:
+                return True
+                
+    # Sub-tokens for composite skills (e.g. "React / TypeScript", "Java, Spring Boot", "Python or Go")
+    sub_tokens = [s.strip() for s in re.split(r'[/,&()]|\bor\b|\band\b', cs_clean) if s.strip()]
+    if len(sub_tokens) > 1:
+        for token in sub_tokens:
+            if len(token) >= 2:
+                if token in allowed_skills:
+                    return True
+                for candidate_skill in allowed_skills:
+                    if len(token) >= 3 and len(candidate_skill) >= 3:
+                        if token in candidate_skill or candidate_skill in token:
+                            return True
+                            
+    # Strip common non-skill suffixes (e.g. "React Development" -> "React", "Spring Boot Framework" -> "Spring Boot")
+    stripped = re.sub(r'\b(development|developer|engineer|programming|framework|library|stack|technologies|tools)\b', '', cs_clean).strip()
+    if stripped and stripped != cs_clean and len(stripped) >= 3:
+        if stripped in allowed_skills:
+            return True
+        for candidate_skill in allowed_skills:
+            if len(stripped) >= 3 and len(candidate_skill) >= 3:
+                if stripped in candidate_skill or candidate_skill in stripped:
+                    return True
+
+    return False
+
 
 def check_core_skill_overlap(structured_data: Dict[str, Any], allowed_skills: set) -> Dict[str, Any]:
     """Check if the candidate has meaningful overlap with the job's core skills.
@@ -188,7 +228,6 @@ def check_core_skill_overlap(structured_data: Dict[str, Any], allowed_skills: se
     core_skills = structured_data.get("core_skills", [])
     
     # If the structuring step didn't produce core_skills, skip this check
-    # (backward compat with old schema that used "skills")
     if not core_skills or not isinstance(core_skills, list):
         return {"override": False}
     
@@ -200,17 +239,7 @@ def check_core_skill_overlap(structured_data: Dict[str, Any], allowed_skills: se
     matched = []
     unmatched = []
     for cs in cleaned_core:
-        found = False
-        for candidate_skill in allowed_skills:
-            # Exact match or substring containment (bidirectional)
-            if cs == candidate_skill:
-                found = True
-                break
-            if len(cs) >= 3 and len(candidate_skill) >= 3:
-                if cs in candidate_skill or candidate_skill in cs:
-                    found = True
-                    break
-        if found:
+        if _matches_any_skill(cs, allowed_skills):
             matched.append(cs)
         else:
             unmatched.append(cs)
@@ -405,10 +434,8 @@ def load_all_resumes() -> str:
     import os
     profile_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "profile"))
     resume_files = {
-        "General": "Resume_DhirajKarangale.txt",
         "AI": "Resume_DhirajKarangale_AI.txt",
-        "MERN": "Resume_DhirajKarangale_FullStack.txt",
-        "Java": "Resume_DhirajKarangale_Java.txt"
+        "FullStack": "Resume_DhirajKarangale_FullStack.txt"
     }
     
     combined_text = ""
@@ -417,7 +444,8 @@ def load_all_resumes() -> str:
         if os.path.exists(filepath):
             with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()
-                combined_text += f"\n\n--- RESUME: {name} ---\n\n{content}"
+                desc = "AI Full-Stack (React + Node.js + Python + LangChain/LangGraph + Agentic AI + RAG)" if name == "AI" else "Full-Stack Software Engineering (React + Node.js + Java / Spring Boot + Microservices + PostgreSQL/MySQL)"
+                combined_text += f"\n\n--- RESUME: {name} ({desc}) ---\n\n{content}"
     
     return combined_text
 
@@ -431,18 +459,23 @@ def resume_selector_node(state: JDState) -> JDState:
     
     llm_result = run_llm_json_step(state.get("current_text", ""), prompt, ELIGIBILITY_MODELS)
     
-    fit_resume_raw = str(llm_result.get("fit_resume") or "General").strip()
+    fit_resume_raw = str(llm_result.get("fit_resume") or "").strip()
     reasoning = str(llm_result.get("reasoning") or "")
     
-    valid_resumes = ["AI", "Java", "MERN", "General"]
-    
     eligibility_result = dict(state.get("eligibility_result", {}))
+    fit_upper = fit_resume_raw.upper().replace(" ", "").replace("_", "").replace("-", "")
     
-    if fit_resume_raw == "NONE":
+    if "NONE" in fit_upper or fit_upper in ["NO", "INELIGIBLE", "FALSE"]:
         eligibility_result["Eligible"] = "NO"
+        eligibility_result["fit_resume"] = "NONE"
         eligibility_result["Reasoning"] = eligibility_result.get("Reasoning", "") + f" | Resume Selector Rejected: {reasoning}"
+    elif "AI" in fit_upper:
+        fit_resume = "AI"
+        eligibility_result["fit_resume"] = fit_resume
+        eligibility_result["Reasoning"] = eligibility_result.get("Reasoning", "") + f" | Selected Resume: {fit_resume} - {reasoning}"
     else:
-        fit_resume = fit_resume_raw if fit_resume_raw in valid_resumes else "General"
+        # FullStack covers Full-Stack, Frontend, Backend, Java, MERN, Software Engineer
+        fit_resume = "FullStack"
         eligibility_result["fit_resume"] = fit_resume
         eligibility_result["Reasoning"] = eligibility_result.get("Reasoning", "") + f" | Selected Resume: {fit_resume} - {reasoning}"
         

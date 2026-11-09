@@ -13,11 +13,14 @@ The AI directory contains a powerful background worker application that automati
 ## How it works
 1. **Listen:** The worker continuously listens to a Redis message queue for new job IDs pushed by the backend.
 2. **Fetch:** When a job is picked up, it fetches the raw job details from the PostgreSQL database.
-3. **Analyze:** It uses a 3-step AI pipeline to:
+3. **Analyze & Match:** It uses a 4-step AI pipeline to:
    - **Clean:** Remove HTML, formatting artifacts, and noise from the raw text while preserving technical details.
    - **Structure:** Extract key fields into a strict JSON format based on the cleaned text.
-   - **Evaluate:** Compare the job requirements against a local candidate profile (`profile/Dhiraj_Karangale_Profile.md`) to determine if the candidate is a match.
-4. **Update:** It saves the structured JSON data and the boolean eligibility status back to the PostgreSQL database and acknowledges the message in Redis.
+   - **Evaluate:** Compare job requirements against the candidate profile (`profile/Dhiraj_Karangale_Profile.md`) using multi-layer filtering (experience ceiling, core skill overlap, and LLM semantic evaluation).
+   - **Resume Selection:** Automatically selects the best-fitting resume variant (`AI` or `FullStack`) for eligible roles:
+     - `AI`: AI Full-Stack roles (React + Node.js + Python + LangChain/LangGraph + Agentic AI + RAG).
+     - `FullStack`: Full-Stack / Software Engineering roles (React + Node.js + Java / Spring Boot + Microservices + PostgreSQL/MySQL).
+4. **Update:** It saves the structured JSON data and the selected `fit_resume` back to PostgreSQL and acknowledges the message in Redis.
 
 ## Architecture
 The application is designed for high throughput, reliability, and precision:
