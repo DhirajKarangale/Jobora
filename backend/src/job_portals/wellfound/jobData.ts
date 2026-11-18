@@ -10,9 +10,11 @@ async function extractData(page: Page, jobId: string) {
   return await page.evaluate(() => {
     // 1. Locate the Slide-In Container to avoid extracting from the background feed
     const submitBtn = document.querySelector('button[data-test="JobDescriptionSlideIn--SubmitButton"]');
+    const successBanner = document.querySelector('div.bg-green-600, div[class*="bg-green-"]');
+    const anchor = submitBtn || successBanner;
     let container: Element | Document = document;
-    if (submitBtn) {
-        let curr: Element | null = submitBtn;
+    if (anchor) {
+        let curr: Element | null = anchor;
         while (curr && curr.tagName !== 'BODY') {
             if (curr.querySelector('h1')) {
                 container = curr;
@@ -75,37 +77,126 @@ async function extractData(page: Page, jobId: string) {
   });
 }
 
+async function isApplicationSubmitted(page: Page): Promise<boolean> {
+  try {
+    return await page.evaluate(() => {
+      const normalize = (str: string) => str.replace(/\s+/g, " ").trim().toLowerCase();
+      const phrases = [
+        "congrats! your application has been submitted",
+        "your application has been submitted",
+        "application has been submitted",
+        "application submitted"
+      ];
+
+      // 1. Check green banner elements (e.g. div.bg-green-600)
+      const greenElements = Array.from(document.querySelectorAll('div.bg-green-600, div[class*="bg-green-"], div[class*="bg-emerald-"]'));
+      for (const el of greenElements) {
+        const text = normalize(el.textContent || "");
+        if (phrases.some(p => text.includes(p))) {
+          return true;
+        }
+      }
+
+      // 2. Check all container elements
+      const elements = Array.from(document.querySelectorAll('div, p, span, h1, h2, h3'));
+      for (const el of elements) {
+        const text = normalize(el.textContent || "");
+        if (phrases.some(p => text.includes(p))) {
+          return true;
+        }
+      }
+
+      // 3. Check body text
+      const bodyText = normalize(document.body.innerText || document.body.textContent || "");
+      if (phrases.some(p => bodyText.includes(p))) {
+        return true;
+      }
+
+      // 4. Check if button / badge text says "Applied"
+      const buttons = Array.from(document.querySelectorAll('button, a, [data-test], [class*="badge"], [class*="tag"]'));
+      for (const btn of buttons) {
+        const btnText = normalize(btn.textContent || "");
+        if (btnText === "applied" || btnText === "application submitted") {
+          return true;
+        }
+      }
+
+      return false;
+    });
+  } catch {
+    return false;
+  }
+}
+
 async function tryApplyJob(page: Page): Promise<boolean> {
   try {
     await delay(WAIT_TIME);
 
-    const submitBtnSelector = 'button[data-test="JobDescriptionSlideIn--SubmitButton"]';
-    const applyBtn = await page.$(submitBtnSelector);
-
-    if (!applyBtn) return false;
-
-    const isDisabled = await page.evaluate((btn) => (btn as HTMLButtonElement).disabled, applyBtn);
-    if (isDisabled) return false;
-
-    await page.evaluate((btn) => (btn as HTMLButtonElement).click(), applyBtn);
-
-    await delay(WAIT_TIME);
-
-    try {
-      await page.waitForFunction(() => {
-        const successDiv = document.querySelector('div.bg-green-600');
-        if (successDiv && successDiv.textContent?.includes('Congrats! Your application has been submitted.')) {
-          return true;
-        }
-        return document.body.textContent?.includes('Congrats! Your application has been submitted.') || false;
-      }, { timeout: 7000 });
-      await delay(WAIT_TIME);
+    // 1. Check if the job is ALREADY applied on page load
+    if (await isApplicationSubmitted(page)) {
+      console.log("[Wellfound] Application is already submitted (detected success banner on page load).");
       return true;
-    } catch {
-      await delay(WAIT_TIME);
+    }
+
+    const submitBtnSelector = 'button[data-test="JobDescriptionSlideIn--SubmitButton"]';
+    let applyBtn: import('puppeteer-core').ElementHandle<Element> | null = await page.$(submitBtnSelector);
+
+    // Fallback: look for other potential apply buttons inside slide-in container or page
+    if (!applyBtn) {
+      const applyBtnHandle = await page.evaluateHandle(() => {
+        const btns = Array.from(document.querySelectorAll('button[data-test*="SubmitButton"], button'));
+        return btns.find(b => {
+          const t = (b.textContent || "").trim().toLowerCase();
+          return t === 'apply' || t === 'apply now' || t === 'quick apply' || t === 'submit application';
+        }) || null;
+      });
+      applyBtn = applyBtnHandle.asElement() as import('puppeteer-core').ElementHandle<Element> | null;
+    }
+
+    if (!applyBtn) {
+      // Re-check if already submitted
+      if (await isApplicationSubmitted(page)) {
+        return true;
+      }
       return false;
     }
+
+    const isDisabled = await page.evaluate((btn) => (btn as HTMLButtonElement).disabled, applyBtn);
+    if (isDisabled) {
+      if (await isApplicationSubmitted(page)) {
+        return true;
+      }
+      return false;
+    }
+
+    // Scroll into view & click with real CDP mouse events, fallback to evaluate click
+    try {
+      await page.evaluate((btn) => {
+        (btn as HTMLElement).scrollIntoView({ behavior: 'instant', block: 'center' });
+      }, applyBtn);
+      await delay(300);
+      await applyBtn.click({ delay: 50 });
+    } catch {
+      await page.evaluate((btn) => (btn as HTMLButtonElement).click(), applyBtn);
+    }
+
+    // 2. Poll for confirmation banner
+    const maxWaitMs = 10000;
+    const intervalMs = 500;
+    const iterations = maxWaitMs / intervalMs;
+
+    for (let i = 0; i < iterations; i++) {
+      await delay(intervalMs);
+      if (await isApplicationSubmitted(page)) {
+        console.log("[Wellfound] Application confirmed via success banner!");
+        await delay(WAIT_TIME);
+        return true;
+      }
+    }
+
+    return await isApplicationSubmitted(page);
   } catch (error) {
+    console.error("[Wellfound] Error in tryApplyJob:", error);
     return false;
   }
 }

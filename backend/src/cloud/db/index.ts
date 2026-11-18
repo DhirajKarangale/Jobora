@@ -145,10 +145,28 @@ export async function saveEligibleAndAppliedJob(data: DataJob): Promise<string> 
   const cleanJobId = data.jobId ? String(data.jobId).trim().toLowerCase() : null;
 
   if (cleanSourceJobId && await isJobExisting(cleanSourceJobId)) {
-    return "";
+    const updateQuery = `
+      UPDATE jobs
+      SET applied_date = COALESCE(applied_date, $1),
+          is_auto_apply = true,
+          fit_resume = CASE WHEN fit_resume IS NULL OR fit_resume = 'NONE' THEN 'General' ELSE fit_resume END
+      WHERE LOWER(TRIM(source_job_id)) = $2 OR LOWER(TRIM(external_job_id)) = $2
+      RETURNING id;
+    `;
+    const { rows } = await pool.query(updateQuery, [new Date(), cleanSourceJobId]);
+    return rows[0]?.id ? String(rows[0].id) : "";
   }
   if (cleanJobId && await isJobExisting(cleanJobId)) {
-    return "";
+    const updateQuery = `
+      UPDATE jobs
+      SET applied_date = COALESCE(applied_date, $1),
+          is_auto_apply = true,
+          fit_resume = CASE WHEN fit_resume IS NULL OR fit_resume = 'NONE' THEN 'General' ELSE fit_resume END
+      WHERE LOWER(TRIM(source_job_id)) = $2 OR LOWER(TRIM(external_job_id)) = $2
+      RETURNING id;
+    `;
+    const { rows } = await pool.query(updateQuery, [new Date(), cleanJobId]);
+    return rows[0]?.id ? String(rows[0].id) : "";
   }
 
   const query = `

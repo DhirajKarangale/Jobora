@@ -6,31 +6,149 @@ import { setTimeout as delay } from "node:timers/promises";
 import { DataJob, CURSHORT_URL_JOB, CURSHORT_URL_JOB_SEARCH, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/automationState.ts";
 
+async function safeClosePage(page: Page | null | undefined): Promise<void> {
+  if (!page) return;
+  try {
+    if (!page.isClosed()) {
+      await page.close();
+    }
+  } catch (err: any) {
+    if (
+      !err?.message?.includes("No target with given id found") &&
+      !err?.message?.includes("Target closed")
+    ) {
+      console.warn("[Cutshort] Notice during page.close:", err.message);
+    }
+  }
+}
+
+async function dismissInterferingModals(page: Page): Promise<boolean> {
+  try {
+    const dismissed = await page.evaluate(() => {
+      const modalSelectors = [
+        "#modal__content",
+        "div[role='dialog']",
+        "div[aria-modal='true']",
+        ".modal",
+        "div[class*='modal__']",
+        "div[class*='Modal_']",
+        "div[class*='dialog_']",
+        "div[class*='Dialog_']"
+      ];
+
+      const allModals = Array.from(
+        document.querySelectorAll(modalSelectors.join(", "))
+      ).filter((m) => {
+        const el = m as HTMLElement;
+        return el.offsetWidth > 0 || el.offsetHeight > 0;
+      });
+
+      const actionKeywords = [
+        "skip",
+        "close",
+        "continue",
+        "done",
+        "got it",
+        "dismiss",
+        "no thanks",
+        "cancel",
+        "maybe later",
+        "remind me later",
+        "not now"
+      ];
+
+      for (const modal of allModals) {
+        const buttons = Array.from(modal.querySelectorAll("button, a"));
+        const hasSendButton = buttons.some((b) => {
+          const t = (b.textContent || "").trim().toLowerCase();
+          return t === "send" || t === "send application";
+        });
+
+        // Do not dismiss active apply/send modal
+        if (hasSendButton) {
+          continue;
+        }
+
+        // 1. Search for buttons with action keywords: close, skip, continue, etc.
+        const actionBtn = buttons.find((b) => {
+          const t = (b.textContent || "").trim().toLowerCase();
+          return actionKeywords.some((kw) => t === kw || t.startsWith(kw) || t.includes(kw));
+        }) as HTMLElement;
+
+        if (actionBtn && (actionBtn.offsetWidth > 0 || actionBtn.offsetHeight > 0)) {
+          actionBtn.click();
+          return true;
+        }
+
+        // 2. Look for explicit close icon buttons
+        const closeIconBtn = modal.querySelector(
+          'button[aria-label="Close"], button[aria-label="close"], .close, button.close, [data-dismiss="modal"], svg[data-icon="close"], i.fa-close, i.fa-times'
+        ) as HTMLElement;
+
+        if (closeIconBtn && (closeIconBtn.offsetWidth > 0 || closeIconBtn.offsetHeight > 0)) {
+          closeIconBtn.click();
+          return true;
+        }
+
+        // 3. Check for standalone icon/SVG buttons without text
+        const svgBtn = buttons.find((b) => {
+          const hasSvg = b.querySelector("svg");
+          const text = (b.textContent || "").trim();
+          return hasSvg && text.length === 0;
+        }) as HTMLElement;
+
+        if (svgBtn && (svgBtn.offsetWidth > 0 || svgBtn.offsetHeight > 0)) {
+          svgBtn.click();
+          return true;
+        }
+      }
+
+      // Check feedback modal specifically
+      const feedbackModal = document.getElementById("modal__content");
+      if (feedbackModal) {
+        const btns = Array.from(feedbackModal.querySelectorAll("button, a"));
+        const skip = btns.find((b) => {
+          const t = (b.textContent || "").trim().toLowerCase();
+          return actionKeywords.some((kw) => t === kw || t.includes(kw));
+        }) as HTMLElement;
+        if (skip) {
+          skip.click();
+          return true;
+        }
+      }
+
+      return false;
+    });
+
+    if (dismissed) {
+      console.log("[Cutshort] Dismissed interfering modal.");
+      await delay(1000);
+      return true;
+    }
+
+    return false;
+  } catch (err) {
+    return false;
+  }
+}
+
 export default async function cutshort(resilientBrowser: ResilientBrowser): Promise<void> {
   const page = await resilientBrowser.newPage();
   try {
     await page.goto(CURSHORT_URL_JOB, { waitUntil: "networkidle2", timeout: 60000 });
     await delay(WAIT_TIME);
 
+    // Dismiss any initial modal (feedback, survey, update prompt, etc.)
+    await dismissInterferingModals(page);
+
     const jobContainersCount = await page.evaluate(() => {
       return document.querySelectorAll('h3 a[href*="/job/"]').length;
     });
 
-    // Check strictly for the "Submit feedback" modal and dismiss it
-    await page.evaluate(() => {
-      const modal = document.getElementById('modal__content');
-      if (modal && modal.textContent?.includes('Submit feedback to companies')) {
-        const buttons = Array.from(modal.querySelectorAll('button'));
-        const skipButton = buttons.find(b => b.textContent?.trim() === 'Skip');
-        if (skipButton) {
-          (skipButton as HTMLElement).click();
-        }
-      }
-    });
-    
-    await delay(1000);
-
     for (let i = 0; i < jobContainersCount; i++) {
+      // Check and dismiss any non-apply modal that may have popped up
+      await dismissInterferingModals(page);
+
       const jobData = await page.evaluate(async (index) => {
         const titleLinks = document.querySelectorAll('h3 a[href*="/job/"]');
         const titleLink = titleLinks[index];
@@ -152,6 +270,9 @@ export default async function cutshort(resilientBrowser: ResilientBrowser): Prom
 
       await delay(WAIT_TIME);
 
+      // Dismiss any feedback or rating modal that appeared after applying
+      await dismissInterferingModals(page);
+
       if (applyStatus === 'applied') {
         await saveEligibleAndAppliedJob(dataToSave);
         incrementJobsAutoApplied();
@@ -165,8 +286,8 @@ export default async function cutshort(resilientBrowser: ResilientBrowser): Prom
       }
     }
   } catch (error) {
-    // console.error("Cutshort Automation Error:", error);
+    console.error("[Cutshort] Automation error:", error);
   } finally {
-    await page.close();
+    await safeClosePage(page);
   }
 }

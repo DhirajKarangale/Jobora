@@ -83,41 +83,190 @@ async function extractCompanyName(page: Page) {
   });
 }
 
-async function extractRole(page: Page) {
-  return page.evaluate(() => {
-    const roleEl = document.querySelector('div[data-display-contents="true"] p');
-    if (roleEl && roleEl.textContent) {
-       return roleEl.textContent.trim();
+async function extractRole(page: Page, companyName?: string | null) {
+  return page.evaluate((compName) => {
+    const cleanComp = (compName || "").trim().toLowerCase();
+
+    const noiseTerms = [
+      "·",
+      "ago",
+      "applicant",
+      "clicked apply",
+      "responses managed",
+      "reposted",
+      "promoted",
+      "easy apply",
+      "apply on company website",
+      "full-time",
+      "part-time",
+      "contract",
+      "temporary",
+      "internship",
+      "on-site",
+      "hybrid",
+      "remote",
+      "view job",
+      "save job",
+      "more options",
+      "sign in",
+      "join now",
+      "about the job",
+      "company website",
+      "verified job"
+    ];
+
+    // 1. Check dedicated job title selectors (traditional LinkedIn UI)
+    const titleSelectors = [
+      "h1.job-details-jobs-unified-top-card__job-title",
+      "h1.t-24",
+      "h1.t-bold",
+      ".job-details-jobs-unified-top-card__job-title",
+      ".jobs-unified-top-card__job-title",
+      ".top-card-layout__title",
+      ".topcard__title",
+      "h1[class*='job-title']",
+      "h2[class*='job-title']"
+    ];
+
+    for (const sel of titleSelectors) {
+      const el = document.querySelector(sel);
+      if (el) {
+        const text = (el.textContent || "").trim();
+        const lower = text.toLowerCase();
+        if (
+          text.length >= 3 &&
+          (!cleanComp || (lower !== cleanComp && !cleanComp.includes(lower))) &&
+          !noiseTerms.some((term) => lower.includes(term))
+        ) {
+          return text;
+        }
+      }
     }
 
-    const h1s = Array.from(document.querySelectorAll('h1'));
+    // 2. Check any h1 element on the page (excluding navigation/header)
+    const h1s = Array.from(document.querySelectorAll("h1"));
     for (const h1 of h1s) {
-      if (h1.closest('header') || h1.closest('#global-nav')) continue;
-      const text = h1.textContent?.trim();
-      if (text && text.length > 3 && text !== "Me") {
+      if (h1.closest("header") || h1.closest("#global-nav") || h1.closest("nav")) continue;
+      const text = (h1.textContent || "").trim();
+      const lower = text.toLowerCase();
+      if (
+        text.length >= 3 &&
+        text !== "Me" &&
+        (!cleanComp || (lower !== cleanComp && !cleanComp.includes(lower))) &&
+        !noiseTerms.some((term) => lower.includes(term))
+      ) {
         return text;
       }
     }
-    
-    const titleEl = document.querySelector('.top-card-layout__title, .topcard__title, .job-details-jobs-unified-top-card__job-title');
-    if (titleEl && titleEl.textContent) {
-       return titleEl.textContent.trim();
+
+    // 3. New SDUI Layout: check elements inside data-display-contents="true"
+    // e.g. <div data-display-contents="true"><p class="aaalje aaalq0 ...">AI Native Software Engineer ...</p></div>
+    const displayElements = Array.from(
+      document.querySelectorAll(
+        'div[data-display-contents="true"] p, div[data-display-contents="true"] h1, div[data-display-contents="true"] h2'
+      )
+    );
+
+    for (const el of displayElements) {
+      // Must not be inside or contain a company link
+      if (el.closest('a[href*="/company/"]') || el.querySelector('a[href*="/company/"]')) continue;
+      if (el.closest('[aria-label^="Company,"]') || el.querySelector('[aria-label^="Company,"]')) continue;
+      if (el.closest("button") || el.closest("figure") || el.closest("svg") || el.closest("a")) continue;
+
+      // Extract text from the first meaningful text node to exclude child badges (like "Verified job")
+      let text = "";
+      for (const node of Array.from(el.childNodes)) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const val = (node.textContent || "").trim();
+          if (val.length >= 3) {
+            text = val;
+            break;
+          }
+        }
+      }
+
+      if (!text) {
+        const clone = el.cloneNode(true) as HTMLElement;
+        clone.querySelectorAll('[aria-label*="Verified"], a, svg, button, figure').forEach((n) => n.remove());
+        text = (clone.textContent || "").trim();
+      }
+
+      const lower = text.toLowerCase();
+      if (
+        text.length >= 3 &&
+        text.length <= 120 &&
+        (!cleanComp || (lower !== cleanComp && !cleanComp.includes(lower))) &&
+        !noiseTerms.some((term) => lower.includes(term))
+      ) {
+        return text;
+      }
     }
-    
+
+    // 4. Check links pointing to /jobs/view/
     const jobLinks = Array.from(document.querySelectorAll('a[href*="/jobs/view/"]'));
     for (const link of jobLinks) {
-       const text = link.textContent?.trim();
-       if (text && text.length > 5 && !text.toLowerCase().includes("apply") && !text.toLowerCase().includes("save")) {
-           return text;
-       }
+      const text = (link.textContent || "").trim();
+      const lower = text.toLowerCase();
+      if (
+        text.length >= 3 &&
+        (!cleanComp || (lower !== cleanComp && !cleanComp.includes(lower))) &&
+        !lower.includes("apply") &&
+        !lower.includes("save") &&
+        !noiseTerms.some((term) => lower.includes(term))
+      ) {
+        return text;
+      }
     }
-    
+
+    // 5. Fallback: Parse document title (e.g. "AI Native Software Engineer at Accenture | LinkedIn")
+    const docTitle = document.title || "";
+    if (docTitle) {
+      let clean = docTitle.replace(/\s*\|\s*LinkedIn.*$/i, "").trim();
+      if (cleanComp) {
+        const hiringRegex = new RegExp(`^${cleanComp}\\s+hiring\\s+(.+?)(?:\\s+in\\s+.+)?$`, "i");
+        const m = clean.match(hiringRegex);
+        if (m && m[1]) return m[1].trim();
+      }
+      const genericHiring = clean.match(/^.+?\s+hiring\s+(.+?)(?:\s+in\\s+.+)?$/i);
+      if (genericHiring && genericHiring[1]) return genericHiring[1].trim();
+
+      if (clean.includes(" at ")) {
+        const parts = clean.split(/\s+at\s+/i);
+        const p0 = parts[0]?.trim() || "";
+        const lower0 = p0.toLowerCase();
+        if (
+          p0.length > 2 &&
+          (!cleanComp || (lower0 !== cleanComp && !cleanComp.includes(lower0))) &&
+          !noiseTerms.some((term) => lower0.includes(term))
+        ) {
+          return p0;
+        }
+      }
+      if (clean.includes(" - ")) {
+        const parts = clean.split(/\s+-\s+/);
+        const p0 = parts[0]?.trim() || "";
+        const lower0 = p0.toLowerCase();
+        if (
+          p0.length > 2 &&
+          (!cleanComp || (lower0 !== cleanComp && !cleanComp.includes(lower0))) &&
+          !noiseTerms.some((term) => lower0.includes(term))
+        ) {
+          return p0;
+        }
+      }
+    }
+
     return null;
-  });
+  }, companyName);
 }
 
 async function extractData(browser: ResilientBrowser, jobId: string) {
   const page = await browser.newPage();
+  await page.evaluateOnNewDocument(() => {
+    if (typeof (window as any).__name === "undefined") {
+      (window as any).__name = (target: any) => target;
+    }
+  });
   const applicationLink = `${LINKEDIN_URL_JOB}${jobId}`;
   try {
     await page.goto(applicationLink, { waitUntil: "domcontentloaded", timeout: 45000 });
@@ -136,7 +285,7 @@ async function extractData(browser: ResilientBrowser, jobId: string) {
     link = applicationLink;
   }
   const description = (await extractDescription(page))?.trim();
-  const role = (await extractRole(page))?.trim() || '';
+  const role = (await extractRole(page, companyName))?.trim() || '';
 
   let isEasyApply = false;
   if (hasApplyLink && link.includes("/jobs/view/") && link.includes("/apply")) {
