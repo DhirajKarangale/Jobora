@@ -6,22 +6,44 @@ import { addToProcessStream } from "../../cloud/redis/index.ts";
 import { DataJob, WELLFOUND_URL_JOB, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/automationState.ts";
 
+async function safeClosePage(page: Page | null | undefined): Promise<void> {
+  if (!page) return;
+  try {
+    if (!page.isClosed()) {
+      await page.close();
+    }
+  } catch (err: any) {
+    if (
+      !err?.message?.includes("No target with given id found") &&
+      !err?.message?.includes("Target closed")
+    ) {
+      console.warn("[Wellfound] Notice during page.close:", err.message);
+    }
+  }
+}
+
 async function extractData(page: Page, jobId: string) {
   return await page.evaluate(() => {
-    // 1. Locate the Slide-In Container to avoid extracting from the background feed
+    // 1. Locate the Slide-In Container to avoid extracting from background feed
+    const slideIn = document.querySelector(
+      '[data-test="JobDescriptionSlideIn"], [data-test*="SlideIn"], [class*="JobDescriptionSlideIn"], [role="dialog"]'
+    );
     const submitBtn = document.querySelector('button[data-test="JobDescriptionSlideIn--SubmitButton"]');
-    const successBanner = document.querySelector('div.bg-green-600, div[class*="bg-green-"]');
-    const anchor = submitBtn || successBanner;
+    const successBanner = document.querySelector('div.bg-green-600, div[class*="bg-green-"], div[class*="bg-emerald-"]');
+    const anchor = slideIn || submitBtn || successBanner;
+
     let container: Element | Document = document;
-    if (anchor) {
-        let curr: Element | null = anchor;
-        while (curr && curr.tagName !== 'BODY') {
-            if (curr.querySelector('h1')) {
-                container = curr;
-                break;
-            }
-            curr = curr.parentElement;
+    if (slideIn) {
+      container = slideIn;
+    } else if (anchor) {
+      let curr: Element | null = anchor;
+      while (curr && curr.tagName !== 'BODY') {
+        if (curr.querySelector('h1')) {
+          container = curr;
+          break;
         }
+        curr = curr.parentElement;
+      }
     }
 
     const role = container.querySelector('h1')?.textContent?.trim() || '';
@@ -33,14 +55,16 @@ async function extractData(page: Page, jobId: string) {
       // Prioritize span text if it exists (new UI)
       const span = a.querySelector('span');
       const text = span ? span.textContent?.trim() : a.textContent?.trim();
-      
+
       if (text && !a.querySelector('img')) {
         companyName = text;
         break;
       }
     }
 
-    const topListItems = Array.from(container.querySelectorAll('ul.flex.flex-wrap.text-md.text-black li, ul.flex.flex-wrap li'));
+    const topListItems = Array.from(
+      container.querySelectorAll('ul.flex.flex-wrap.text-md.text-black li, ul.flex.flex-wrap li')
+    );
     let salary = '';
     let experience = '';
 
@@ -54,14 +78,18 @@ async function extractData(page: Page, jobId: string) {
       }
     }
 
-    const locationSpan = Array.from(container.querySelectorAll('span')).find(el => el.textContent?.trim() === 'Job Location' || el.textContent?.trim() === 'Location');
-    // For location, the text is inside a sibling div, sometimes wrapped in an anchor
+    const locationSpan = Array.from(container.querySelectorAll('span')).find(
+      el => el.textContent?.trim() === 'Job Location' || el.textContent?.trim() === 'Location'
+    );
     const location = locationSpan?.nextElementSibling?.textContent?.trim() || '';
 
-    const skillsSpan = Array.from(container.querySelectorAll('span')).find(el => el.textContent?.trim() === 'Skills');
+    const skillsSpan = Array.from(container.querySelectorAll('span')).find(
+      el => el.textContent?.trim() === 'Skills'
+    );
     const skillsContainer = skillsSpan?.nextElementSibling;
-    // Use immediate children instead of querying all divs to prevent nested text duplication
-    const skills = skillsContainer ? Array.from(skillsContainer.children).map(el => el.textContent?.trim()).filter(Boolean).join(', ') : '';
+    const skills = skillsContainer
+      ? Array.from(skillsContainer.children).map(el => el.textContent?.trim()).filter(Boolean).join(', ')
+      : '';
 
     const about = container.querySelector('#job-description')?.textContent?.trim() || '';
 
@@ -81,44 +109,72 @@ async function isApplicationSubmitted(page: Page): Promise<boolean> {
   try {
     return await page.evaluate(() => {
       const normalize = (str: string) => str.replace(/\s+/g, " ").trim().toLowerCase();
-      const phrases = [
-        "congrats! your application has been submitted",
-        "your application has been submitted",
-        "application has been submitted",
-        "application submitted"
-      ];
 
-      // 1. Check green banner elements (e.g. div.bg-green-600)
-      const greenElements = Array.from(document.querySelectorAll('div.bg-green-600, div[class*="bg-green-"], div[class*="bg-emerald-"]'));
-      for (const el of greenElements) {
-        const text = normalize(el.textContent || "");
-        if (phrases.some(p => text.includes(p))) {
-          return true;
-        }
-      }
+      // Find slide-in container if present, or fallback to document
+      const slideIn = document.querySelector(
+        '[data-test="JobDescriptionSlideIn"], [data-test*="SlideIn"], [class*="JobDescriptionSlideIn"], [role="dialog"]'
+      ) || document;
 
-      // 2. Check all container elements
-      const elements = Array.from(document.querySelectorAll('div, p, span, h1, h2, h3'));
-      for (const el of elements) {
-        const text = normalize(el.textContent || "");
-        if (phrases.some(p => text.includes(p))) {
-          return true;
-        }
-      }
-
-      // 3. Check body text
-      const bodyText = normalize(document.body.innerText || document.body.textContent || "");
-      if (phrases.some(p => bodyText.includes(p))) {
+      // 1. Check green / emerald confirmation banner (e.g. bg-green-600)
+      const greenBanner = slideIn.querySelector(
+        'div.bg-green-600, div[class*="bg-green-"], div[class*="bg-emerald-"], [class*="bg-green-600"], [class*="bg-emerald-600"]'
+      );
+      if (greenBanner) {
         return true;
       }
 
-      // 4. Check if button / badge text says "Applied"
-      const buttons = Array.from(document.querySelectorAll('button, a, [data-test], [class*="badge"], [class*="tag"]'));
-      for (const btn of buttons) {
-        const btnText = normalize(btn.textContent || "");
-        if (btnText === "applied" || btnText === "application submitted") {
+      // 2. Applied phrases to look for in container text
+      const appliedPhrases = [
+        "congrats! your application has been submitted",
+        "your application has been submitted",
+        "application has been submitted",
+        "application submitted",
+        "already applied",
+        "you have applied",
+        "you have already applied",
+        "you've already applied",
+        "you already applied",
+        "you applied",
+        "application received",
+        "application sent",
+        "your application was sent",
+        "applied on",
+        "applied to this job",
+        "application status"
+      ];
+
+      const allText = normalize(slideIn.textContent || "");
+      if (appliedPhrases.some(phrase => allText.includes(phrase))) {
+        return true;
+      }
+
+      // 3. Check buttons, badges, tags, and status pills inside slideIn
+      const badgesAndButtons = Array.from(
+        slideIn.querySelectorAll(
+          'button, a, [data-test], [class*="badge"], [class*="tag"], [class*="status"], [class*="pill"], span, div'
+        )
+      );
+
+      for (const el of badgesAndButtons) {
+        const text = normalize(el.textContent || "");
+        if (
+          text === "applied" ||
+          text === "✓ applied" ||
+          text === "applied ✓" ||
+          text.startsWith("applied on") ||
+          text.startsWith("applied ") ||
+          text.includes("already applied") ||
+          text.includes("you applied") ||
+          text === "application submitted"
+        ) {
           return true;
         }
+      }
+
+      // 4. Check disabled apply button with applied text
+      const disabledBtn = slideIn.querySelector('button[disabled]');
+      if (disabledBtn && normalize(disabledBtn.textContent || "").includes("applied")) {
+        return true;
       }
 
       return false;
@@ -130,43 +186,55 @@ async function isApplicationSubmitted(page: Page): Promise<boolean> {
 
 async function tryApplyJob(page: Page): Promise<boolean> {
   try {
-    await delay(WAIT_TIME);
+    const submitBtnSelector = 'button[data-test="JobDescriptionSlideIn--SubmitButton"]';
 
-    // 1. Check if the job is ALREADY applied on page load
+    // 1. Poll for either application status (already applied) or the Apply button
+    // Wellfound fetches user application status via GraphQL on client mount, which takes 1-3 seconds.
+    let applyBtn: import('puppeteer-core').ElementHandle<Element> | null = null;
+    const maxPollAttempts = 10;
+
+    for (let attempt = 0; attempt < maxPollAttempts; attempt++) {
+      if (await isApplicationSubmitted(page)) {
+        console.log("[Wellfound] Application is already submitted (detected on page load/hydration).");
+        return true;
+      }
+
+      applyBtn = await page.$(submitBtnSelector);
+      if (!applyBtn) {
+        const applyBtnHandle = await page.evaluateHandle(() => {
+          const btns = Array.from(document.querySelectorAll('button[data-test*="SubmitButton"], button'));
+          return btns.find(b => {
+            const t = (b.textContent || "").trim().toLowerCase();
+            return t === 'apply' || t === 'apply now' || t === 'quick apply' || t === 'submit application';
+          }) || null;
+        });
+        applyBtn = applyBtnHandle.asElement() as import('puppeteer-core').ElementHandle<Element> | null;
+      }
+
+      if (applyBtn) {
+        break;
+      }
+
+      await delay(500);
+    }
+
+    // Final check for already applied
     if (await isApplicationSubmitted(page)) {
-      console.log("[Wellfound] Application is already submitted (detected success banner on page load).");
+      console.log("[Wellfound] Application is already submitted.");
       return true;
     }
 
-    const submitBtnSelector = 'button[data-test="JobDescriptionSlideIn--SubmitButton"]';
-    let applyBtn: import('puppeteer-core').ElementHandle<Element> | null = await page.$(submitBtnSelector);
-
-    // Fallback: look for other potential apply buttons inside slide-in container or page
     if (!applyBtn) {
-      const applyBtnHandle = await page.evaluateHandle(() => {
-        const btns = Array.from(document.querySelectorAll('button[data-test*="SubmitButton"], button'));
-        return btns.find(b => {
-          const t = (b.textContent || "").trim().toLowerCase();
-          return t === 'apply' || t === 'apply now' || t === 'quick apply' || t === 'submit application';
-        }) || null;
-      });
-      applyBtn = applyBtnHandle.asElement() as import('puppeteer-core').ElementHandle<Element> | null;
-    }
-
-    if (!applyBtn) {
-      // Re-check if already submitted
-      if (await isApplicationSubmitted(page)) {
-        return true;
-      }
-      return false;
+      // If no apply button exists after 5 seconds of polling and the job description is loaded,
+      // the job is either already applied or closed/no longer accepting applications.
+      console.log("[Wellfound] No Apply button found after polling. Considering job as already applied / closed.");
+      return true;
     }
 
     const isDisabled = await page.evaluate((btn) => (btn as HTMLButtonElement).disabled, applyBtn);
     if (isDisabled) {
-      if (await isApplicationSubmitted(page)) {
-        return true;
-      }
-      return false;
+      console.log("[Wellfound] Apply button is disabled. Considering job as already applied.");
+      return true;
     }
 
     // Scroll into view & click with real CDP mouse events, fallback to evaluate click
@@ -205,6 +273,8 @@ export async function getJobData(resilientBrowser: ResilientBrowser, jobIds: str
   console.log(`[Wellfound] Starting to process ${jobIds.length} job(s)...`);
 
   for (const jobId of jobIds) {
+    let page: Page | null = null;
+    let initialPages: Page[] = [];
     try {
       const cleanJobId = jobId ? jobId.trim().toLowerCase() : "";
       if (!cleanJobId || await isJobExisting(cleanJobId)) {
@@ -213,7 +283,8 @@ export async function getJobData(resilientBrowser: ResilientBrowser, jobIds: str
       }
       console.log(`[Wellfound] Navigating to apply for job ID: ${cleanJobId}`);
 
-      const page = await resilientBrowser.newPage();
+      initialPages = await resilientBrowser.pages();
+      page = await resilientBrowser.newPage();
       const applicationLink = `${WELLFOUND_URL_JOB}${cleanJobId}`;
       await page.goto(applicationLink, { waitUntil: "load" });
       await delay(WAIT_TIME);
@@ -225,15 +296,11 @@ export async function getJobData(resilientBrowser: ResilientBrowser, jobIds: str
 
       if (!companyName || !about) {
         console.log(`[Wellfound] Missing company name or description for job ID: ${cleanJobId}. Skipping.`);
-        await delay(WAIT_TIME);
-        await page.close();
         continue;
       }
 
       if (isBlacklistedCompany(companyName)) {
         console.log(`[Wellfound] Company ${companyName} is blacklisted for job ID: ${cleanJobId}. Skipping.`);
-        await delay(WAIT_TIME);
-        await page.close();
         continue;
       }
 
@@ -274,9 +341,18 @@ export async function getJobData(resilientBrowser: ResilientBrowser, jobIds: str
       }
 
       await delay(WAIT_TIME);
-      await page.close();
     } catch (err) {
       console.error(`[Wellfound] Error processing job ID ${jobId}:`, err);
+    } finally {
+      await safeClosePage(page);
+      try {
+        const currentPages = await resilientBrowser.pages();
+        for (const p of currentPages) {
+          if (!initialPages.includes(p) && !p.isClosed()) {
+            await safeClosePage(p);
+          }
+        }
+      } catch (e) {}
     }
   }
 }

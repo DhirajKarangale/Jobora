@@ -9,12 +9,58 @@ const JOB_LINK_SELECTOR = 'a[href^="/jobs/"]';
 async function extractJobIds(page: Page): Promise<string[]> {
   try {
     await page.waitForSelector(JOB_LINK_SELECTOR, { visible: true, timeout: 10000 });
-    const ids = await page.$$eval(JOB_LINK_SELECTOR, links => {
-      return links
-        .map(link => link.getAttribute("href"))
-        .filter(href => href && href.startsWith("/jobs/"))
-        .map(href => href!.replace("/jobs/", ""))
-        .filter(id => id.match(/^\d+-/));
+    const ids = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('a[href^="/jobs/"]'));
+      const validIds: string[] = [];
+
+      for (const link of links) {
+        const href = link.getAttribute("href") || "";
+        if (!href.startsWith("/jobs/")) continue;
+        const slug = href.replace("/jobs/", "").trim();
+        if (!slug.match(/^\d+-/)) continue;
+
+        // Check surrounding job card / container for "Applied" status
+        let card: Element | null = link;
+        while (card && card.tagName !== 'BODY') {
+          if (
+            card.getAttribute('data-test')?.includes('Job') ||
+            card.className?.includes('jobListing') ||
+            card.className?.includes('styles_result') ||
+            card.className?.includes('styles_job') ||
+            card.tagName === 'LI'
+          ) {
+            break;
+          }
+          card = card.parentElement;
+        }
+        const cardEl = card || link.parentElement?.parentElement;
+
+        if (cardEl) {
+          const cardBadges = Array.from(
+            cardEl.querySelectorAll('button, span, div, [class*="badge"], [class*="tag"], [class*="status"]')
+          );
+          const isCardApplied = cardBadges.some(b => {
+            const t = (b.textContent || "").trim().toLowerCase();
+            return (
+              t === "applied" ||
+              t === "✓ applied" ||
+              t === "applied ✓" ||
+              t.startsWith("applied on") ||
+              t.startsWith("applied ") ||
+              t === "application submitted" ||
+              t === "already applied"
+            );
+          });
+
+          if (isCardApplied) {
+            continue;
+          }
+        }
+
+        validIds.push(slug);
+      }
+
+      return Array.from(new Set(validIds));
     });
     return ids;
   } catch (error) {

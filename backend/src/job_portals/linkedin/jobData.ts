@@ -260,7 +260,24 @@ async function extractRole(page: Page, companyName?: string | null) {
   }, companyName);
 }
 
+async function safeClosePage(page: Page | null | undefined): Promise<void> {
+  if (!page) return;
+  try {
+    if (!page.isClosed()) {
+      await page.close();
+    }
+  } catch (err: any) {
+    if (
+      !err?.message?.includes("No target with given id found") &&
+      !err?.message?.includes("Target closed")
+    ) {
+      console.warn("[LinkedIn] Notice during page.close:", err.message);
+    }
+  }
+}
+
 async function extractData(browser: ResilientBrowser, jobId: string) {
+  const initialPages = await browser.pages();
   const page = await browser.newPage();
   await page.evaluateOnNewDocument(() => {
     if (typeof (window as any).__name === "undefined") {
@@ -269,110 +286,120 @@ async function extractData(browser: ResilientBrowser, jobId: string) {
   });
   const applicationLink = `${LINKEDIN_URL_JOB}${jobId}`;
   try {
-    await page.goto(applicationLink, { waitUntil: "domcontentloaded", timeout: 45000 });
-  } catch (error) {
-    console.log(`[LinkedIn] Navigation timeout for job ${jobId}. Skipping.`);
-    try { if (!page.isClosed()) await page.close(); } catch (e) {}
-    return;
-  }
-
-  await delay(WAIT_TIME);
-  const companyName = (await extractCompanyName(page))?.trim();
-  let link = (await extractLink(page, jobId))?.trim();
-  const hasApplyLink = !!link;
-
-  if (!link) {
-    link = applicationLink;
-  }
-  const description = (await extractDescription(page))?.trim();
-  const role = (await extractRole(page, companyName))?.trim() || '';
-
-  let isEasyApply = false;
-  if (hasApplyLink && link.includes("/jobs/view/") && link.includes("/apply")) {
-    isEasyApply = true;
-  } else {
-    isEasyApply = await page.evaluate(() => {
-      return !!document.querySelector('[aria-label="LinkedIn Apply to this job"]') || 
-             !!document.querySelector('[aria-label="Easy Apply to this job"]') || 
-             !!document.querySelector('svg#linkedin-bug-medium') ||
-             !!document.querySelector('button[aria-label="Easy Apply to this job"]');
-    });
-  }
-
-  const hasAnyApplyButton = await page.evaluate(() => {
-      if (document.querySelector('.jobs-apply-button')) return true;
-      if (document.querySelector('a[aria-label="Apply on company website"]')) return true;
-      const allBtns = Array.from(document.querySelectorAll('button, a'));
-      return allBtns.some(b => {
-          const t = b.textContent?.trim().toLowerCase();
-          return t === 'apply' || t === 'easy apply';
-      });
-  });
-
-  const isAlreadyApplied = await page.evaluate(() => {
-    const textNodes = Array.from(document.querySelectorAll('*'));
-    return textNodes.some(node => {
-      const text = node.textContent?.trim().toLowerCase();
-      return text === 'applied' || text === 'application submitted';
-    });
-  });
-
-  if (isAlreadyApplied) {
-    console.log(`[LinkedIn] Job ${jobId} is already applied. Skipping.`);
-    try { if (!page.isClosed()) await page.close(); } catch (error) {}
-    return;
-  }
-
-  if (!hasApplyLink && !isEasyApply && !hasAnyApplyButton) {
-      console.log(`[LinkedIn] No Apply or Easy Apply button found for job ${jobId}. Skipping.`);
-      try { if (!page.isClosed()) await page.close(); } catch (error) {}
-      return;
-  }
-
-  let autoApplySuccess = false;
-  if (isEasyApply) {
     try {
-      autoApplySuccess = await handleEasyApply(page, jobId);
+      await page.goto(applicationLink, { waitUntil: "domcontentloaded", timeout: 45000 });
     } catch (error) {
-      console.error(`[LinkedIn] Auto apply encountered an error for job ${jobId}:`, error);
-      autoApplySuccess = false;
+      console.log(`[LinkedIn] Navigation timeout for job ${jobId}. Skipping.`);
+      return null;
     }
-  }
 
-  await delay(WAIT_TIME);
-  try {
-    if (!page.isClosed()) {
-      await page.close();
+    await delay(WAIT_TIME);
+    const companyName = (await extractCompanyName(page))?.trim();
+    let link = (await extractLink(page, jobId))?.trim();
+    const hasApplyLink = !!link;
+
+    if (!link) {
+      link = applicationLink;
     }
-  } catch (error) {
-    console.error(`[LinkedIn] Error closing page for job ${jobId}:`, error);
+    const description = (await extractDescription(page))?.trim();
+    const role = (await extractRole(page, companyName))?.trim() || '';
+
+    let isEasyApply = false;
+    if (hasApplyLink && link.includes("/jobs/view/") && link.includes("/apply")) {
+      isEasyApply = true;
+    } else {
+      isEasyApply = await page.evaluate(() => {
+        const externalBtn = document.querySelector('a[aria-label="Apply on company website"], a[href*="/safety/go/"], a.jobs-apply-button[target="_blank"]');
+        if (externalBtn) return false;
+
+        const easyApplyBtn = document.querySelector(
+          '[aria-label="Easy Apply to this job"], [aria-label="LinkedIn Apply to this job"], button[aria-label="Easy Apply to this job"], button.jobs-apply-button'
+        );
+        if (!easyApplyBtn) return false;
+
+        const text = (easyApplyBtn.textContent || '').trim().toLowerCase();
+        if (text.includes('company website') || text.includes('company site') || text.includes('off linkedin')) {
+          return false;
+        }
+        if (text.includes('easy apply')) return true;
+        const hasBugInside = !!easyApplyBtn.querySelector('svg#linkedin-bug-medium, svg[data-test-icon*="linkedin"]');
+        return hasBugInside;
+      });
+    }
+
+    const hasAnyApplyButton = await page.evaluate(() => {
+        if (document.querySelector('.jobs-apply-button')) return true;
+        if (document.querySelector('a[aria-label="Apply on company website"]')) return true;
+        const allBtns = Array.from(document.querySelectorAll('button, a'));
+        return allBtns.some(b => {
+            const t = b.textContent?.trim().toLowerCase();
+            return t === 'apply' || t === 'easy apply';
+        });
+    });
+
+    const isAlreadyApplied = await page.evaluate(() => {
+      const textNodes = Array.from(document.querySelectorAll('*'));
+      return textNodes.some(node => {
+        const text = node.textContent?.trim().toLowerCase();
+        return text === 'applied' || text === 'application submitted';
+      });
+    });
+
+    if (isAlreadyApplied) {
+      console.log(`[LinkedIn] Job ${jobId} is already applied. Skipping.`);
+      return null;
+    }
+
+    if (!hasApplyLink && !isEasyApply && !hasAnyApplyButton) {
+        console.log(`[LinkedIn] No Apply or Easy Apply button found for job ${jobId}. Skipping.`);
+        return null;
+    }
+
+    let autoApplySuccess = false;
+    if (isEasyApply) {
+      try {
+        autoApplySuccess = await handleEasyApply(page, jobId);
+      } catch (error) {
+        console.error(`[LinkedIn] Auto apply encountered an error for job ${jobId}:`, error);
+        autoApplySuccess = false;
+      }
+    }
+
+    if (!companyName || !link || !description) {
+        console.log(`[LinkedIn] Missing required data for job ${jobId}. companyName=${!!companyName}, link=${!!link}, description=${!!description}, role=${!!role}`);
+        return null;
+    }
+    if (isBlacklistedCompany(companyName)) return null;
+
+    const data: DataJob = {
+      id: null,
+      sourceName: "LinkedIn",
+      sourceJobId: jobId,
+      companyName,
+      jobId: null,
+      description,
+      link,
+      portal_link: applicationLink,
+      role
+    };
+
+    let dbId: string;
+
+    if (autoApplySuccess) dbId = await saveEligibleAndAppliedJob(data);
+    else dbId = await saveJob(data);
+    return { id: dbId, autoApplied: autoApplySuccess };
+
+  } finally {
+    await safeClosePage(page);
+    try {
+      const currentPages = await browser.pages();
+      for (const p of currentPages) {
+        if (!initialPages.includes(p) && !p.isClosed()) {
+          await safeClosePage(p);
+        }
+      }
+    } catch (e) {}
   }
-
-  if (!companyName || !link || !description) {
-      console.log(`[LinkedIn] Missing required data for job ${jobId}. companyName=${!!companyName}, link=${!!link}, description=${!!description}, role=${!!role}`);
-      return;
-  }
-  if (isBlacklistedCompany(companyName)) return;
-
-  const data: DataJob = {
-    id: null,
-    sourceName: "LinkedIn",
-    sourceJobId: jobId,
-    companyName,
-    jobId: null,
-    description,
-    link,
-    portal_link: applicationLink,
-    role
-  };
-
-  let dbId: string;
-
-  if (autoApplySuccess) dbId = await saveEligibleAndAppliedJob(data);
-  else dbId = await saveJob(data);
-  return { id: dbId, autoApplied: autoApplySuccess };
-
-  // return null;
 }
 
 export async function getJobData(browser: ResilientBrowser, jobIds: string[]) {

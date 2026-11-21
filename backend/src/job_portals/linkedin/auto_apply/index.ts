@@ -24,6 +24,26 @@ export async function handleEasyApply(page: Page, jobId: string, targetResumeNam
     return false;
   }
 
+  const isExternal = await easyApplyBtn.evaluate(b => {
+    const text = (b.textContent || '').toLowerCase();
+    const href = b.getAttribute('href') || '';
+    const ariaLabel = (b.getAttribute('aria-label') || '').toLowerCase();
+    const target = b.getAttribute('target');
+    return (
+      target === '_blank' ||
+      href.includes('/safety/go/') ||
+      text.includes('company website') ||
+      text.includes('company site') ||
+      text.includes('off linkedin') ||
+      ariaLabel.includes('company website')
+    );
+  });
+
+  if (isExternal) {
+    console.log(`[LinkedIn AutoApply] Job ${jobId} requires applying on company website. Skipping Easy Apply.`);
+    return false;
+  }
+
   const href = await easyApplyBtn.evaluate(b => b.getAttribute('href'));
 
   if (href && href.includes('apply')) {

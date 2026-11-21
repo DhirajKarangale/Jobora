@@ -21,6 +21,53 @@ async function safeClosePage(page: Page | null | undefined): Promise<void> {
   }
 }
 
+async function isAnyModalOpen(page: Page): Promise<boolean> {
+  try {
+    return await page.evaluate(() => {
+      const modals = Array.from(
+        document.querySelectorAll(
+          ".modal, .modal-dialog, .application-modal-wrap, #application-modal, div[role='dialog']"
+        )
+      );
+      return modals.some((m) => {
+        const el = m as HTMLElement;
+        const style = window.getComputedStyle(el);
+        return (
+          style.display !== "none" &&
+          style.visibility !== "hidden" &&
+          (el.offsetWidth > 0 || el.offsetHeight > 0)
+        );
+      });
+    });
+  } catch (e) {
+    return false;
+  }
+}
+
+async function forceCloseModals(page: Page): Promise<void> {
+  try {
+    await page.evaluate(() => {
+      // 1. Remove backdrop elements
+      const backdrops = document.querySelectorAll(".modal-backdrop");
+      backdrops.forEach((b) => b.remove());
+
+      // 2. Hide modals and remove 'in' / 'show' classes
+      const modals = document.querySelectorAll(".modal, .application-modal-wrap, #application-modal");
+      modals.forEach((m) => {
+        const el = m as HTMLElement;
+        el.classList.remove("in", "show");
+        el.style.display = "none";
+        el.setAttribute("aria-hidden", "true");
+      });
+
+      // 3. Remove modal-open class on body
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("padding-right");
+      document.body.style.removeProperty("overflow");
+    });
+  } catch (e) {}
+}
+
 async function hasAlreadyNotInterestedBanner(page: Page): Promise<boolean> {
   try {
     return await page.evaluate(() => {
@@ -45,7 +92,10 @@ async function isModalShowingApplied(page: Page): Promise<boolean> {
         "already marked this job as not interested",
         "marked this job as not interested",
         "application submitted",
-        "applied successfully"
+        "applied successfully",
+        "application received",
+        "application sent",
+        "already applied to this job"
       ];
 
       // 1. Check all visible modal containers
@@ -71,7 +121,7 @@ async function isModalShowingApplied(page: Page): Promise<boolean> {
       }
 
       // 2. Check primary apply button specifically
-      const applyBtn = document.querySelector(".apply button, button.btn-primary.apply, .modal-footer button");
+      const applyBtn = document.querySelector(".apply button, button.btn-primary.apply, .modal-footer button, #apply-btn");
       if (applyBtn) {
         const btnText = (applyBtn.textContent || "").trim().toLowerCase();
         if (btnText === "applied" || phrases.some((p) => btnText.includes(p))) {
@@ -123,7 +173,7 @@ async function handleInterferingModals(page: Page): Promise<boolean> {
         if (isNonApplyModal) {
           // Look for close icon
           const closeBtn = htmlWrap.querySelector(
-            ".application-modal-close, .close, .fa-close, button.close, [data-dismiss='modal']"
+            ".close, button.close, span.close, a.close, .application-modal-close, .fa-close, [data-dismiss='modal']"
           ) as HTMLElement;
           if (closeBtn && (closeBtn.offsetWidth > 0 || closeBtn.offsetHeight > 0)) {
             closeBtn.click();
@@ -157,22 +207,97 @@ async function handleInterferingModals(page: Page): Promise<boolean> {
   }
 }
 
+async function handleNoticePeriodAndQuestions(page: Page): Promise<void> {
+  try {
+    await page.evaluate(() => {
+      // 1. Select dropdowns (e.g. notice period)
+      const selects = Array.from(document.querySelectorAll("select"));
+      for (const sel of selects) {
+        if (sel.selectedIndex <= 0 && sel.options.length > 1) {
+          sel.selectedIndex = 1;
+          sel.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      }
+
+      // 2. Radio buttons (e.g. notice period, work auth)
+      const radioGroups = new Set<string>();
+      const radios = Array.from(document.querySelectorAll('input[type="radio"]')) as HTMLInputElement[];
+      for (const r of radios) {
+        if (r.name) radioGroups.add(r.name);
+      }
+      for (const groupName of radioGroups) {
+        const groupRadios = radios.filter((r) => r.name === groupName);
+        if (!groupRadios.some((r) => r.checked) && groupRadios[0]) {
+          groupRadios[0].click();
+        }
+      }
+
+      // 3. Required checkboxes
+      const checkboxes = Array.from(document.querySelectorAll('input[type="checkbox"][required]')) as HTMLInputElement[];
+      for (const cb of checkboxes) {
+        if (!cb.checked) {
+          cb.click();
+        }
+      }
+    });
+  } catch (e) {}
+}
+
 async function clickApplyButton(page: Page): Promise<boolean> {
   try {
+    // 1. First handle any notice period or question inputs
+    await handleNoticePeriodAndQuestions(page);
+    await delay(300);
+
     return await page.evaluate(() => {
-      const applyBtn = document.querySelector(
-        ".apply button, button.btn-primary.apply, .modal-footer button.btn-primary"
-      ) as HTMLElement;
-      if (applyBtn && (applyBtn.offsetWidth > 0 || applyBtn.offsetHeight > 0)) {
-        applyBtn.click();
-        return true;
+      // 2. Check primary apply/submit selectors
+      const primarySelectors = [
+        ".apply button",
+        "button.btn-primary.apply",
+        "#apply-btn",
+        ".modal-footer button.btn-primary",
+        ".modal-footer button[type='submit']",
+        ".application-modal-wrap button.btn-primary",
+        ".modal-dialog button.btn-primary",
+        "button[type='submit']"
+      ];
+
+      for (const sel of primarySelectors) {
+        const applyBtn = document.querySelector(sel) as HTMLElement;
+        if (applyBtn && (applyBtn.offsetWidth > 0 || applyBtn.offsetHeight > 0)) {
+          const txt = (applyBtn.innerText || applyBtn.textContent || "").trim().toLowerCase();
+          if (txt === "close" || txt === "cancel" || txt === "skip") continue;
+          applyBtn.click();
+          return true;
+        }
       }
-      const btns = Array.from(document.querySelectorAll("button"));
-      const btn = btns.find((b) => (b.innerText || "").trim().toLowerCase() === "apply");
-      if (btn && (btn.offsetWidth > 0 || btn.offsetHeight > 0)) {
-        btn.click();
-        return true;
+
+      // 3. Check buttons by action text keywords
+      const targetKeywords = [
+        "apply",
+        "apply now",
+        "submit",
+        "submit application",
+        "send application",
+        "send",
+        "confirm",
+        "proceed",
+        "save & continue",
+        "continue"
+      ];
+
+      const btns = Array.from(document.querySelectorAll("button, a.btn")) as HTMLElement[];
+      for (const kw of targetKeywords) {
+        const btn = btns.find((b) => {
+          const t = (b.innerText || b.textContent || "").trim().toLowerCase();
+          return t === kw;
+        }) as HTMLElement;
+        if (btn && (btn.offsetWidth > 0 || btn.offsetHeight > 0)) {
+          btn.click();
+          return true;
+        }
       }
+
       return false;
     });
   } catch (e) {
@@ -185,13 +310,19 @@ async function dismissModalAndMoveAhead(page: Page): Promise<boolean> {
     const closed = await page.evaluate(() => {
       // 1. Close button selectors
       const closeSelectors = [
-        ".application-modal-close",
+        ".close",
         "button.close",
+        "span.close",
+        "a.close",
+        "div.close",
+        ".application-modal-close",
         ".modal-header .close",
         ".modal-header button",
         ".modal-dialog .close",
         ".modal-content .close",
         ".modal-close",
+        '[aria-label="Close"]',
+        '[aria-label="close"]',
         '[data-dismiss="modal"]',
         'button[ng-click*="close"]',
         'button[ng-click*="dismiss"]',
@@ -200,6 +331,7 @@ async function dismissModalAndMoveAhead(page: Page): Promise<boolean> {
         'a[ng-click*="dismiss"]',
         "i.fa-close",
         "i.fa-times",
+        "svg[data-icon='close']",
         ".alert .close",
         ".notification .close"
       ];
@@ -225,7 +357,10 @@ async function dismissModalAndMoveAhead(page: Page): Promise<boolean> {
         "dismiss",
         "no thanks",
         "cancel",
-        "maybe later"
+        "maybe later",
+        "remind me later",
+        "not now",
+        "back"
       ];
 
       const allButtons = Array.from(
@@ -256,7 +391,18 @@ async function dismissModalAndMoveAhead(page: Page): Promise<boolean> {
       await page.keyboard.press("Escape");
     } catch (e) {}
 
-    await delay(1000);
+    await delay(500);
+
+    // If modal is still open, try clicking the backdrop
+    const stillOpen = await isAnyModalOpen(page);
+    if (stillOpen) {
+      await page.evaluate(() => {
+        const backdrop = document.querySelector(".modal-backdrop") as HTMLElement;
+        if (backdrop) backdrop.click();
+      });
+      await delay(500);
+    }
+
     return closed;
   } catch (e) {
     return false;
@@ -301,7 +447,7 @@ async function handleAlreadyNotInterested(
 async function applyJobs(page: Page, onRestartNeeded?: () => Promise<void>): Promise<void> {
   let lastStuckCompany: string | null = null;
   let loopCount = 0;
-  const MAX_LOOPS_PER_MODAL = 10;
+  const MAX_LOOPS_PER_MODAL = 4;
 
   while (loopCount++ < MAX_LOOPS_PER_MODAL) {
     try {
@@ -309,12 +455,7 @@ async function applyJobs(page: Page, onRestartNeeded?: () => Promise<void>): Pro
       await handleInterferingModals(page);
 
       // Check if modal is currently open
-      const isModalOpen = await page.evaluate(() => {
-        const m = document.querySelector(".modal, .modal-dialog, .application-modal-wrap, #application-modal");
-        return !!m && ((m as HTMLElement).offsetWidth > 0 || (m as HTMLElement).offsetHeight > 0);
-      });
-
-      if (!isModalOpen) {
+      if (!await isAnyModalOpen(page)) {
         break;
       }
 
@@ -337,12 +478,18 @@ async function applyJobs(page: Page, onRestartNeeded?: () => Promise<void>): Pro
           await delay(WAIT_TIME);
 
           if (await isModalShowingApplied(page)) {
-            console.log("[Instahyre] Unable to close already-applied modal. Requesting window restart...");
-            if (onRestartNeeded) {
-              await onRestartNeeded();
-              return;
+            console.log("[Instahyre] Force closing stubborn applied modal...");
+            await forceCloseModals(page);
+            await delay(500);
+
+            if (await isModalShowingApplied(page)) {
+              console.log("[Instahyre] Unable to close modal. Requesting window restart...");
+              if (onRestartNeeded) {
+                await onRestartNeeded();
+                return;
+              }
+              break;
             }
-            break;
           }
         }
         console.log("[Instahyre] Successfully moved ahead after closing already-applied modal.");
@@ -417,7 +564,7 @@ async function applyJobs(page: Page, onRestartNeeded?: () => Promise<void>): Pro
         continue;
       }
 
-      // 4. Click Apply Button
+      // 4. Click Apply / Submit Button
       if (companyName) {
         await clickApplyButton(page);
         await delay(WAIT_TIME);
@@ -447,7 +594,7 @@ async function applyJobs(page: Page, onRestartNeeded?: () => Promise<void>): Pro
 
         const isSuccess = await page.evaluate((oldName) => {
           const currentName = document.querySelector("h2.company-name")?.textContent?.trim();
-          const applyBtnExists = !!document.querySelector(".apply button");
+          const applyBtnExists = !!document.querySelector(".apply button, #apply-btn");
           return !applyBtnExists || currentName !== oldName;
         }, companyName);
 
@@ -474,13 +621,33 @@ async function applyJobs(page: Page, onRestartNeeded?: () => Promise<void>): Pro
       break;
     }
   }
+
+  // Final check: Guarantee no modal remains open after applyJobs finishes
+  if (await isAnyModalOpen(page)) {
+    console.log("[Instahyre] Modal still lingering after applyJobs loop. Dismissing...");
+    await dismissModalAndMoveAhead(page);
+    await delay(500);
+    if (await isAnyModalOpen(page)) {
+      console.log("[Instahyre] Force closing lingering modal...");
+      await forceCloseModals(page);
+    }
+  }
 }
 
 async function processAllVisibleJobs(page: Page, onRestartNeeded?: () => Promise<void>) {
   let consecutiveNoJobs = 0;
   while (consecutiveNoJobs < 2) {
-    // Dismiss any interfering modal before searching for job cards
+    // 1. Dismiss any interfering modal before searching for job cards
     await handleInterferingModals(page);
+
+    // 2. Ensure no lingering modal is covering the job list
+    if (await isAnyModalOpen(page)) {
+      await dismissModalAndMoveAhead(page);
+      await delay(500);
+      if (await isAnyModalOpen(page)) {
+        await forceCloseModals(page);
+      }
+    }
 
     let clicked = false;
     try {
@@ -492,6 +659,7 @@ async function processAllVisibleJobs(page: Page, onRestartNeeded?: () => Promise
           (b) => b.offsetWidth > 0 && b.offsetHeight > 0 && !b.hasAttribute("data-clicked")
         );
         if (visibleBtn) {
+          visibleBtn.scrollIntoView({ behavior: "instant", block: "center" });
           visibleBtn.click();
           visibleBtn.setAttribute("data-clicked", "true");
           return true;
@@ -507,8 +675,30 @@ async function processAllVisibleJobs(page: Page, onRestartNeeded?: () => Promise
     }
 
     consecutiveNoJobs = 0;
-    await delay(WAIT_TIME);
-    await applyJobs(page, onRestartNeeded);
+
+    // 3. Wait up to 4s for modal to actually open
+    let modalOpened = false;
+    for (let m = 0; m < 8; m++) {
+      await delay(500);
+      modalOpened = await isAnyModalOpen(page);
+      if (modalOpened) break;
+    }
+
+    if (modalOpened) {
+      await applyJobs(page, onRestartNeeded);
+    }
+
+    // 4. Ensure no modal stays open before next iteration
+    if (await isAnyModalOpen(page)) {
+      await forceCloseModals(page);
+      await delay(300);
+      if (await isAnyModalOpen(page)) {
+        console.log("[Instahyre] Modal completely stuck between jobs. Reloading page...");
+        await page.reload({ waitUntil: "domcontentloaded" });
+        await delay(WAIT_TIME);
+      }
+    }
+
     await delay(WAIT_TIME);
   }
 }

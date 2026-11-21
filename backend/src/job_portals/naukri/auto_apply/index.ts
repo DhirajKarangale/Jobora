@@ -25,8 +25,14 @@ export async function handleNaukriApply(page: Page, jobId: string): Promise<bool
       return false;
     }
 
-    const btnText = await page.evaluate(el => el.textContent?.trim().toLowerCase() || '', applyBtn);
-    if (btnText.includes('company site')) {
+    const isExternal = await page.evaluate(el => {
+      const target = el.getAttribute('target');
+      const href = el.getAttribute('href') || '';
+      const text = el.textContent?.trim().toLowerCase() || '';
+      return target === '_blank' || text.includes('company site') || text.includes('company website') || href.includes('gateway');
+    }, applyBtn);
+
+    if (isExternal) {
       console.log(`Job ${jobId} requires applying on company site. Skipping.`);
       return false;
     }
