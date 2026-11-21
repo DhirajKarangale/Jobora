@@ -96,7 +96,7 @@
 \section{Achievements}
 \begin{itemize}
     \item \textbf{Google Buildathon Winner} — Built an AI document intelligence platform; awarded \textbf{Best GenAI Solution}, \textbf{Infosys Cohere Award}, and featured on \textbf{Google Marketplace}.
-    \item Selected as \textbf{1 of 150 elite builders} from 5,000+ applicants for \textbf{Push to Prod 2026}, Anthropic's flagship Claude hackathon; \textbf{HackWithInfy Finalist}.
+    \item \textbf{Anthropic's Flagship Claude Hackathon (Push to Prod 2026)} — Selected as \textbf{1 of 150 elite builders} from 5,000+ global applicants; \textbf{HackWithInfy Finalist}.
     \item Achieved \href{https://leetcode.com/u/DhirajKarangale/}{\underline{\textbf{LeetCode Knight}}} (2,012 Rating), ranked in top \textbf{2.45\%} globally with \textbf{1K+} problems solved.
     \item Published open-source \href{https://www.npmjs.com/~dhirajkarangale}{\underline{\textbf{npm libraries}}} with \textbf{5K+ cumulative downloads}; shipped Android applications with \textbf{1.5M+ Play Store downloads}.
 \end{itemize}

@@ -95,7 +95,7 @@
 \section{Achievements}
 \begin{itemize}
     \item \textbf{Google Buildathon Winner} — Architected a schema-driven document intelligence engine; honored with \textbf{Best Solution Award}, \textbf{Infosys Cohere Award}, and featured on \textbf{Google Marketplace}.
-    \item \textbf{Push to Prod 2026 (Anthropic)} — Hand-picked as \textbf{1 of 150 elite builders} from 5,000+ global applicants; recognized as a \textbf{HackWithInfy Finalist} in Infosys' flagship national competitive programming contest.
+    \item \textbf{Anthropic's Flagship Claude Hackathon (Push to Prod 2026)} — Hand-picked as \textbf{1 of 150 elite builders} from 5,000+ global applicants; recognized as a \textbf{HackWithInfy Finalist} in Infosys' flagship contest.
     \item \href{https://leetcode.com/u/DhirajKarangale/}{\underline{\textbf{LeetCode Knight}}} (2,012 Rating, top \textbf{2.45\%} globally) with \textbf{1,000+} algorithmic problems solved across data structures, graph theory, and system design.
     \item \textbf{Open-Source \& Scale:} Published production \href{https://www.npmjs.com/~dhirajkarangale}{\underline{\textbf{npm libraries}}} with \textbf{5K+ downloads} (\texttt{satyamark-react}, \texttt{pdf-ppt-export-react}); shipped Android apps exceeding \textbf{1.5M+} Play Store downloads.
 \end{itemize}

@@ -23,7 +23,7 @@ Beyond Infosys, built a Customer 360 & Next Best Action AI copilot with hybrid R
 
 Passionate open-source contributor — published production-grade npm libraries with 5K+ cumulative downloads (SatyaMark React SDK, PDF & PPT Export). Shipped Android applications with 1.5M+ Google Play Store downloads. Active builder across AI and developer tooling.
 
-Recognized nationally and internationally — Google Buildathon Winner (Best GenAI Solution Award, Infosys Cohere Award), HackWithInfy Finalist, LeetCode Knight (top 2.45% globally, 1K+ problems solved), and hand-picked as 1 of 150 elite builders from 5,000+ applicants for Push to Prod 2026, Anthropic's flagship Claude hackathon.
+Recognized nationally and internationally — Google Buildathon Winner (Best GenAI Solution Award, Infosys Cohere Award), selected as 1 of 150 elite builders from 5,000+ global applicants for Anthropic's flagship Claude hackathon (Push to Prod 2026), HackWithInfy Finalist, and LeetCode Knight (top 2.45% globally, 1K+ problems solved).
 
 Core strengths: agentic AI architecture (LangChain, LangGraph, RAG, multi-agent orchestration, agent memory, guardrails), LLM integration & inference (prompt engineering, context engineering, semantic caching, structured outputs, tool calling), full-stack engineering (React, Node.js, TypeScript, Python, Java, Spring Boot), distributed systems design, and shipping production AI software with speed, quality, and security.
 
@@ -403,7 +403,7 @@ Job-matching platform for students to discover part-time and internship opportun
 ### Awards & Honors
 - **Google Buildathon Winner** — Won the buildathon, featured on Google Marketplace, received Best GenAI Solution Award and Infosys Cohere Award.
 - **HackWithInfy Finalist** — National-level coding competition by Infosys.
-- **Push to Prod 2026 (Anthropic)** — Selected as 1 of 150 elite builders from 5,000+ applicants for Anthropic's flagship Claude hackathon.
+- **Anthropic's Flagship Claude Hackathon (Push to Prod 2026)** — Selected as 1 of 150 elite builders globally from 5,000+ applicants to build cutting-edge agentic workflows with Anthropic and Claude.
 - **LeetCode Knight** — 2,012 Rating, ranked in the top 2.45% globally with 1,000+ problems solved across data structures, algorithms, and system design.
 
 ### Open-Source Impact
@@ -416,7 +416,7 @@ Job-matching platform for students to discover part-time and internship opportun
 - **HackWithInfy** — Finalist.
 - **Meta Global AI Developer Hackathon** — Participant.
 - **Snowflake CoCo CLI Hackathon 2026 (GCC Edition)** — Participant.
-- **Push to Prod 2026 (Anthropic Claude Hackathon)** — Selected builder (1 of 150 from 5,000+).
+- **Anthropic's Flagship Claude Hackathon (Push to Prod 2026)** — Selected builder (1 of 150 from 5,000+ applicants).
 - **Google AI Builder Cup** — Participant.
 - **Y Combinator Buildathon** — Participant.
 - **micro1 Frontier Engineering Challenge 2026** — Participant.
