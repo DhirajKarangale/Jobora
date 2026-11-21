@@ -3,15 +3,11 @@
 
 \usepackage{latexsym}
 \usepackage{titlesec}
-\usepackage{marvosym}
-\usepackage[usenames,dvipsnames]{color}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{enumitem}
 \usepackage[hidelinks,pdfnewwindow]{hyperref}
 \usepackage{fancyhdr}
 \usepackage[english]{babel}
-\usepackage{tabularx}
-\usepackage{xcolor}
-\usepackage{fontawesome5}
 \usepackage{geometry}
 \input{glyphtounicode}
 
@@ -77,15 +73,15 @@
     {\small \bfseries AI Engineer \enskip$|$\enskip Agentic AI Engineer \enskip$|$\enskip AI Full-Stack Engineer} \\ \vspace{3pt}
     \small
     \underline{+91 7620320595} \enskip
-    \faIcon{envelope} \href{mailto:dakarangale02@gmail.com}{\underline{dakarangale02@gmail.com}} \enskip
-    \faIcon{linkedin} \href{https://www.linkedin.com/in/dhiraj-karangale-464ab91bb/}{\underline{linkedin/dhiraj-karangale}} \enskip
-    \faIcon{github} \href{https://github.com/DhirajKarangale}{\underline{github/DhirajKarangale}} \enskip
-    \faIcon{code} \href{https://dhirajkarangale.vercel.app}{\underline{Portfolio}}
+    \href{mailto:dakarangale02@gmail.com}{\underline{dakarangale02@gmail.com}} \enskip
+    \href{https://www.linkedin.com/in/dhiraj-karangale-464ab91bb/}{\underline{linkedin/dhiraj-karangale}} \enskip
+    \href{https://github.com/DhirajKarangale}{\underline{github/DhirajKarangale}} \enskip
+    \href{https://dhirajkarangale.vercel.app}{\underline{Portfolio}}
 \end{center}
 
 % --- PROFESSIONAL SUMMARY ---
 \section{Professional Summary}
-AI-focused Software Engineer with 2.5+ years of experience architecting enterprise agentic workflows, multi-agent LangGraph systems, and multimodal RAG pipelines. Specialized in production LLM orchestration, semantic caching, zero-trust RBAC guardrails, and full-stack data plumbing delivering verified cost and latency reductions.
+AI-focused Software Engineer with 2+ years of experience architecting enterprise agentic workflows, multi-agent LangGraph systems, and multimodal RAG pipelines. Specialized in production LLM orchestration, semantic caching, zero-trust RBAC guardrails, and full-stack data plumbing delivering verified cost and latency reductions.
 
 % --- SKILLS ---
 \section{Skills}
@@ -93,19 +89,19 @@ AI-focused Software Engineer with 2.5+ years of experience architecting enterpri
     \item \textbf{Agentic AI \& Orchestration:} Generative AI, Large Language Models (LLMs), Agentic AI, LangGraph (StateGraph), Multi-Agent Orchestration, ReAct Pattern, Human-in-the-Loop (HITL), Multi-Tier Agent Memory, Supervisor Patterns, Tool \& Function Calling, Browser Automation (Puppeteer), Structured Outputs (Pydantic, JSON Schema), Model Context Protocol (MCP), A2A Protocol, Claude Agent SDK, Google ADK
     \item \textbf{LLM Optimization \& Evals:} Context Engineering, Token Headroom Management, Context Compaction, Prompt Caching, Semantic Caching, LLM Evaluation (Evals, AI-as-a-Judge), LangSmith, Langfuse, Ragas, DeepEval, Hallucination Detection, AI Guardrails, Deterministic-to-Semantic Guardrails, Post-LLM Validation, Prompt-Injection Defense, Zero-Trust RBAC
     \item \textbf{RAG \& Multimodal Systems:} Retrieval-Augmented Generation (RAG), Hybrid RAG (Dense/Sparse Retrieval), Vector Search \& Databases (Qdrant, Pinecone, FAISS, pgvector), Reranking (Cross-Encoders), Embeddings (Snowflake Arctic Embed), BM25, TF-IDF, Text-to-SQL (NL2SQL), Layout-Aware OCR (Bounding Boxes), Vision-Language Models (VLM), Voice AI (Faster-Whisper STT, TTS), AI Image Forensics
-    \item \textbf{Foundation Models \& Serving:} Anthropic Claude (3.5 Sonnet), OpenAI (GPT-4o), Google Gemini, DeepSeek (R1, V3), Llama 3.3, Qwen 2.5, Hugging Face Transformers, PyTorch, vLLM, LLM Gateway, Multi-Provider Failover \& Resilient Fallback Cascades, Token Exhaustion Handling, AWS Bedrock, GCP Vertex AI, Snowflake Cortex
+    \item \textbf{Foundation Models \& Serving:} Anthropic Claude, OpenAI (GPT), Google Gemini, Meta Llama, DeepSeek, Qwen, Hugging Face Transformers, PyTorch, vLLM, LLM Gateway, Multi-Provider Failover, Resilient Fallback Cascades, Token Exhaustion Handling, AWS Bedrock, GCP Vertex AI, Snowflake Cortex
     \item \textbf{Full-Stack \& Cloud Infrastructure:} Python (Asyncio), TypeScript, JavaScript, React, Node.js, FastAPI, PostgreSQL, Redis Streams (Consumer Groups), WebSockets, Server-Sent Events (SSE), Docker, Micro-Frontends (Webpack Module Federation), AWS (S3, Parameter Store), GCP (Cloud Run, Cloud SQL), Puppeteer, REST APIs, CI/CD
 \end{skillslist}
 
 % --- EXPERIENCE ---
 \section{Experience}
 
-\subsection{Infosys $|$ \normalfont\footnotesize\emph{Specialist Programmer – Software Development Engineer} \hspace*{\fill} \normalfont\small Aug 2024 -- Present}
+\subsection{Infosys $|$ \normalfont\footnotesize\emph{Specialist Programmer -- Software Development Engineer} \hspace*{\fill} \normalfont\small Aug 2024 -- Present}
 \begin{itemize}
     \item Architected \textbf{DB Wiki}, an enterprise \textbf{multi-agent Text-to-SQL (NL2SQL)} platform using \textbf{LangGraph (StateGraph)}-orchestrated \textbf{Navigator, Planner, Writer, and Validator agents} with \textbf{ReAct reasoning loops} and \textbf{tool calling}, enabling natural-language analytics via \textbf{PostgreSQL database introspection} across \textbf{2,500+ tables} with \textbf{RBAC} query guardrails and \textbf{prompt-injection defense}.
     \item Engineered a two-tier \textbf{query-plan cache} (BM25 lexical retrieval + TF-IDF similarity) and \textbf{prompt caching} strategy for query-plan and SQL reuse, slashing latency by \textbf{40\%} and token costs by \textbf{50\%}; enforced \textbf{headroom management} and deterministic-to-semantic SQL validation with automated \textbf{hallucination detection} and retry loops.
-    \item Pioneered a schema-driven \textbf{multimodal document intelligence platform} featuring adaptive OCR, \textbf{bounding-box detection}, layout-aware extraction, and \textbf{LLM evaluation harnesses (AI-as-a-judge)} for structured output validation — \textbf{won Google Buildathon} (\textbf{Best GenAI Solution}, Infosys Cohere Award), reducing business processing time by \textbf{80\%}.
-    \item Developed an \textbf{AI-powered Transcript-to-PDD (Process Design Document) platform} using \textbf{LangGraph Human-in-the-Loop (HITL)} orchestration with persistent checkpointing, multi-stage \textbf{NLP pipelines} (\textbf{context compaction}, token optimization), and \textbf{multimodal video analysis (OCR + VLM visual-evidence mapping)} — reducing document creation from hours to under \textbf{5 minutes} (\textbf{95\%+ time reduction}).
+    \item Pioneered a schema-driven \textbf{multimodal document intelligence platform} featuring adaptive OCR, \textbf{bounding-box detection}, layout-aware extraction, and \textbf{LLM evaluation harnesses (AI-as-a-judge)} for structured output validation -- \textbf{won Google Buildathon}, reducing business processing time by \textbf{80\%}.
+    \item Developed an \textbf{AI-powered Transcript-to-PDD (Process Design Document) platform} using \textbf{LangGraph Human-in-the-Loop (HITL)} orchestration with persistent checkpointing, multi-stage \textbf{NLP pipelines} (\textbf{context compaction}, token optimization), and \textbf{multimodal video analysis (OCR + VLM visual-evidence mapping)} -- reducing document creation from hours to under \textbf{5 minutes} (\textbf{95\%+ time reduction}).
     \item Designed horizontally scalable, \textbf{asynchronous processing} backend pipelines utilizing \textbf{Python (FastAPI)}, \textbf{Node.js}, and \textbf{Redis Streams} consumer groups to handle concurrent multimodal ingestion; built automated \textbf{Microsoft Teams integrations} for meeting transcript and video retrieval.
     \item Delivered enterprise \textbf{React micro-frontend applications} (Webpack Module Federation) with real-time \textbf{Server-Sent Events (SSE)} for live AI token streaming, deployed on \textbf{AWS} and \textbf{GCP}; boosted application throughput by \textbf{25\%} via API and query optimizations, with reporting modules adopted across \textbf{7+ enterprise projects by 3 teams}.
 \end{itemize}
@@ -118,8 +114,8 @@ AI-focused Software Engineer with 2.5+ years of experience architecting enterpri
 % --- ACHIEVEMENTS ---
 \section{Achievements}
 \begin{itemize}
-    \item \textbf{Google Buildathon Winner} — Awarded \textbf{Best GenAI Solution} and \textbf{Infosys Cohere Award} for universal multimodal document intelligence; solution featured on \textbf{Google Marketplace}.
-    \item \textbf{Anthropic's Flagship Claude Hackathon (Push to Prod 2026)} — Selected as \textbf{1 of 150 elite builders globally} from 5,000+ applicants to architect production agentic workflows with Claude.
+    \item \textbf{Google Buildathon Winner} -- Awarded \textbf{Best GenAI Solution} and \textbf{Infosys Cohere Award} for universal multimodal document intelligence; solution featured on \textbf{Google Marketplace}.
+    \item \textbf{Anthropic's Flagship Claude Hackathon (Push to Prod 2026)} -- Selected as \textbf{1 of 150 elite builders globally} from 5,000+ applicants to architect production agentic workflows with Claude.
     \item Achieved \href{https://leetcode.com/u/DhirajKarangale/}{\underline{\textbf{LeetCode Knight}}} (2,012 Rating), ranking in the top \textbf{2.45\% globally} with \textbf{1,000+ problems solved} across data structures and algorithms.
     \item Published open-source \href{https://www.npmjs.com/~dhirajkarangale}{\underline{\textbf{npm libraries}}} with \textbf{5K+ cumulative downloads}, including \textbf{satyamark-react} (4K+ downloads) for real-time AI claim verification.
 \end{itemize}
@@ -130,20 +126,20 @@ AI-focused Software Engineer with 2.5+ years of experience architecting enterpri
 \subsection{\href{https://customer360-theta.vercel.app/}{\underline{Customer 360}} $|$ \normalfont\footnotesize\emph{LangGraph, LangChain, Hybrid RAG, Snowflake Cortex, Arctic Embed, FAISS, Redis, PostgreSQL} \hspace*{\fill} \normalfont\small 2026}
 \begin{itemize}
     \item Built for the \textbf{Snowflake CoCo CLI Hackathon}, an enterprise \textbf{multi-agent AI copilot} featuring \textbf{hybrid Retrieval-Augmented Generation (RAG)} (Snowflake Arctic Embed + FAISS vector search), \textbf{ReAct reasoning loops}, and \textbf{safe Text-to-SQL} analytics.
-    \item Designed \textbf{multi-tier agent memory} (LangGraph short-term, Redis sliding-window, long-term episodic) with an \textbf{LLM Gateway} providing \textbf{multi-provider failover and fallback cascades} (Google GenAI, Groq Llama 3.3, Snowflake Cortex) with \textbf{token exhaustion handling}, cutting costs by \textbf{35\%} via \textbf{semantic caching}.
+    \item Designed \textbf{multi-tier agent memory} (LangGraph short-term, Redis sliding-window, long-term episodic) with an \textbf{LLM Gateway} providing \textbf{multi-provider failover and fallback cascades} (Google GenAI, Groq Llama, Snowflake Cortex) with \textbf{token exhaustion handling}, cutting costs by \textbf{35\%} via \textbf{semantic caching}.
     \item Developed an autonomous \textbf{Next Best Action engine} utilizing \textbf{Model Context Protocol (MCP)} for tool execution with \textbf{structured outputs (Pydantic)}; enforced \textbf{zero-trust RBAC}, and \textbf{LangSmith AI-as-a-judge regression evals (92\%+ faithfulness)} against golden datasets.
 \end{itemize}
 
-\subsection{\href{https://github.com/DhirajKarangale/Mira}{\underline{MIRA}} $|$ \normalfont\footnotesize\emph{LangGraph, Local-First RAG, Qdrant, VLM, Faster-Whisper, Tauri 2 (Rust), FastAPI, Redis Streams} \hspace*{\fill} \normalfont\small 2026}
+\subsection{\href{https://github.com/DhirajKarangale/Mira}{\underline{MIRA}} $|$ \normalfont\footnotesize\emph{LangGraph, Local-First RAG, Qdrant, VLM, Faster-Whisper, Tauri 2, FastAPI, Redis Streams} \hspace*{\fill} \normalfont\small 2026}
 \begin{itemize}
     \item Architected a \textbf{privacy-first agentic AI assistant} featuring \textbf{local-first hybrid RAG} (vector search + cross-encoder reranking), proactive daily intelligence workflows, and cyclic state machines orchestrated via \textbf{LangGraph} and \textbf{FastAPI}.
     \item Engineered a multimodal ingestion pipeline with word-level \textbf{layout-aware OCR (bounding boxes)}, perceptual-hash deduplication, and \textbf{Vision-Language Models (VLM)}, indexing 1024-dim semantic embeddings into a local \textbf{Qdrant} vector store.
-    \item Designed \textbf{layered agent memory} with local \textbf{Qwen3 embedding inference}, temporal search, and on-device \textbf{Voice AI (Faster-Whisper STT \& TTS)} achieving sub-second (\textbf{<850ms}) response; enforced \textbf{context compaction} and \textbf{token headroom management}.
+    \item Designed \textbf{layered agent memory} with local \textbf{Qwen embedding inference}, temporal search, and on-device \textbf{Voice AI (Faster-Whisper STT \& TTS)} achieving sub-second (\textbf{$<$850ms}) response; enforced \textbf{context compaction} and \textbf{token headroom management}.
 \end{itemize}
 
-\subsection{\href{https://satyamark.vercel.app/}{\underline{SatyaMark}} $|$ \normalfont\footnotesize\emph{LangGraph, LangChain, Multi-Modal RAG, Claude 3.5 Sonnet, Hugging Face, Redis Streams, WebSockets} \hspace*{\fill} \normalfont\small 2025}
+\subsection{\href{https://satyamark.vercel.app/}{\underline{SatyaMark}} $|$ \normalfont\footnotesize\emph{LangGraph, LangChain, Multi-Modal RAG, Claude, Hugging Face, Redis Streams, WebSockets} \hspace*{\fill} \normalfont\small 2025}
 \begin{itemize}
-    \item Built an open-source \textbf{multimodal content verification platform} with \textbf{LangGraph} orchestration, \textbf{Claude 3.5 Sonnet}, and live web search for automated claim extraction, verifiability assessment, and real-time misinformation detection.
+    \item Built an open-source \textbf{multimodal content verification platform} with \textbf{LangGraph} orchestration, \textbf{Claude}, and live web search for automated claim extraction, verifiability assessment, and real-time misinformation detection.
     \item Implemented \textbf{Map-Reduce fact-checking} and \textbf{AI-as-a-judge evidence scoring} evaluating claims across 5+ web sources with \textbf{90\%+ faithfulness}; integrated \textbf{AI image forensics} to detect synthetic media with calibrated confidence scores.
     \item Architected an asynchronous worker engine using \textbf{Redis Streams} and real-time WebSocket streaming; published the open-source \href{https://www.npmjs.com/package/satyamark-react}{\underline{\textbf{satyamark-react}}} SDK with \textbf{4K+ npm downloads}.
 \end{itemize}
