@@ -104,7 +104,7 @@ Core strengths: agentic AI architecture (LangChain, LangGraph, RAG, multi-agent 
 
 ### Infosys — Specialist Programmer (Software Development Engineer)
 
-**Duration:** August 2024 – Present (1.3+ years)
+**Duration:** August 2024 – Present (2.3+ years)
 **Employment:** Full-Time | **Location:** India (On-site)
 
 #### Enterprise Dashboard Export Library
