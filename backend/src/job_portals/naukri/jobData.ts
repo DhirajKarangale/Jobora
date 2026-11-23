@@ -126,41 +126,35 @@ async function handleApply(browser: ResilientBrowser, page: Page, currentUrl: st
         return { applied: false, applyLink: directUrl };
       }
 
-      // 2. Click button to capture redirected tab and ensure all new tabs are closed
-      const initialPages = await browser.pages();
+      // 2. Click button to capture redirected tab and ensure only its tab is closed
       const isDisabled = await page.evaluate((btn) => (btn as HTMLButtonElement).disabled, companySiteBtn);
       if (!isDisabled) {
+        let newPageUrl: string | null = null;
+        let popupPage: Page | null = null;
+
+        const rawBrowser = await browser.getBrowser();
+        const newTargetPromise = rawBrowser.waitForTarget(
+          t => t.opener() === page.target(),
+          { timeout: 8000 }
+        ).catch(() => null);
+
         await page.evaluate((btn) => (btn as HTMLElement).click(), companySiteBtn);
 
-        let newPageUrl: string | null = null;
-        for (let i = 0; i < 15; i++) {
-          await delay(WAIT_TIME);
-          const currentPages = await browser.pages();
-          const newPages = currentPages.filter(p => !initialPages.includes(p) && p !== page);
-
-          if (newPages.length > 0) {
-            for (const np of newPages) {
-              try {
-                const u = np.url();
-                if (u && u !== 'about:blank' && !newPageUrl) {
-                  newPageUrl = u;
-                }
-              } catch {}
-            }
-            if (newPageUrl && newPageUrl !== 'about:blank') {
-              break;
+        const newTarget = await newTargetPromise;
+        if (newTarget) {
+          popupPage = await newTarget.page();
+          if (popupPage) {
+            try {
+              await delay(WAIT_TIME);
+              const u = popupPage.url();
+              if (u && u !== 'about:blank') {
+                newPageUrl = u;
+              }
+            } finally {
+              await safeClosePage(popupPage);
             }
           }
         }
-
-        // Close ALL new pages opened by clicking the company site button
-        try {
-          const currentPages = await browser.pages();
-          const newPages = currentPages.filter(p => !initialPages.includes(p) && p !== page);
-          for (const np of newPages) {
-            await safeClosePage(np);
-          }
-        } catch (e) {}
 
         if (newPageUrl) {
           return { applied: false, applyLink: newPageUrl };
@@ -206,15 +200,18 @@ async function handleApply(browser: ResilientBrowser, page: Page, currentUrl: st
 export async function getJobData(browser: ResilientBrowser, jobIds: string[]) {
   for (const jobId of jobIds) {
     let page: Page | null = null;
-    let initialPages: Page[] = [];
     try {
       const cleanJobId = jobId ? jobId.trim().toLowerCase() : "";
       if (!cleanJobId || await isJobExisting(cleanJobId)) continue;
 
-      initialPages = await browser.pages();
       page = await browser.newPage();
       const applicationLink = `${NAUKRI_URL_JOB}${cleanJobId}`;
-      await page.goto(applicationLink, { waitUntil: "load" });
+      try {
+        await page.goto(applicationLink, { waitUntil: "domcontentloaded", timeout: 45000 });
+      } catch (navErr: any) {
+        console.warn(`[Naukri] Navigation failed or timed out for job ID ${cleanJobId}:`, navErr.message);
+        continue;
+      }
       await delay(WAIT_TIME);
 
       const isAlreadyApplied = await page.evaluate(() => {
@@ -288,15 +285,6 @@ export async function getJobData(browser: ResilientBrowser, jobIds: string[]) {
       console.error(`[Naukri] Error processing job ${jobId}:`, err);
     } finally {
       await safeClosePage(page);
-      // Guarantee ANY auxiliary page opened during this job is closed
-      try {
-        const currentPages = await browser.pages();
-        for (const p of currentPages) {
-          if (!initialPages.includes(p) && !p.isClosed()) {
-            await safeClosePage(p);
-          }
-        }
-      } catch (e) {}
     }
   }
 }

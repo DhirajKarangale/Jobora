@@ -718,7 +718,7 @@ export default async function instahyer(resilientBrowser: ResilientBrowser): Pro
         shouldRestart = true;
       };
 
-      await page.goto(INSTAHYRE_URL_JOB_SEARCH, { waitUntil: "load" });
+      await page.goto(INSTAHYRE_URL_JOB_SEARCH, { waitUntil: "domcontentloaded", timeout: 45000 });
       await delay(WAIT_TIME);
 
       // 1. Process visible jobs on root page

@@ -274,7 +274,6 @@ export async function getJobData(resilientBrowser: ResilientBrowser, jobIds: str
 
   for (const jobId of jobIds) {
     let page: Page | null = null;
-    let initialPages: Page[] = [];
     try {
       const cleanJobId = jobId ? jobId.trim().toLowerCase() : "";
       if (!cleanJobId || await isJobExisting(cleanJobId)) {
@@ -283,10 +282,14 @@ export async function getJobData(resilientBrowser: ResilientBrowser, jobIds: str
       }
       console.log(`[Wellfound] Navigating to apply for job ID: ${cleanJobId}`);
 
-      initialPages = await resilientBrowser.pages();
       page = await resilientBrowser.newPage();
       const applicationLink = `${WELLFOUND_URL_JOB}${cleanJobId}`;
-      await page.goto(applicationLink, { waitUntil: "load" });
+      try {
+        await page.goto(applicationLink, { waitUntil: "domcontentloaded", timeout: 45000 });
+      } catch (navErr: any) {
+        console.warn(`[Wellfound] Navigation timeout or error for job ID ${cleanJobId}:`, navErr.message);
+        continue;
+      }
       await delay(WAIT_TIME);
 
       const data = await extractData(page, jobId);
@@ -345,14 +348,6 @@ export async function getJobData(resilientBrowser: ResilientBrowser, jobIds: str
       console.error(`[Wellfound] Error processing job ID ${jobId}:`, err);
     } finally {
       await safeClosePage(page);
-      try {
-        const currentPages = await resilientBrowser.pages();
-        for (const p of currentPages) {
-          if (!initialPages.includes(p) && !p.isClosed()) {
-            await safeClosePage(p);
-          }
-        }
-      } catch (e) {}
     }
   }
 }

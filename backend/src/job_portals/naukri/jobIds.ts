@@ -34,7 +34,13 @@ async function extractJobIds(page: Page): Promise<string[]> {
 
 export async function getJobIds(browser: ResilientBrowser): Promise<string[]> {
   const page = await browser.newPage();
-  await page.goto(NAUKRI_URL_JOB_SEARCH, { waitUntil: "load" });
+  try {
+    await page.goto(NAUKRI_URL_JOB_SEARCH, { waitUntil: "domcontentloaded", timeout: 45000 });
+  } catch (err: any) {
+    console.error("[Naukri] Search page navigation timeout or error:", err.message);
+    try { if (!page.isClosed()) await page.close(); } catch {}
+    return [];
+  }
   await delay(WAIT_TIME);
 
   let pageCount = JOB_PORTAL_PAGINATATION;

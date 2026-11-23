@@ -48,16 +48,18 @@ export async function handleEasyApply(page: Page, jobId: string, targetResumeNam
 
   if (href && href.includes('apply')) {
     const fullUrl = href.startsWith('http') ? href : `https://www.linkedin.com${href}`;
-    await page.goto(fullUrl, { waitUntil: 'domcontentloaded' });
+    try {
+      await page.goto(fullUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    } catch (navErr: any) {
+      console.warn(`[LinkedIn AutoApply] Navigation error for job ${jobId}:`, navErr.message);
+      return false;
+    }
   } else {
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 5000 }).catch(() => { }),
-      easyApplyBtn.evaluate(b => (b as HTMLElement).click())
-    ]);
+    await easyApplyBtn.evaluate(b => (b as HTMLElement).click());
   }
 
   try {
-    await page.waitForSelector('.jobs-easy-apply-modal', { timeout: 15000 });
+    await page.waitForSelector('.jobs-easy-apply-modal, [role="dialog"]', { timeout: 15000 });
     await delay(WAIT_TIME_AUTO_APPLY);
   } catch (e) {
   }
@@ -66,9 +68,20 @@ export async function handleEasyApply(page: Page, jobId: string, targetResumeNam
   let stuckCounter = 0;
 
   for (let i = 0; i < 10; i++) {
-    const currentFields = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('input, select, textarea, label, legend')).map(el => (el as any).name || el.id || el.textContent?.trim() || '').join('|');
-    });
+    if (page.isClosed()) return false;
+
+    let currentFields = "";
+    try {
+      currentFields = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('input, select, textarea, label, legend')).map(el => (el as any).name || el.id || el.textContent?.trim() || '').join('|');
+      });
+    } catch (err: any) {
+      if (err?.message?.includes("detached") || err?.message?.includes("Target closed")) {
+        console.warn(`[LinkedIn AutoApply] Target or frame unavailable during evaluation for job ${jobId}:`, err.message);
+        return false;
+      }
+      throw err;
+    }
 
     if (currentFields && currentFields === previousFields) {
       stuckCounter++;

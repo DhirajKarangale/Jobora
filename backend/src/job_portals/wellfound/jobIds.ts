@@ -71,7 +71,13 @@ async function extractJobIds(page: Page): Promise<string[]> {
 
 export async function getJobIds(resilientBrowser: ResilientBrowser): Promise<string[]> {
   const page = await resilientBrowser.newPage();
-  await page.goto(WELLFOUND_URL_JOB_SEARCH, { waitUntil: "load" });
+  try {
+    await page.goto(WELLFOUND_URL_JOB_SEARCH, { waitUntil: "domcontentloaded", timeout: 45000 });
+  } catch (err: any) {
+    console.error("[Wellfound] Search page navigation timeout or error:", err.message);
+    try { if (!page.isClosed()) await page.close(); } catch {}
+    return [];
+  }
   await delay(WAIT_TIME);
 
   let pageCount = JOB_PORTAL_PAGINATATION;
