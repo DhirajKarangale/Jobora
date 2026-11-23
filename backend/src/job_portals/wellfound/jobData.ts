@@ -24,74 +24,141 @@ async function safeClosePage(page: Page | null | undefined): Promise<void> {
 
 async function extractData(page: Page, jobId: string) {
   return await page.evaluate(() => {
-    // 1. Locate the Slide-In Container to avoid extracting from background feed
+    // Look inside slide-in / dialog container if present, or search the full document
     const slideIn = document.querySelector(
       '[data-test="JobDescriptionSlideIn"], [data-test*="SlideIn"], [class*="JobDescriptionSlideIn"], [role="dialog"]'
     );
-    const submitBtn = document.querySelector('button[data-test="JobDescriptionSlideIn--SubmitButton"]');
-    const successBanner = document.querySelector('div.bg-green-600, div[class*="bg-green-"], div[class*="bg-emerald-"]');
-    const anchor = slideIn || submitBtn || successBanner;
+    const root: Element | Document = slideIn || document;
 
-    let container: Element | Document = document;
-    if (slideIn) {
-      container = slideIn;
-    } else if (anchor) {
-      let curr: Element | null = anchor;
-      while (curr && curr.tagName !== 'BODY') {
-        if (curr.querySelector('h1')) {
-          container = curr;
-          break;
-        }
-        curr = curr.parentElement;
-      }
-    }
+    // 1. Role: <h1 class="inline text-xl font-semibold text-black">AI Engineer</h1>
+    const role = root.querySelector('h1')?.textContent?.trim() ||
+                 document.querySelector('h1')?.textContent?.trim() || '';
 
-    const role = container.querySelector('h1')?.textContent?.trim() || '';
+    // 2. Extract Company Name
+    let companyName: string | null = null;
 
-    // 2. Extract Company Name from within the container
-    let companyName = null;
-    const companyAnchors = Array.from(container.querySelectorAll('a[href^="/company/"]'));
+    // a. Anchor tags linking to /company/ or /startup/
+    const companyAnchors = Array.from(root.querySelectorAll('a[href*="/company/"], a[href*="/startup/"]'))
+      .concat(Array.from(document.querySelectorAll('a[href*="/company/"], a[href*="/startup/"]')));
+
     for (const a of companyAnchors) {
-      // Prioritize span text if it exists (new UI)
       const span = a.querySelector('span');
-      const text = span ? span.textContent?.trim() : a.textContent?.trim();
-
-      if (text && !a.querySelector('img')) {
+      const text = (span ? span.textContent : a.textContent)?.trim();
+      if (text && text.length > 1 && !text.toLowerCase().includes('wellfound') && !text.toLowerCase().includes('overview')) {
         companyName = text;
         break;
       }
     }
 
+    // b. Startup / Company name elements or data-test attributes
+    if (!companyName) {
+      const startupNameEl = root.querySelector('[data-test="StartupName"], [class*="startupName"], [class*="companyName"]') ||
+                            document.querySelector('[data-test="StartupName"], [class*="startupName"], [class*="companyName"]');
+      if (startupNameEl) {
+        companyName = startupNameEl.textContent?.trim() || null;
+      }
+    }
+
+    // c. Logo image alt text (e.g., alt="Loyalty Juggernaut logo")
+    if (!companyName) {
+      const logoImg = root.querySelector('img[alt*="logo" i], img[alt*="Logo" i]') ||
+                      document.querySelector('img[alt*="logo" i], img[alt*="Logo" i]');
+      if (logoImg) {
+        const alt = logoImg.getAttribute('alt') || '';
+        const cleaned = alt.replace(/\s+logo\s*$/i, '').trim();
+        if (cleaned.length > 1) {
+          companyName = cleaned;
+        }
+      }
+    }
+
+    // d. Fallback to document.title ("Role at Company | Wellfound" or "Company is hiring...")
+    if (!companyName && document.title) {
+      const cleanTitle = document.title.replace(/\s*\|\s*Wellfound.*$/i, '').trim();
+      if (cleanTitle.includes(' at ')) {
+        companyName = cleanTitle.split(/\s+at\s+/i)[1]?.trim() || null;
+      } else if (cleanTitle.includes(' is hiring ')) {
+        companyName = cleanTitle.split(/\s+is hiring\s+/i)[0]?.trim() || null;
+      }
+    }
+
+    // 3. Top meta items: Experience, Salary, Location
+    // <ul class="flex flex-wrap text-md text-black">
+    //   <li>Hyderabad</li> <li>| 2 years of exp</li> <li>| Full Time</li>
+    // </ul>
     const topListItems = Array.from(
-      container.querySelectorAll('ul.flex.flex-wrap.text-md.text-black li, ul.flex.flex-wrap li')
+      root.querySelectorAll('ul.flex.flex-wrap li, ul[class*="text-md"] li')
+    ).concat(
+      Array.from(document.querySelectorAll('ul.flex.flex-wrap li, ul[class*="text-md"] li'))
     );
+
     let salary = '';
     let experience = '';
 
     for (const li of topListItems) {
-      const text = li.textContent?.trim() || '';
-      if (text.includes('₹') || text.includes('$')) {
+      const raw = li.textContent || '';
+      const text = raw.replace(/^[|•\s]+/, '').replace(/[|•\s]+$/, '').trim();
+      if ((text.includes('₹') || text.includes('$')) && !salary) {
         salary = text;
       }
-      if (text.includes('exp') || text.toLowerCase().includes('year')) {
-        experience = text.replace('|', '').trim();
+      if ((text.toLowerCase().includes('exp') || text.toLowerCase().includes('year')) && !experience) {
+        experience = text.replace(/^\|\s*/, '').trim();
       }
     }
 
-    const locationSpan = Array.from(container.querySelectorAll('span')).find(
-      el => el.textContent?.trim() === 'Job Location' || el.textContent?.trim() === 'Location'
-    );
-    const location = locationSpan?.nextElementSibling?.textContent?.trim() || '';
+    // 4. Location:
+    // Location link: <a href="/location/hyderabad">Hyderabad</a> or grid section: <span>Job Location</span>
+    let location = root.querySelector('a[href*="/location/"]')?.textContent?.trim() ||
+                   document.querySelector('a[href*="/location/"]')?.textContent?.trim() || '';
 
-    const skillsSpan = Array.from(container.querySelectorAll('span')).find(
-      el => el.textContent?.trim() === 'Skills'
-    );
-    const skillsContainer = skillsSpan?.nextElementSibling;
-    const skills = skillsContainer
-      ? Array.from(skillsContainer.children).map(el => el.textContent?.trim()).filter(Boolean).join(', ')
-      : '';
+    if (!location) {
+      const locationSpan = Array.from(root.querySelectorAll('span'))
+        .concat(Array.from(document.querySelectorAll('span')))
+        .find(el => el.textContent?.trim() === 'Job Location' || el.textContent?.trim() === 'Location');
+      if (locationSpan) {
+        const parent = locationSpan.closest('div');
+        const locLink = parent?.querySelector('a, div.flex, p');
+        location = locLink?.textContent?.trim() || '';
+      }
+    }
 
-    const about = container.querySelector('#job-description')?.textContent?.trim() || '';
+    // 5. Skills:
+    // <span class="text-md font-semibold">Skills</span>
+    // <div class="flex flex-wrap"><div class="...">AI</div>...</div>
+    let skills = '';
+    const skillsSpan = Array.from(root.querySelectorAll('span'))
+      .concat(Array.from(document.querySelectorAll('span')))
+      .find(el => el.textContent?.trim() === 'Skills');
+
+    if (skillsSpan) {
+      const parentDiv = skillsSpan.closest('div');
+      if (parentDiv) {
+        const skillBadges = Array.from(parentDiv.querySelectorAll('div[class*="rounded"], div.flex.flex-wrap > div'));
+        const filtered = skillBadges
+          .map(el => el.textContent?.trim() || '')
+          .filter(t => t && t !== 'Skills');
+        skills = Array.from(new Set(filtered)).join(', ');
+      }
+    }
+
+    // 6. About the job / Description:
+    // <div class="styles_description__xjvTf inline-block text-black" id="job-description">
+    let about = root.querySelector('#job-description, [data-test="JobDescription"], [class*="styles_description_"], [class*="jobDescription"]')
+      ?.textContent?.trim() ||
+      document.querySelector('#job-description, [data-test="JobDescription"], [class*="styles_description_"], [class*="jobDescription"]')
+      ?.textContent?.trim() || '';
+
+    if (!about) {
+      const aboutHeader = Array.from(root.querySelectorAll('h2, h3, span'))
+        .concat(Array.from(document.querySelectorAll('h2, h3, span')))
+        .find(el => {
+          const t = el.textContent?.trim().toLowerCase() || '';
+          return t.includes('about the job') || t.includes('about the role');
+        });
+      if (aboutHeader && aboutHeader.parentElement) {
+        about = aboutHeader.parentElement.textContent?.trim() || '';
+      }
+    }
 
     return {
       role,
@@ -290,6 +357,9 @@ export async function getJobData(resilientBrowser: ResilientBrowser, jobIds: str
         console.warn(`[Wellfound] Navigation timeout or error for job ID ${cleanJobId}:`, navErr.message);
         continue;
       }
+      try {
+        await page.waitForSelector('h1, #job-description', { timeout: 10000 });
+      } catch {}
       await delay(WAIT_TIME);
 
       const data = await extractData(page, jobId);
