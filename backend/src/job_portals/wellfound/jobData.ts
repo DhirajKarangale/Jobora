@@ -24,55 +24,122 @@ async function safeClosePage(page: Page | null | undefined): Promise<void> {
 
 async function extractData(page: Page, jobId: string) {
   return await page.evaluate(() => {
-    // Look inside slide-in / dialog container if present, or search the full document
+    // 1. Identify the Active Job Card
+    const companyHeader = document.querySelector('[data-test="JobListingCompanyHeader"]');
+    const jobDescEl = document.querySelector('#job-description');
     const slideIn = document.querySelector(
       '[data-test="JobDescriptionSlideIn"], [data-test*="SlideIn"], [class*="JobDescriptionSlideIn"], [role="dialog"]'
     );
-    const root: Element | Document = slideIn || document;
 
-    // 1. Role: <h1 class="inline text-xl font-semibold text-black">AI Engineer</h1>
-    const role = root.querySelector('h1')?.textContent?.trim() ||
-                 document.querySelector('h1')?.textContent?.trim() || '';
+    // Find the closest card container wrapping the active job
+    const activeCard: Element | Document = 
+      companyHeader?.closest('div[class*="rounded-xl"]') ||
+      jobDescEl?.closest('div[class*="rounded-xl"]') ||
+      companyHeader?.parentElement ||
+      slideIn ||
+      document;
 
-    // 2. Extract Company Name
-    let companyName: string | null = null;
+    // 2. Role Extraction
+    let role = '';
+    const isNoiseRole = (text: string | null | undefined): boolean => {
+      if (!text) return true;
+      const lower = text.trim().toLowerCase();
+      return (
+        lower.length < 3 ||
+        lower === 'search for jobs' ||
+        lower.startsWith('search for jobs') ||
+        lower.includes('search for jobs') ||
+        lower === 'wellfound' ||
+        lower === 'jobs' ||
+        lower === 'overview' ||
+        lower === 'discover'
+      );
+    };
 
-    // a. Anchor tags linking to /company/ or /startup/
-    const companyAnchors = Array.from(root.querySelectorAll('a[href*="/company/"], a[href*="/startup/"]'))
-      .concat(Array.from(document.querySelectorAll('a[href*="/company/"], a[href*="/startup/"]')));
+    const roleCandidates = Array.from(
+      activeCard.querySelectorAll('h1.inline, h1.text-xl, h1.font-semibold, h1[class*="text-xl"], h1')
+    ).concat(
+      Array.from(document.querySelectorAll('h1.inline, h1.text-xl, h1.font-semibold, h1[class*="text-xl"], h1'))
+    );
 
-    for (const a of companyAnchors) {
-      const span = a.querySelector('span');
-      const text = (span ? span.textContent : a.textContent)?.trim();
-      if (text && text.length > 1 && !text.toLowerCase().includes('wellfound') && !text.toLowerCase().includes('overview')) {
-        companyName = text;
+    for (const h of roleCandidates) {
+      const t = h.textContent?.trim() || '';
+      if (!isNoiseRole(t)) {
+        role = t;
         break;
       }
     }
 
-    // b. Startup / Company name elements or data-test attributes
-    if (!companyName) {
-      const startupNameEl = root.querySelector('[data-test="StartupName"], [class*="startupName"], [class*="companyName"]') ||
-                            document.querySelector('[data-test="StartupName"], [class*="startupName"], [class*="companyName"]');
-      if (startupNameEl) {
-        companyName = startupNameEl.textContent?.trim() || null;
-      }
-    }
+    // 3. Extract Company Name
+    let companyName: string | null = null;
 
-    // c. Logo image alt text (e.g., alt="Loyalty Juggernaut logo")
-    if (!companyName) {
-      const logoImg = root.querySelector('img[alt*="logo" i], img[alt*="Logo" i]') ||
-                      document.querySelector('img[alt*="logo" i], img[alt*="Logo" i]');
-      if (logoImg) {
-        const alt = logoImg.getAttribute('alt') || '';
-        const cleaned = alt.replace(/\s+logo\s*$/i, '').trim();
-        if (cleaned.length > 1) {
-          companyName = cleaned;
+    // a. Directly from [data-test="JobListingCompanyHeader"] (Wellfound's dedicated company header)
+    if (companyHeader) {
+      // Check font-semibold span inside company link: <a href="/company/..."><span class="text-sm font-semibold text-black">The Ninja Studio</span></a>
+      const nameSpan = companyHeader.querySelector(
+        'a[href*="/company/"] span.font-semibold, a[href*="/startup/"] span.font-semibold, a[href*="/company/"] span, a[href*="/startup/"] span, span.font-semibold'
+      );
+      const spanText = nameSpan?.textContent?.trim();
+      if (spanText && spanText.length > 1 && !spanText.toLowerCase().includes('actively hiring')) {
+        companyName = spanText;
+      }
+
+      // Check avatar image alt: <img alt="Avatar for The Ninja Studio" ...>
+      if (!companyName) {
+        const avatarImg = companyHeader.querySelector('img[alt^="Avatar for " i], img[alt]');
+        const altText = avatarImg?.getAttribute('alt')?.trim();
+        if (altText) {
+          const cleanAlt = altText.replace(/^Avatar for\s+/i, '').replace(/\s+logo$/i, '').trim();
+          if (cleanAlt.length > 1) {
+            companyName = cleanAlt;
+          }
+        }
+      }
+
+      // Check company anchor directly (excluding logo-only img anchors)
+      if (!companyName) {
+        const anchors = Array.from(companyHeader.querySelectorAll('a[href*="/company/"], a[href*="/startup/"]'));
+        for (const a of anchors) {
+          if (a.querySelector('img') && !a.textContent?.trim()) continue;
+          const text = a.textContent?.trim();
+          if (text && text.length > 1 && !text.toLowerCase().includes('actively hiring')) {
+            companyName = text;
+            break;
+          }
         }
       }
     }
 
-    // d. Fallback to document.title ("Role at Company | Wellfound" or "Company is hiring...")
+    // b. From activeCard if companyHeader was not present
+    if (!companyName && activeCard !== document) {
+      const companyAnchors = Array.from(activeCard.querySelectorAll('a[href*="/company/"], a[href*="/startup/"]'));
+      for (const a of companyAnchors) {
+        if (a.querySelector('img') && !a.textContent?.trim()) continue;
+        const span = a.querySelector('span.font-semibold, span');
+        const text = (span ? span.textContent : a.textContent)?.trim();
+        if (
+          text &&
+          text.length > 1 &&
+          !text.toLowerCase().includes('wellfound') &&
+          !text.toLowerCase().includes('overview') &&
+          !text.toLowerCase().includes('actively hiring')
+        ) {
+          companyName = text;
+          break;
+        }
+      }
+
+      if (!companyName) {
+        const logoImg = activeCard.querySelector('img[alt*="Avatar for " i], img[alt*="logo" i]');
+        if (logoImg) {
+          const alt = logoImg.getAttribute('alt') || '';
+          const cleaned = alt.replace(/^Avatar for\s+/i, '').replace(/\s+logo$/i, '').trim();
+          if (cleaned.length > 1) companyName = cleaned;
+        }
+      }
+    }
+
+    // c. Fallback to document.title ("Role at Company | Wellfound" or "Company is hiring...")
     if (!companyName && document.title) {
       const cleanTitle = document.title.replace(/\s*\|\s*Wellfound.*$/i, '').trim();
       if (cleanTitle.includes(' at ')) {
@@ -82,12 +149,15 @@ async function extractData(page: Page, jobId: string) {
       }
     }
 
-    // 3. Top meta items: Experience, Salary, Location
+    // 4. Top meta items: Experience, Salary, Location
     // <ul class="flex flex-wrap text-md text-black">
-    //   <li>Hyderabad</li> <li>| 2 years of exp</li> <li>| Full Time</li>
+    //   <li>₹6L – ₹10L • No equity</li>
+    //   <li>Remote (India)</li>
+    //   <li>| 2 years of exp</li>
+    //   <li>| Full Time</li>
     // </ul>
     const topListItems = Array.from(
-      root.querySelectorAll('ul.flex.flex-wrap li, ul[class*="text-md"] li')
+      activeCard.querySelectorAll('ul.flex.flex-wrap li, ul[class*="text-md"] li')
     ).concat(
       Array.from(document.querySelectorAll('ul.flex.flex-wrap li, ul[class*="text-md"] li'))
     );
@@ -106,15 +176,22 @@ async function extractData(page: Page, jobId: string) {
       }
     }
 
-    // 4. Location:
-    // Location link: <a href="/location/hyderabad">Hyderabad</a> or grid section: <span>Job Location</span>
-    let location = root.querySelector('a[href*="/location/"]')?.textContent?.trim() ||
+    // 5. Location
+    let location = activeCard.querySelector('a[href*="/location/"]')?.textContent?.trim() ||
                    document.querySelector('a[href*="/location/"]')?.textContent?.trim() || '';
 
     if (!location) {
-      const locationSpan = Array.from(root.querySelectorAll('span'))
+      location = activeCard.querySelector('a[href*="/remote"]')?.textContent?.trim() ||
+                 document.querySelector('a[href*="/remote"]')?.textContent?.trim() || '';
+    }
+
+    if (!location) {
+      const locationSpan = Array.from(activeCard.querySelectorAll('span'))
         .concat(Array.from(document.querySelectorAll('span')))
-        .find(el => el.textContent?.trim() === 'Job Location' || el.textContent?.trim() === 'Location');
+        .find(el => {
+          const t = el.textContent?.trim() || '';
+          return t === 'Job Location' || t === 'Company Location' || t === 'Location' || t === 'Hires remotely in';
+        });
       if (locationSpan) {
         const parent = locationSpan.closest('div');
         const locLink = parent?.querySelector('a, div.flex, p');
@@ -122,11 +199,11 @@ async function extractData(page: Page, jobId: string) {
       }
     }
 
-    // 5. Skills:
+    // 6. Skills:
     // <span class="text-md font-semibold">Skills</span>
-    // <div class="flex flex-wrap"><div class="...">AI</div>...</div>
+    // <div class="flex flex-wrap"><div class="...">PHP</div>...</div>
     let skills = '';
-    const skillsSpan = Array.from(root.querySelectorAll('span'))
+    const skillsSpan = Array.from(activeCard.querySelectorAll('span'))
       .concat(Array.from(document.querySelectorAll('span')))
       .find(el => el.textContent?.trim() === 'Skills');
 
@@ -141,15 +218,15 @@ async function extractData(page: Page, jobId: string) {
       }
     }
 
-    // 6. About the job / Description:
+    // 7. About the job / Description:
     // <div class="styles_description__xjvTf inline-block text-black" id="job-description">
-    let about = root.querySelector('#job-description, [data-test="JobDescription"], [class*="styles_description_"], [class*="jobDescription"]')
+    let about = activeCard.querySelector('#job-description, [data-test="JobDescription"], [class*="styles_description_"], [class*="jobDescription"]')
       ?.textContent?.trim() ||
       document.querySelector('#job-description, [data-test="JobDescription"], [class*="styles_description_"], [class*="jobDescription"]')
       ?.textContent?.trim() || '';
 
     if (!about) {
-      const aboutHeader = Array.from(root.querySelectorAll('h2, h3, span'))
+      const aboutHeader = Array.from(activeCard.querySelectorAll('h2, h3, span'))
         .concat(Array.from(document.querySelectorAll('h2, h3, span')))
         .find(el => {
           const t = el.textContent?.trim().toLowerCase() || '';
@@ -177,20 +254,8 @@ async function isApplicationSubmitted(page: Page): Promise<boolean> {
     return await page.evaluate(() => {
       const normalize = (str: string) => str.replace(/\s+/g, " ").trim().toLowerCase();
 
-      // Find slide-in container if present, or fallback to document
-      const slideIn = document.querySelector(
-        '[data-test="JobDescriptionSlideIn"], [data-test*="SlideIn"], [class*="JobDescriptionSlideIn"], [role="dialog"]'
-      ) || document;
-
-      // 1. Check green / emerald confirmation banner (e.g. bg-green-600)
-      const greenBanner = slideIn.querySelector(
-        'div.bg-green-600, div[class*="bg-green-"], div[class*="bg-emerald-"], [class*="bg-green-600"], [class*="bg-emerald-600"]'
-      );
-      if (greenBanner) {
-        return true;
-      }
-
-      // 2. Applied phrases to look for in container text
+      // 1. Direct body text search (immune to any CSS/DOM class changes)
+      const bodyText = normalize(document.body.innerText || document.body.textContent || "");
       const appliedPhrases = [
         "congrats! your application has been submitted",
         "your application has been submitted",
@@ -210,14 +275,29 @@ async function isApplicationSubmitted(page: Page): Promise<boolean> {
         "application status"
       ];
 
-      const allText = normalize(slideIn.textContent || "");
-      if (appliedPhrases.some(phrase => allText.includes(phrase))) {
+      if (appliedPhrases.some(phrase => bodyText.includes(phrase))) {
         return true;
       }
 
-      // 3. Check buttons, badges, tags, and status pills inside slideIn
+      // 2. Green / emerald confirmation banner (e.g. bg-green-600)
+      const greenBanner = document.querySelector(
+        'div.bg-green-600, [class*="bg-green-600"], div[class*="bg-green-"], div[class*="bg-emerald-"], [class*="bg-emerald-600"]'
+      );
+      if (greenBanner) {
+        const text = normalize(greenBanner.textContent || "");
+        if (
+          text.includes("submitted") ||
+          text.includes("applied") ||
+          text.includes("congrats") ||
+          text.includes("application")
+        ) {
+          return true;
+        }
+      }
+
+      // 3. Status pills, badges, buttons across document
       const badgesAndButtons = Array.from(
-        slideIn.querySelectorAll(
+        document.querySelectorAll(
           'button, a, [data-test], [class*="badge"], [class*="tag"], [class*="status"], [class*="pill"], span, div'
         )
       );
@@ -232,16 +312,20 @@ async function isApplicationSubmitted(page: Page): Promise<boolean> {
           text.startsWith("applied ") ||
           text.includes("already applied") ||
           text.includes("you applied") ||
-          text === "application submitted"
+          text === "application submitted" ||
+          text.includes("application has been submitted")
         ) {
           return true;
         }
       }
 
-      // 4. Check disabled apply button with applied text
-      const disabledBtn = slideIn.querySelector('button[disabled]');
-      if (disabledBtn && normalize(disabledBtn.textContent || "").includes("applied")) {
-        return true;
+      // 4. Disabled buttons with applied text
+      const disabledButtons = Array.from(document.querySelectorAll('button[disabled], [aria-disabled="true"]'));
+      for (const btn of disabledButtons) {
+        const text = normalize(btn.textContent || "");
+        if (text.includes("applied") || text.includes("submitted")) {
+          return true;
+        }
       }
 
       return false;
@@ -366,9 +450,10 @@ export async function getJobData(resilientBrowser: ResilientBrowser, jobIds: str
       await delay(WAIT_TIME);
 
       const { role, companyName, salary, experience, location, skills, about } = data;
+      console.log(`[Wellfound] Job ID ${cleanJobId} parsed: Role="${role}", Company="${companyName}"`);
 
       if (!companyName || !about) {
-        console.log(`[Wellfound] Missing company name or description for job ID: ${cleanJobId}. Skipping.`);
+        console.log(`[Wellfound] Missing company name or description for job ID: ${cleanJobId}. Skipping. (company=${companyName}, about=${!!about})`);
         continue;
       }
 

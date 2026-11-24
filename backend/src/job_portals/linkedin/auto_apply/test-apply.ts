@@ -8,7 +8,10 @@ async function run() {
   const browser = await edge();
   const page = await browser.newPage();
   const jobIds = [
-    "4471301228"
+    "4492182379",
+    "4493759690",
+    "4492878682",
+    "4493757709"
   ];
 
   for (const jobId of jobIds) {

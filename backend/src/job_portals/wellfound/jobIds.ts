@@ -39,7 +39,10 @@ async function extractJobIds(page: Page): Promise<string[]> {
           const cardBadges = Array.from(
             cardEl.querySelectorAll('button, span, div, [class*="badge"], [class*="tag"], [class*="status"]')
           );
-          const isCardApplied = cardBadges.some(b => {
+          const cardText = (cardEl.textContent || "").toLowerCase();
+          const hasGreenBanner = cardEl.querySelector('div.bg-green-600, [class*="bg-green-"], [class*="bg-emerald-"]') !== null;
+
+          const isCardApplied = hasGreenBanner || cardBadges.some(b => {
             const t = (b.textContent || "").trim().toLowerCase();
             return (
               t === "applied" ||
@@ -48,9 +51,13 @@ async function extractJobIds(page: Page): Promise<string[]> {
               t.startsWith("applied on") ||
               t.startsWith("applied ") ||
               t === "application submitted" ||
-              t === "already applied"
+              t === "already applied" ||
+              t.includes("already applied") ||
+              t.includes("application has been submitted") ||
+              t.includes("your application has been submitted") ||
+              t.includes("congrats! your application")
             );
-          });
+          }) || cardText.includes("application has been submitted") || cardText.includes("your application has been submitted");
 
           if (isCardApplied) {
             continue;

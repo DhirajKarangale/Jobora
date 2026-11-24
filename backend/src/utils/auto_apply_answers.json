@@ -93,7 +93,7 @@
     "dropdownValue": "7620320595"
   },
   {
-    "pattern": "years?.*experience|experience.*years?|how\\s+many\\s+years|total\\s+exp\\b|relevant\\s+experience",
+    "pattern": "total.*professional.*experience|years?.*experience|experience.*years?|how\\s+many\\s+years|total\\s+exp\\b|relevant\\s+experience",
     "numericValue": "2",
     "fallbackNumericValue": "2",
     "textValue": "2",
@@ -154,7 +154,7 @@
     "dropdownValue": "Total CTC: ₹10.48 LPA | Fixed: ₹8.02 LPA | Variable: ₹2.46 LPA"
   },
   {
-    "pattern": "current.*(?:package|compensation|ctc|salary|drawn).*inr",
+    "pattern": "current.*(?:package|compensation|ctc|salary|drawn).*inr|current.*ctc.*inr|current.*ctc",
     "numericValue": "1048000",
     "fallbackNumericValue": "1048000",
     "textValue": "1048000",
@@ -175,7 +175,7 @@
     "fallbackTextValue": "10.48"
   },
   {
-    "pattern": "(?:expected|desired|target).*(?:package|compensation|ctc|salary|pay).*inr",
+    "pattern": "(?:expected|desired|target).*(?:package|compensation|ctc|salary|pay).*inr|expected.*ctc.*inr|expected.*ctc",
     "numericValue": "2000000",
     "fallbackNumericValue": "2000000",
     "textValue": "2000000",
@@ -217,7 +217,7 @@
     ]
   },
   {
-    "pattern": "notice\\s+period|how\\s+soon.*(?:join|fill|start|begin)",
+    "pattern": "notice\\s*period|in\\s+days|how\\s+soon.*(?:join|fill|start|begin)",
     "numericValue": "30",
     "fallbackNumericValue": "30",
     "textValue": "30",
@@ -225,9 +225,10 @@
     "dropdownValue": "30 Days",
     "preferredOptions": [
       "30 Days",
+      "30",
+      "45",
       "1 Month",
       "1 month",
-      "30",
       "Less than 30 Days",
       "Less than a month",
       "1",
@@ -276,7 +277,25 @@
     "dropdownValue": "No"
   },
   {
-    "pattern": "city|what\\s+is\\s+your\\s+(?:current\\s+)?location|current\\s+location|current\\s+city|where\\s+are\\s+you\\s+located",
+    "pattern": "which\\s+location.*applying|preferred.*location|work\\s+location|select.*location",
+    "numericValue": "Pune City, Maharashtra, India",
+    "textValue": "Pune City, Maharashtra, India",
+    "dropdownValue": "Pune City, Maharashtra, India",
+    "preferredOptions": [
+      "Pune City, Maharashtra, India",
+      "Pune District, Maharashtra, India",
+      "Pune Division, Maharashtra, India",
+      "Pune",
+      "Maharashtra",
+      "Bangalore",
+      "Bengaluru",
+      "Hyderabad",
+      "Mumbai",
+      "Any"
+    ]
+  },
+  {
+    "pattern": "\\bcity\\b|current\\s+city|current\\s+location|what\\s+is\\s+your\\s+(?:current\\s+)?(?:city|location)",
     "numericValue": "Pune",
     "textValue": "Pune",
     "dropdownValue": "Pune",
@@ -302,20 +321,6 @@
     "preferredOptions": [
       "India",
       "IN"
-    ]
-  },
-  {
-    "pattern": "which\\s+location.*applying|preferred.*location",
-    "numericValue": "Pune",
-    "textValue": "Pune",
-    "dropdownValue": "Pune",
-    "preferredOptions": [
-      "Pune",
-      "Bangalore",
-      "Bengaluru",
-      "Hyderabad",
-      "Mumbai",
-      "Any"
     ]
   },
   {
@@ -794,12 +799,6 @@
     "dropdownValue": "Satyamark: Built an open-source multi-modal content verification platform combining LLM-based fact-checking, RAG, web search, and AI image detection. Designed LangGraph multi-stage workflows for claim extraction, evidence retrieval, scoring, re-evaluation, and grounded verdict generation. Implemented Map-Reduce fact-checking to extract relevant evidence and produce evidence-based verification results. Built asynchronous AI processing using Redis Streams, worker architecture, retries, abandoned-job handling, and API failover. Published a reusable React SDK with 3.6K+ downloads for streaming live verification results into applications."
   },
   {
-    "pattern": "\\bctc\\b|compensation|salary|expected\\s+salary",
-    "numericValue": "10.48 LPA",
-    "textValue": "10.48 LPA",
-    "dropdownValue": "10.48 LPA"
-  },
-  {
     "pattern": "hands-on\\s+experience|hands\\s+on\\s+experience",
     "numericValue": "Yes",
     "textValue": "Yes",
@@ -815,162 +814,6 @@
     "dropdownValue": "Yes",
     "preferredOptions": [
       "Yes"
-    ]
-  },
-  {
-    "pattern": "linkedin",
-    "numericValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb",
-    "textValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb",
-    "dropdownValue": "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb",
-    "preferredOptions": [
-      "https://www.linkedin.com/in/dhiraj-karangale-464ab91bb"
-    ]
-  },
-  {
-    "pattern": "portfolio|website",
-    "numericValue": "https://dhirajkarangale.vercel.app",
-    "textValue": "https://dhirajkarangale.vercel.app",
-    "dropdownValue": "https://dhirajkarangale.vercel.app",
-    "preferredOptions": [
-      "https://dhirajkarangale.vercel.app"
-    ]
-  },
-  {
-    "pattern": "github|git\\b|version control",
-    "numericValue": "https://github.com/DhirajKarangale",
-    "textValue": "https://github.com/DhirajKarangale",
-    "dropdownValue": "https://github.com/DhirajKarangale",
-    "preferredOptions": [
-      "https://github.com/DhirajKarangale"
-    ]
-  },
-  {
-    "pattern": "resid|locat|relocat|available for",
-    "numericValue": "Yes",
-    "textValue": "Pune",
-    "dropdownValue": "Yes",
-    "preferredOptions": [
-      "Yes",
-      "Pune"
-    ]
-  },
-  {
-    "pattern": "year|experience|how many",
-    "numericValue": "2",
-    "textValue": "2",
-    "dropdownValue": "2",
-    "preferredOptions": [
-      "2",
-      "1-2",
-      "2-3",
-      "2+"
-    ]
-  },
-  {
-    "pattern": "notice|join",
-    "numericValue": "15 Days",
-    "textValue": "15 Days",
-    "dropdownValue": "15 Days",
-    "preferredOptions": [
-      "15",
-      "1 month",
-      "immediate"
-    ]
-  },
-  {
-    "pattern": "current ctc|current salary",
-    "numericValue": "10",
-    "textValue": "10",
-    "dropdownValue": "10",
-    "preferredOptions": [
-      "10"
-    ]
-  },
-  {
-    "pattern": "ctc|salary|lpa|compensation",
-    "numericValue": "20",
-    "textValue": "20",
-    "dropdownValue": "20",
-    "preferredOptions": [
-      "20",
-      "15"
-    ]
-  },
-  {
-    "pattern": "education|degree|qualification",
-    "numericValue": "B.Tech",
-    "textValue": "B.Tech",
-    "dropdownValue": "B.Tech",
-    "preferredOptions": [
-      "b.tech",
-      "bachelor"
-    ]
-  },
-  {
-    "pattern": "english|proficiency",
-    "numericValue": "Fluent",
-    "textValue": "Fluent",
-    "dropdownValue": "Fluent",
-    "preferredOptions": [
-      "fluent",
-      "expert",
-      "native"
-    ]
-  },
-  {
-    "pattern": "shift|wfo|office|on-site",
-    "numericValue": "Yes",
-    "textValue": "Yes",
-    "dropdownValue": "Yes",
-    "preferredOptions": [
-      "yes",
-      "willing",
-      "agree"
-    ]
-  },
-  {
-    "pattern": "gender",
-    "numericValue": "Male",
-    "textValue": "Male",
-    "dropdownValue": "Male",
-    "preferredOptions": [
-      "male"
-    ]
-  },
-  {
-    "pattern": "status.*employment|employment.*status",
-    "numericValue": "Employed",
-    "textValue": "Employed",
-    "dropdownValue": "Employed",
-    "preferredOptions": [
-      "employed",
-      "working",
-      "full-time"
-    ]
-  },
-  {
-    "pattern": "yes|no",
-    "numericValue": "Yes",
-    "textValue": "Yes",
-    "dropdownValue": "Yes",
-    "preferredOptions": [
-      "yes"
-    ]
-  },
-  {
-    "pattern": "which of these|skills|areas",
-    "numericValue": "AI",
-    "textValue": "AI",
-    "dropdownValue": "AI",
-    "preferredOptions": [
-      "ai",
-      "artificial intelligence",
-      "machine learning",
-      "react",
-      "frontend",
-      "node",
-      "backend (node)",
-      "java"
     ]
   }
 ]

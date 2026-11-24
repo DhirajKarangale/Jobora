@@ -351,6 +351,12 @@ async function extractData(browser: ResilientBrowser, jobId: string) {
         const externalBtn = document.querySelector('a[aria-label="Apply on company website"], a[href*="/safety/go/"], a.jobs-apply-button[target="_blank"]');
         if (externalBtn) return false;
 
+        const safetyContinue = Array.from(document.querySelectorAll('a, button')).find(el => {
+          const t = (el.textContent || '').trim().toLowerCase();
+          return t === 'continue applying' || t === 'continue apply' || t.includes('continue applying');
+        });
+        if (safetyContinue) return true;
+
         const easyApplyBtn = document.querySelector(
           '[aria-label="Easy Apply to this job"], [aria-label="LinkedIn Apply to this job"], button[aria-label="Easy Apply to this job"], button.jobs-apply-button'
         );
@@ -372,7 +378,7 @@ async function extractData(browser: ResilientBrowser, jobId: string) {
       const allBtns = Array.from(document.querySelectorAll('button, a'));
       return allBtns.some(b => {
         const t = b.textContent?.trim().toLowerCase();
-        return t === 'apply' || t === 'easy apply';
+        return t === 'apply' || t === 'easy apply' || t === 'continue applying' || t === 'continue apply' || t?.includes('continue applying');
       });
     });
 
