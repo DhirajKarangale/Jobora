@@ -268,7 +268,8 @@ export async function handleQuestions(page: Page): Promise<boolean> {
           hasError,
           currentValue,
           questionText: texts.join(' ').toLowerCase(),
-          isRequired
+          isRequired,
+          placeholder: inputEl.placeholder?.toLowerCase() || ''
         };
       }, field);
 
@@ -353,12 +354,41 @@ export async function handleQuestions(page: Page): Promise<boolean> {
               }, field, selectedVal);
               await delay(WAIT_TIME_AUTO_APPLY);
             }
-          } else if (['text', 'tel', 'number', 'email', 'url', ''].includes(info.type) || info.tagName === 'textarea') {
-            const valToType = resolveDynamicValue(
+          } else if (['text', 'tel', 'number', 'email', 'url', 'date', ''].includes(info.type) || info.tagName === 'textarea') {
+            let valToType = resolveDynamicValue(
               (info.id.toLowerCase().includes('numeric') || info.type === 'number')
                 ? (matchedConfig.numericValue || matchedConfig.textValue)
                 : (matchedConfig.textValue || matchedConfig.numericValue)
             );
+
+            // Special date formatting for Last Working Day (3 Feb 2027)
+            if (matchedConfig.pattern.includes('last\\s+working') || matchedConfig.pattern.includes('lwd') || info.questionText.includes('last working') || info.questionText.includes('lwd')) {
+              if (info.type === 'date' || info.placeholder.includes('yyyy') || info.id.toLowerCase().includes('date')) {
+                valToType = '2027-02-03';
+              } else if (info.placeholder.includes('mm/dd') || info.placeholder.includes('mm-dd')) {
+                valToType = '02/03/2027';
+              } else if (info.placeholder.includes('dd/mm') || info.placeholder.includes('dd-mm')) {
+                valToType = '03/02/2027';
+              } else {
+                valToType = '03/02/2027';
+              }
+            }
+
+            // Sanity check: Ensure questions asking for number of days or scale ratings do not send non-numeric values
+            const qLower = info.questionText.toLowerCase();
+            if (qLower.includes('how many days') || (qLower.includes('days') && (qLower.includes('join') || qLower.includes('start') || qLower.includes('notice')))) {
+              if (!/^\d+$/.test(valToType)) {
+                valToType = '30';
+              }
+            } else if (qLower.includes('scale of 1-10') || qLower.includes('scale of 1–10') || qLower.includes('scale of 1 to 10') || qLower.includes('1-10') || qLower.includes('1–10') || qLower.includes('1 to 10')) {
+              if (!/^\d+$/.test(valToType)) {
+                valToType = '8';
+              }
+            } else if (qLower.includes('scale of 1-5') || qLower.includes('scale of 1–5') || qLower.includes('scale of 1 to 5') || qLower.includes('1-5') || qLower.includes('1–5') || qLower.includes('1 to 5')) {
+              if (!/^\d+$/.test(valToType)) {
+                valToType = '4';
+              }
+            }
 
             // Set natively for React form state
             await field.evaluate((el, val) => {
@@ -461,7 +491,10 @@ export async function handleQuestions(page: Page): Promise<boolean> {
             }
 
             if (!targetLabel && radioLabels.length > 0) {
-              const yesLabel = radioLabels.find(l => l.textContent?.trim().toLowerCase() === 'yes');
+              const yesLabel = radioLabels.find(l => {
+                const t = (l.textContent || '').trim().toLowerCase();
+                return t === 'yes' || t.startsWith('yes') || t.includes('yes') || t === 'agree' || t === 'i agree' || t === 'completed';
+              });
               targetLabel = (yesLabel || radioLabels[0]) as HTMLElement;
             }
 
@@ -492,7 +525,10 @@ export async function handleQuestions(page: Page): Promise<boolean> {
             const sel = select as HTMLSelectElement;
             const validOpts = Array.from(sel.options).filter(o => o.value && o.value !== 'Select an option' && o.value.trim() !== '');
             if (validOpts.length > 0) {
-              const yesOpt = validOpts.find(o => o.text.trim().toLowerCase() === 'yes');
+              const yesOpt = validOpts.find(o => {
+                const t = o.text.trim().toLowerCase();
+                return t === 'yes' || t.startsWith('yes') || t.includes('yes') || t === 'agree' || t === 'i agree' || t === 'completed';
+              });
               sel.value = yesOpt ? yesOpt.value : validOpts[0].value;
               sel.dispatchEvent(new Event('input', { bubbles: true }));
               sel.dispatchEvent(new Event('change', { bubbles: true }));
@@ -503,16 +539,22 @@ export async function handleQuestions(page: Page): Promise<boolean> {
           await page.evaluate(fs => {
             const labels = Array.from(fs.querySelectorAll('label, [role="radio"]'));
             if (labels.length > 0) {
-              const yesLabel = labels.find(l => l.textContent?.trim().toLowerCase() === 'yes');
+              const yesLabel = labels.find(l => {
+                const t = l.textContent?.trim().toLowerCase() || '';
+                return t === 'yes' || t.startsWith('yes') || t.includes('yes') || t === 'agree' || t === 'i agree' || t === 'completed';
+              });
               const target = (yesLabel || labels[0]) as HTMLElement;
               target.click();
             }
           }, field);
           await delay(WAIT_TIME_AUTO_APPLY);
-        } else if (['text', 'tel', 'number', 'email', 'url', ''].includes(info.type) || info.tagName === 'textarea') {
+        } else if (['text', 'tel', 'number', 'email', 'url', 'date', ''].includes(info.type) || info.tagName === 'textarea') {
           let fallbackVal = 'NA';
           const q = info.questionText;
-          if (q.includes('notice') || q.includes('days')) fallbackVal = '30';
+          if (q.includes('last working') || q.includes('lwd')) fallbackVal = '03/02/2027';
+          else if (q.includes('notice') || q.includes('days') || q.includes('join')) fallbackVal = '30';
+          else if (q.includes('scale of 1-10') || q.includes('scale of 1–10') || q.includes('scale of 1 to 10') || q.includes('1-10') || q.includes('1–10') || q.includes('rate') || q.includes('rating')) fallbackVal = '8';
+          else if (q.includes('scale of 1-5') || q.includes('scale of 1–5') || q.includes('scale of 1 to 5') || q.includes('1-5') || q.includes('1–5')) fallbackVal = '4';
           else if (q.includes('ctc') || q.includes('salary') || q.includes('compensation') || q.includes('inr')) fallbackVal = '1048000';
           else if (q.includes('experience') || q.includes('years')) fallbackVal = '2';
           else if (q.includes('linkedin')) fallbackVal = 'https://www.linkedin.com/in/dhiraj-karangale-464ab91bb';

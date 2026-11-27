@@ -208,16 +208,31 @@
     "dropdownValue": "411057"
   },
   {
-    "pattern": "(?:comfortable|willing|open|able|will\\s+you|available).*?(?:commute|commuting|relocate|relocating|hybrid|on-site|onsite|in-person|in\\s+office|office|work\\s+from)",
+    "pattern": "relocat(?:e|ing|ion)|(?:comfortable|willing|open|able|will\\s+you|available|ready).*?(?:commute|commuting|relocate|relocating|hybrid|on-site|onsite|in-person|in\\s+office|office|work\\s+from)",
     "numericValue": "Yes",
     "textValue": "Yes",
     "dropdownValue": "Yes",
     "preferredOptions": [
-      "Yes"
+      "Yes",
+      "Willing to relocate",
+      "Yes, I am willing to relocate",
+      "Open to relocate"
     ]
   },
   {
-    "pattern": "notice\\s*period|in\\s+days|how\\s+soon.*(?:join|fill|start|begin)",
+    "pattern": "(?:serving|on|currently\\s+serving)\\s+notice|serving\\s+(?:a\\s+)?notice\\s+period|are\\s+you\\s+(?:currently\\s+)?serving|currently\\s+on\\s+notice",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": [
+      "Yes",
+      "Currently serving notice period",
+      "Serving notice period",
+      "Yes, serving notice period"
+    ]
+  },
+  {
+    "pattern": "(?:in\\s+)?how\\s+many\\s+days.*?(?:join|start|available|begin|fill)|(?:join|start).*?(?:in\\s+)?how\\s+many\\s+days|number\\s+of\\s+days.*?(?:join|start|available)|how\\s+soon.*?(?:join|fill|start|begin)|notice\\s*period|in\\s+days",
     "numericValue": "30",
     "fallbackNumericValue": "30",
     "textValue": "30",
@@ -238,18 +253,50 @@
     ]
   },
   {
-    "pattern": "last\\s+working\\s+day",
-    "numericValue": "0",
-    "textValue": "0",
-    "dropdownValue": "0"
+    "pattern": "scale\\s+of\\s+1[–\\-–\\s]+5|scale\\s+of\\s+1\\s+to\\s+5|1\\s*[-–to]\\s*5|out\\s+of\\s+5",
+    "numericValue": "4",
+    "textValue": "4",
+    "dropdownValue": "4",
+    "preferredOptions": [
+      "4",
+      "4/5",
+      "4 - Good",
+      "4 - Advanced",
+      "4 - Proficient",
+      "4 out of 5"
+    ]
   },
   {
-    "pattern": "(?:serving|on)\\s+notice",
-    "numericValue": "No",
-    "textValue": "No",
-    "dropdownValue": "No",
+    "pattern": "scale\\s+of\\s+1[–\\-–\\s]+10|scale\\s+of\\s+1\\s+to\\s+10|1\\s*[-–to]\\s*10|out\\s+of\\s+10|rate.*?(?:scale|1\\s*[-–to]\\s*10|skills?)|rating.*?(?:scale|1\\s*[-–to]\\s*10)",
+    "numericValue": "8",
+    "textValue": "8",
+    "dropdownValue": "8",
     "preferredOptions": [
-      "No"
+      "8",
+      "8/10",
+      "8 - Very Good",
+      "8 - Advanced",
+      "8 - Proficient",
+      "8/10 - Proficient",
+      "8 out of 10"
+    ]
+  },
+  {
+    "pattern": "last\\s+working\\s+(?:day|date)|\\blwd\\b|last\\s+day\\s+of\\s+(?:work|employment)|official\\s+last\\s+day|end\\s+date.*(?:current|employment)",
+    "numericValue": "03/02/2027",
+    "fallbackNumericValue": "02/03/2027",
+    "textValue": "03/02/2027",
+    "fallbackTextValue": "3 Feb 2027",
+    "dropdownValue": "3 Feb 2027",
+    "preferredOptions": [
+      "3 Feb 2027",
+      "03/02/2027",
+      "02/03/2027",
+      "February 3, 2027",
+      "3rd February 2027",
+      "03 Feb 2027",
+      "Feb 2027",
+      "February 2027"
     ]
   },
   {
@@ -259,10 +306,54 @@
     "dropdownValue": "No"
   },
   {
-    "pattern": "(?:bachelor|degree|secondary|ged|high\\s+school|graduation|graduate|equivalent)",
+    "pattern": "(?:complete|completed|did\\s+you\\s+complete|have\\s+you\\s+completed|pursuing|pursued).*?(?:education|graduation|degree|be|b\\.e|btech|b\\.tech|bachelor)|(?:education|graduation|degree|be|b\\.e|btech|b\\.tech|bachelor).*?(?:complete|completed|status|finished|done)|are\\s+you\\s+(?:a\\s+)?graduate|did\\s+you\\s+graduate",
     "numericValue": "Yes",
     "textValue": "Yes",
-    "dropdownValue": "Yes"
+    "dropdownValue": "Yes",
+    "preferredOptions": [
+      "Yes",
+      "Completed",
+      "Graduate",
+      "Yes, completed"
+    ]
+  },
+  {
+    "pattern": "(?:bachelor|degree|secondary|ged|high\\s+school|graduation|graduate|equivalent|education|\\bbe\\b|\\bb\\.e\\.?\\b|\\bbtech\\b|\\bb\\.tech\\b)",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": [
+      "Yes",
+      "Bachelor's Degree",
+      "Completed",
+      "Graduate"
+    ]
+  },
+  {
+    "pattern": "(?:comfortable|willing|open|able|ready|can\\s+you|would\\s+you|do\\s+you|are\\s+you).*?(?:join|travel|shift|schedule|background|verification|check|drug|qualification|requirement|criteria|policy|terms|agreement|declaration|guideline|flexible|full-?time)",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": [
+      "Yes",
+      "I agree",
+      "Agree",
+      "Yes, I agree",
+      "Yes, I am comfortable",
+      "Yes, I am willing"
+    ]
+  },
+  {
+    "pattern": "(?:meet|fulfill|satisfy).*?(?:requirement|qualification|criteria|condition)|(?:agree|consent|acknowledge).*?(?:terms|condition|declaration|policy)",
+    "numericValue": "Yes",
+    "textValue": "Yes",
+    "dropdownValue": "Yes",
+    "preferredOptions": [
+      "Yes",
+      "Agree",
+      "I agree",
+      "Yes, I agree"
+    ]
   },
   {
     "pattern": "(?:authorized|eligible|legally).*work|legally.*authorized",
