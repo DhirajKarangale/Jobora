@@ -4,22 +4,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { extractJobData } from "./jobData.ts";
 import { INSTAHYRE_URL_JOB_SEARCH, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsAutoApplied, incrementJobsScraped } from "../../utils/automationState.ts";
-
-async function safeClosePage(page: Page | null | undefined): Promise<void> {
-  if (!page) return;
-  try {
-    if (!page.isClosed()) {
-      await page.close();
-    }
-  } catch (err: any) {
-    if (
-      !err?.message?.includes("No target with given id found") &&
-      !err?.message?.includes("Target closed")
-    ) {
-      console.warn("[Instahyre] Notice during page.close:", err.message);
-    }
-  }
-}
+import { trackAndClosePopups, safeClosePage } from "../../utils/popupManager.ts";
 
 async function isAnyModalOpen(page: Page): Promise<boolean> {
   try {
@@ -249,57 +234,66 @@ async function clickApplyButton(page: Page): Promise<boolean> {
     await handleNoticePeriodAndQuestions(page);
     await delay(300);
 
-    return await page.evaluate(() => {
-      // 2. Check primary apply/submit selectors
-      const primarySelectors = [
-        ".apply button",
-        "button.btn-primary.apply",
-        "#apply-btn",
-        ".modal-footer button.btn-primary",
-        ".modal-footer button[type='submit']",
-        ".application-modal-wrap button.btn-primary",
-        ".modal-dialog button.btn-primary",
-        "button[type='submit']"
-      ];
+    let clicked = false;
+    const popupRes = await trackAndClosePopups(page.browser(), page, async () => {
+      clicked = await page.evaluate(() => {
+        // 2. Check primary apply/submit selectors
+        const primarySelectors = [
+          ".apply button",
+          "button.btn-primary.apply",
+          "#apply-btn",
+          ".modal-footer button.btn-primary",
+          ".modal-footer button[type='submit']",
+          ".application-modal-wrap button.btn-primary",
+          ".modal-dialog button.btn-primary",
+          "button[type='submit']"
+        ];
 
-      for (const sel of primarySelectors) {
-        const applyBtn = document.querySelector(sel) as HTMLElement;
-        if (applyBtn && (applyBtn.offsetWidth > 0 || applyBtn.offsetHeight > 0)) {
-          const txt = (applyBtn.innerText || applyBtn.textContent || "").trim().toLowerCase();
-          if (txt === "close" || txt === "cancel" || txt === "skip") continue;
-          applyBtn.click();
-          return true;
+        for (const sel of primarySelectors) {
+          const applyBtn = document.querySelector(sel) as HTMLElement;
+          if (applyBtn && (applyBtn.offsetWidth > 0 || applyBtn.offsetHeight > 0)) {
+            const txt = (applyBtn.innerText || applyBtn.textContent || "").trim().toLowerCase();
+            if (txt === "close" || txt === "cancel" || txt === "skip") continue;
+            applyBtn.click();
+            return true;
+          }
         }
-      }
 
-      // 3. Check buttons by action text keywords
-      const targetKeywords = [
-        "apply",
-        "apply now",
-        "submit",
-        "submit application",
-        "send application",
-        "send",
-        "confirm",
-        "proceed",
-        "save & continue",
-        "continue"
-      ];
+        // 3. Check buttons by action text keywords
+        const targetKeywords = [
+          "apply",
+          "apply now",
+          "submit",
+          "submit application",
+          "send application",
+          "send",
+          "confirm",
+          "proceed",
+          "save & continue",
+          "continue"
+        ];
 
-      const btns = Array.from(document.querySelectorAll("button, a.btn")) as HTMLElement[];
-      for (const kw of targetKeywords) {
-        const btn = btns.find((b) => {
-          const t = (b.innerText || b.textContent || "").trim().toLowerCase();
-          return t === kw;
-        }) as HTMLElement;
-        if (btn && (btn.offsetWidth > 0 || btn.offsetHeight > 0)) {
-          btn.click();
-          return true;
+        const btns = Array.from(document.querySelectorAll("button, a.btn")) as HTMLElement[];
+        for (const kw of targetKeywords) {
+          const btn = btns.find((b) => {
+            const t = (b.innerText || b.textContent || "").trim().toLowerCase();
+            return t === kw;
+          }) as HTMLElement;
+          if (btn && (btn.offsetWidth > 0 || btn.offsetHeight > 0)) {
+            btn.click();
+            return true;
+          }
         }
-      }
 
-      return false;
+        return false;
+      });
     });
+
+    if (popupRes.openedNewTab) {
+      console.log(`[Instahyre] Apply button opened external site. Closed external tab: ${popupRes.finalUrl || 'new tab'}`);
+    }
+
+    return clicked;
   } catch (e) {
     return false;
   }

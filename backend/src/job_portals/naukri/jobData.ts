@@ -5,6 +5,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
 import { DataJob, NAUKRI_URL_JOB, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/automationState.ts";
+import { trackAndClosePopups, safeClosePage } from "../../utils/popupManager.ts";
 
 async function extractData(page: Page, jobId: string) {
   return await page.evaluate(() => {
@@ -83,22 +84,6 @@ async function extractData(page: Page, jobId: string) {
   });
 }
 
-async function safeClosePage(page: Page | null | undefined): Promise<void> {
-  if (!page) return;
-  try {
-    if (!page.isClosed()) {
-      await page.close();
-    }
-  } catch (err: any) {
-    if (
-      !err?.message?.includes("No target with given id found") &&
-      !err?.message?.includes("Target closed")
-    ) {
-      console.warn("[Naukri] Notice during page.close:", err.message);
-    }
-  }
-}
-
 async function handleApply(browser: ResilientBrowser, page: Page, currentUrl: string): Promise<{ applied: boolean, applyLink: string }> {
   try {
     await delay(WAIT_TIME);
@@ -126,38 +111,15 @@ async function handleApply(browser: ResilientBrowser, page: Page, currentUrl: st
         return { applied: false, applyLink: directUrl };
       }
 
-      // 2. Click button to capture redirected tab and ensure only its tab is closed
+      // 2. Click button to capture redirected tab and ensure that external site is immediately closed
       const isDisabled = await page.evaluate((btn) => (btn as HTMLButtonElement).disabled, companySiteBtn);
       if (!isDisabled) {
-        let newPageUrl: string | null = null;
-        let popupPage: Page | null = null;
+        const popupRes = await trackAndClosePopups(browser, page, async () => {
+          await page.evaluate((btn) => (btn as HTMLElement).click(), companySiteBtn);
+        });
 
-        const rawBrowser = await browser.getBrowser();
-        const newTargetPromise = rawBrowser.waitForTarget(
-          t => t.opener() === page.target(),
-          { timeout: 8000 }
-        ).catch(() => null);
-
-        await page.evaluate((btn) => (btn as HTMLElement).click(), companySiteBtn);
-
-        const newTarget = await newTargetPromise;
-        if (newTarget) {
-          popupPage = await newTarget.page();
-          if (popupPage) {
-            try {
-              await delay(WAIT_TIME);
-              const u = popupPage.url();
-              if (u && u !== 'about:blank') {
-                newPageUrl = u;
-              }
-            } finally {
-              await safeClosePage(popupPage);
-            }
-          }
-        }
-
-        if (newPageUrl) {
-          return { applied: false, applyLink: newPageUrl };
+        if (popupRes.finalUrl) {
+          return { applied: false, applyLink: popupRes.finalUrl };
         }
       }
     }
@@ -170,7 +132,15 @@ async function handleApply(browser: ResilientBrowser, page: Page, currentUrl: st
     const isDisabled = await page.evaluate((btn) => (btn as HTMLButtonElement).disabled, applyBtn);
     if (isDisabled) return { applied: false, applyLink: currentUrl };
 
-    await page.evaluate((btn) => (btn as HTMLButtonElement).click(), applyBtn);
+    // Some jobs have #apply-button that opens the company site in a new tab; track and close it immediately
+    const applyPopupRes = await trackAndClosePopups(browser, page, async () => {
+      await page.evaluate((btn) => (btn as HTMLButtonElement).click(), applyBtn);
+    });
+
+    if (applyPopupRes.openedNewTab && applyPopupRes.finalUrl) {
+      console.log(`[Naukri] Apply button opened company site externally. Closed external tab: ${applyPopupRes.finalUrl}`);
+      return { applied: false, applyLink: applyPopupRes.finalUrl };
+    }
 
     await delay(WAIT_TIME);
 

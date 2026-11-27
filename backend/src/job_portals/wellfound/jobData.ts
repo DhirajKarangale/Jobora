@@ -5,22 +5,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { addToProcessStream } from "../../cloud/redis/index.ts";
 import { DataJob, WELLFOUND_URL_JOB, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/automationState.ts";
-
-async function safeClosePage(page: Page | null | undefined): Promise<void> {
-  if (!page) return;
-  try {
-    if (!page.isClosed()) {
-      await page.close();
-    }
-  } catch (err: any) {
-    if (
-      !err?.message?.includes("No target with given id found") &&
-      !err?.message?.includes("Target closed")
-    ) {
-      console.warn("[Wellfound] Notice during page.close:", err.message);
-    }
-  }
-}
+import { trackAndClosePopups, safeClosePage } from "../../utils/popupManager.ts";
 
 async function extractData(page: Page, jobId: string) {
   return await page.evaluate(() => {
@@ -335,7 +320,7 @@ async function isApplicationSubmitted(page: Page): Promise<boolean> {
   }
 }
 
-async function tryApplyJob(page: Page): Promise<boolean> {
+async function tryApplyJob(page: Page, resilientBrowser: ResilientBrowser, jobData: DataJob): Promise<boolean> {
   try {
     const submitBtnSelector = 'button[data-test="JobDescriptionSlideIn--SubmitButton"]';
 
@@ -353,10 +338,17 @@ async function tryApplyJob(page: Page): Promise<boolean> {
       applyBtn = await page.$(submitBtnSelector);
       if (!applyBtn) {
         const applyBtnHandle = await page.evaluateHandle(() => {
-          const btns = Array.from(document.querySelectorAll('button[data-test*="SubmitButton"], button'));
+          const btns = Array.from(document.querySelectorAll('button[data-test*="SubmitButton"], button, a[data-test*="SubmitButton"], a'));
           return btns.find(b => {
             const t = (b.textContent || "").trim().toLowerCase();
-            return t === 'apply' || t === 'apply now' || t === 'quick apply' || t === 'submit application';
+            return (
+              t === 'apply' ||
+              t === 'apply now' ||
+              t === 'quick apply' ||
+              t === 'submit application' ||
+              t.includes('apply on company') ||
+              t.includes('apply externally')
+            );
           }) || null;
         });
         applyBtn = applyBtnHandle.asElement() as import('puppeteer-core').ElementHandle<Element> | null;
@@ -382,21 +374,46 @@ async function tryApplyJob(page: Page): Promise<boolean> {
       return true;
     }
 
+    const isExternal = await page.evaluate((btn) => {
+      const el = btn as HTMLElement;
+      const href = el.getAttribute('href') || el.closest('a')?.getAttribute('href') || '';
+      const target = el.getAttribute('target') || el.closest('a')?.getAttribute('target') || '';
+      const text = (el.textContent || '').trim().toLowerCase();
+      return (
+        target === '_blank' ||
+        text.includes('company website') ||
+        text.includes('company site') ||
+        text.includes('apply externally') ||
+        text.includes('off wellfound') ||
+        (href.startsWith('http') && !href.includes('wellfound.com'))
+      );
+    }, applyBtn);
+
     const isDisabled = await page.evaluate((btn) => (btn as HTMLButtonElement).disabled, applyBtn);
     if (isDisabled) {
       console.log("[Wellfound] Apply button is disabled. Considering job as already applied.");
       return true;
     }
 
-    // Scroll into view & click with real CDP mouse events, fallback to evaluate click
-    try {
-      await page.evaluate((btn) => {
-        (btn as HTMLElement).scrollIntoView({ behavior: 'instant', block: 'center' });
-      }, applyBtn);
-      await delay(300);
-      await applyBtn.click({ delay: 50 });
-    } catch {
-      await page.evaluate((btn) => (btn as HTMLButtonElement).click(), applyBtn);
+    // Scroll into view & click with real CDP mouse events, tracking and closing any newly opened popup/external site
+    const popupRes = await trackAndClosePopups(resilientBrowser, page, async () => {
+      try {
+        await page.evaluate((btn) => {
+          (btn as HTMLElement).scrollIntoView({ behavior: 'instant', block: 'center' });
+        }, applyBtn);
+        await delay(300);
+        await applyBtn.click({ delay: 50 });
+      } catch {
+        await page.evaluate((btn) => (btn as HTMLElement).click(), applyBtn);
+      }
+    });
+
+    if (popupRes.openedNewTab || isExternal) {
+      console.log(`[Wellfound] Apply button opened external company site. Closed external tab: ${popupRes.finalUrl || 'new tab'}`);
+      if (popupRes.finalUrl) {
+        jobData.link = popupRes.finalUrl;
+      }
+      return false; // Not applied on Wellfound since it's an external apply
     }
 
     // 2. Poll for confirmation banner
@@ -482,7 +499,7 @@ export async function getJobData(resilientBrowser: ResilientBrowser, jobIds: str
         role
       };
 
-      const applied = await tryApplyJob(page);
+      const applied = await tryApplyJob(page, resilientBrowser, jobData);
 
       if (applied) {
         console.log(`[Wellfound] Applied successfully for job ID: ${cleanJobId}`);

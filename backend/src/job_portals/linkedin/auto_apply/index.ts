@@ -8,8 +8,23 @@ import { unfollowCompany, clickNextOrSubmit, isStepReadyToProceed } from "./navi
 import { isWorkExperienceStep, hasWorkExperienceErrors, handleWorkExperienceErrors } from "./experience.ts";
 import { isEducationStep, hasEducationErrors, handleEducationErrors } from "./education.ts";
 import { handleSafetyReminderModal } from "./safety.ts";
+import { trackAndClosePopups } from "../../../utils/popupManager.ts";
 
 export async function handleEasyApply(page: Page, jobId: string, targetResumeName: string = "DhirajKarangale.pdf"): Promise<boolean> {
+  // Ensure esbuild/tsx __name helper is always defined in the page context
+  try {
+    await page.evaluateOnNewDocument(() => {
+      if (typeof (window as any).__name === "undefined") {
+        (window as any).__name = (target: any) => target;
+      }
+    });
+    await page.evaluate(() => {
+      if (typeof (window as any).__name === "undefined") {
+        (window as any).__name = (target: any) => target;
+      }
+    });
+  } catch {}
+
   // If safety reminder modal is already showing, click Continue applying
   await handleSafetyReminderModal(page);
 
@@ -83,10 +98,17 @@ export async function handleEasyApply(page: Page, jobId: string, targetResumeNam
       return false;
     }
   } else {
-    await easyApplyBtn.evaluate(b => {
-      if (b.tagName.toLowerCase() === 'a') b.removeAttribute('target');
-      (b as HTMLElement).click();
+    const popupRes = await trackAndClosePopups(page.browser(), page, async () => {
+      await easyApplyBtn.evaluate(b => {
+        if (b.tagName.toLowerCase() === 'a') b.removeAttribute('target');
+        (b as HTMLElement).click();
+      });
     });
+
+    if (popupRes.openedNewTab) {
+      console.log(`[LinkedIn AutoApply] Job ${jobId} requires applying on company website. Closed external tab.`);
+      return false;
+    }
   }
 
   await delay(1000);

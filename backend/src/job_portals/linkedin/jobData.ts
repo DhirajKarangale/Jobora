@@ -6,6 +6,7 @@ import { addToProcessStream } from "../../cloud/redis/index.ts";
 import { DataJob, LINKEDIN_URL_JOB, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/automationState.ts";
 import { handleEasyApply } from "./auto_apply/index.ts";
+import { safeClosePage } from "../../utils/popupManager.ts";
 
 const SELECTORS = {
   description: '[data-sdui-component="com.linkedin.sdui.generated.jobseeker.dsl.impl.aboutTheJob"], .show-more-less-html__markup, .description__text, .jobs-description__content, #job-details, div[class*="description"]',
@@ -300,20 +301,140 @@ async function extractRole(page: Page, companyName?: string | null) {
   }, companyName);
 }
 
-async function safeClosePage(page: Page | null | undefined): Promise<void> {
-  if (!page) return;
-  try {
-    if (!page.isClosed()) {
-      await page.close();
+async function checkLinkedInApplyStatus(page: Page): Promise<{
+  isAlreadyApplied: boolean;
+  isExpired: boolean;
+  hasApplyButton: boolean;
+  isEasyApply: boolean;
+  isExternalApply: boolean;
+  externalLink: string | null;
+}> {
+  return await page.evaluate(() => {
+    const textAll = (document.body.innerText || '').toLowerCase();
+
+    // 1. Check if already applied
+    const alreadyAppliedTexts = ['applied', 'application submitted', 'applied on'];
+    const isAlreadyApplied = Array.from(document.querySelectorAll('span, button, p, div')).some(node => {
+      if (node.children.length > 0) return false;
+      const t = (node.textContent || '').trim().toLowerCase();
+      return alreadyAppliedTexts.includes(t);
+    });
+
+    if (isAlreadyApplied) {
+      return {
+        isAlreadyApplied: true,
+        isExpired: false,
+        hasApplyButton: false,
+        isEasyApply: false,
+        isExternalApply: false,
+        externalLink: null
+      };
     }
-  } catch (err: any) {
-    if (
-      !err?.message?.includes("No target with given id found") &&
-      !err?.message?.includes("Target closed")
-    ) {
-      console.warn("[LinkedIn] Notice during page.close:", err.message);
+
+    // 2. Check if job is expired or closed
+    const isClosedBanner = (
+      textAll.includes('no longer accepting applications') ||
+      textAll.includes('this job is closed') ||
+      textAll.includes('job is closed') ||
+      textAll.includes('applications are no longer being accepted') ||
+      textAll.includes('this job has expired') ||
+      textAll.includes('job expired') ||
+      document.querySelector('[data-test-job-expired-banner], .jobs-details__top-card--closed') !== null
+    );
+
+    // 3. Look for apply buttons strictly within the job details / top card action area
+    // (Explicitly exclude sidebar recommendations, similar jobs, footer, etc.)
+    const excludeSelectors = 'aside, .jobs-similar-jobs, .artdeco-dropdown, footer, #compactfooter-current-year, nav';
+
+    // A. External Apply ("Apply on company website" or "/safety/go/")
+    const externalLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>(
+      'a[aria-label="Apply on company website"], a[href*="/safety/go/"], a.jobs-apply-button[target="_blank"]'
+    )).filter(el => !el.closest(excludeSelectors));
+
+    let externalLink: string | null = null;
+    let isExternalApply = false;
+
+    if (externalLinks.length > 0) {
+      isExternalApply = true;
+      const rawHref = externalLinks[0].href || externalLinks[0].getAttribute('href') || '';
+      try {
+        const urlObj = new URL(rawHref, window.location.origin);
+        const encodedUrl = urlObj.searchParams.get('url');
+        externalLink = encodedUrl ? decodeURIComponent(encodedUrl) : rawHref;
+      } catch {
+        externalLink = rawHref;
+      }
     }
-  }
+
+    // B. Easy Apply
+    let isEasyApply = false;
+    const easyApplyCandidates = Array.from(document.querySelectorAll<HTMLElement>(
+      '[aria-label="Easy Apply to this job"], [aria-label="LinkedIn Apply to this job"], button.jobs-apply-button'
+    )).filter(el => !el.closest(excludeSelectors));
+
+    for (const btn of easyApplyCandidates) {
+      const text = (btn.textContent || '').trim().toLowerCase();
+      const aria = (btn.getAttribute('aria-label') || '').toLowerCase();
+      const href = btn.getAttribute('href') || '';
+
+      if (
+        text.includes('company website') ||
+        text.includes('company site') ||
+        text.includes('off linkedin') ||
+        aria.includes('company website') ||
+        href.includes('/safety/go/')
+      ) {
+        isExternalApply = true;
+        if (!externalLink && href) externalLink = href;
+      } else if (
+        text.includes('easy apply') ||
+        aria.includes('easy apply') ||
+        btn.querySelector('svg#linkedin-bug-medium, svg[data-test-icon*="linkedin"]')
+      ) {
+        isEasyApply = true;
+        break;
+      }
+    }
+
+    // C. General apply button in the job's main header / top card
+    const topCardContainer = document.querySelector(
+      '.jobs-unified-top-card, .job-details-jobs-unified-top-card__container--two-pane, .jobs-details__main-content, div[data-display-contents="true"]'
+    );
+    
+    let hasGeneralApply = false;
+    if (topCardContainer) {
+      const btns = Array.from(topCardContainer.querySelectorAll<HTMLElement>('button, a')).filter(el => !el.closest(excludeSelectors));
+      for (const b of btns) {
+        const t = (b.textContent || '').trim().toLowerCase();
+        const aria = (b.getAttribute('aria-label') || '').toLowerCase();
+        if (
+          b.classList.contains('jobs-apply-button') ||
+          t === 'apply' ||
+          t === 'easy apply' ||
+          aria.includes('apply to this job')
+        ) {
+          hasGeneralApply = true;
+          if (b.getAttribute('target') === '_blank' || (b as HTMLAnchorElement).href?.includes('/safety/go/')) {
+            isExternalApply = true;
+            if (!externalLink) externalLink = (b as HTMLAnchorElement).href;
+          }
+          break;
+        }
+      }
+    }
+
+    const hasApplyButton = (isEasyApply || isExternalApply || hasGeneralApply) && !isClosedBanner;
+    const isExpired = isClosedBanner || !hasApplyButton;
+
+    return {
+      isAlreadyApplied,
+      isExpired,
+      hasApplyButton,
+      isEasyApply: isEasyApply && !isClosedBanner,
+      isExternalApply: isExternalApply && !isClosedBanner,
+      externalLink
+    };
+  });
 }
 
 async function extractData(browser: ResilientBrowser, jobId: string) {
@@ -333,75 +454,40 @@ async function extractData(browser: ResilientBrowser, jobId: string) {
     }
 
     await delay(WAIT_TIME);
-    const companyName = (await extractCompanyName(page))?.trim();
-    let link = (await extractLink(page, jobId))?.trim();
-    const hasApplyLink = !!link;
 
-    if (!link) {
-      link = applicationLink;
-    }
-    const description = (await extractDescription(page))?.trim();
-    const role = (await extractRole(page, companyName))?.trim() || '';
+    // 1. Check apply status immediately before running heavier extractions
+    const status = await checkLinkedInApplyStatus(page);
 
-    let isEasyApply = false;
-    if (hasApplyLink && link.includes("/jobs/view/") && link.includes("/apply")) {
-      isEasyApply = true;
-    } else {
-      isEasyApply = await page.evaluate(() => {
-        const externalBtn = document.querySelector('a[aria-label="Apply on company website"], a[href*="/safety/go/"], a.jobs-apply-button[target="_blank"]');
-        if (externalBtn) return false;
-
-        const safetyContinue = Array.from(document.querySelectorAll('a, button')).find(el => {
-          const t = (el.textContent || '').trim().toLowerCase();
-          return t === 'continue applying' || t === 'continue apply' || t.includes('continue applying');
-        });
-        if (safetyContinue) return true;
-
-        const easyApplyBtn = document.querySelector(
-          '[aria-label="Easy Apply to this job"], [aria-label="LinkedIn Apply to this job"], button[aria-label="Easy Apply to this job"], button.jobs-apply-button'
-        );
-        if (!easyApplyBtn) return false;
-
-        const text = (easyApplyBtn.textContent || '').trim().toLowerCase();
-        if (text.includes('company website') || text.includes('company site') || text.includes('off linkedin')) {
-          return false;
-        }
-        if (text.includes('easy apply')) return true;
-        const hasBugInside = !!easyApplyBtn.querySelector('svg#linkedin-bug-medium, svg[data-test-icon*="linkedin"]');
-        return hasBugInside;
-      });
-    }
-
-    const hasAnyApplyButton = await page.evaluate(() => {
-      if (document.querySelector('.jobs-apply-button')) return true;
-      if (document.querySelector('a[aria-label="Apply on company website"]')) return true;
-      const allBtns = Array.from(document.querySelectorAll('button, a'));
-      return allBtns.some(b => {
-        const t = b.textContent?.trim().toLowerCase();
-        return t === 'apply' || t === 'easy apply' || t === 'continue applying' || t === 'continue apply' || t?.includes('continue applying');
-      });
-    });
-
-    const isAlreadyApplied = await page.evaluate(() => {
-      const textNodes = Array.from(document.querySelectorAll('*'));
-      return textNodes.some(node => {
-        const text = node.textContent?.trim().toLowerCase();
-        return text === 'applied' || text === 'application submitted';
-      });
-    });
-
-    if (isAlreadyApplied) {
+    if (status.isAlreadyApplied) {
       console.log(`[LinkedIn] Job ${jobId} is already applied. Skipping.`);
       return null;
     }
 
-    if (!hasApplyLink && !isEasyApply && !hasAnyApplyButton) {
-      console.log(`[LinkedIn] No Apply or Easy Apply button found for job ${jobId}. Skipping.`);
+    // For any job without an apply button (no Easy Apply, no Apply on site), consider it expired, ignore, close tab and move on
+    if (status.isExpired || !status.hasApplyButton) {
+      console.log(`[LinkedIn] Job ${jobId} has no apply button / is expired or closed. Ignoring and moving on.`);
       return null;
     }
 
+    // 2. Only if the job is active and has a valid apply option, extract details
+    const companyName = (await extractCompanyName(page))?.trim();
+    const description = (await extractDescription(page))?.trim();
+    const role = (await extractRole(page, companyName))?.trim() || '';
+
+    if (!companyName || !description) {
+      console.log(`[LinkedIn] Missing required data for job ${jobId}. companyName=${!!companyName}, description=${!!description}, role=${!!role}`);
+      return null;
+    }
+
+    if (isBlacklistedCompany(companyName)) {
+      console.log(`[LinkedIn] Company ${companyName} is blacklisted for job ${jobId}. Skipping.`);
+      return null;
+    }
+
+    let link = status.externalLink || (await extractLink(page, jobId))?.trim() || applicationLink;
+
     let autoApplySuccess = false;
-    if (isEasyApply) {
+    if (status.isEasyApply) {
       try {
         autoApplySuccess = await handleEasyApply(page, jobId);
       } catch (error) {
@@ -409,12 +495,6 @@ async function extractData(browser: ResilientBrowser, jobId: string) {
         autoApplySuccess = false;
       }
     }
-
-    if (!companyName || !link || !description) {
-      console.log(`[LinkedIn] Missing required data for job ${jobId}. companyName=${!!companyName}, link=${!!link}, description=${!!description}, role=${!!role}`);
-      return null;
-    }
-    if (isBlacklistedCompany(companyName)) return null;
 
     const data: DataJob = {
       id: null,

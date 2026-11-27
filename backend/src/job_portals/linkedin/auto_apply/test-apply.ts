@@ -6,28 +6,37 @@ import { WAIT_TIME } from "../../../utils/constants.ts";
 async function run() {
   console.log("Starting browser connection...");
   const browser = await edge();
-  const page = await browser.newPage();
   const jobIds = [
-    "4492182379",
-    "4493759690",
-    "4492878682",
-    "4493757709"
+    "4494630965",
+    "4495260741",
+    "4495289358"
   ];
 
   for (const jobId of jobIds) {
-    console.log(`Navigating to job ${jobId}...`);
+    console.log(`\nNavigating to job ${jobId}...`);
+    const page = await browser.newPage();
     try {
-      await page.goto(`https://www.linkedin.com/jobs/view/${jobId}`, { waitUntil: "domcontentloaded" });
+      await page.evaluateOnNewDocument(() => {
+        if (typeof (window as any).__name === "undefined") {
+          (window as any).__name = (target: any) => target;
+        }
+      });
+
+      await page.goto(`https://www.linkedin.com/jobs/view/${jobId}`, { waitUntil: "domcontentloaded", timeout: 45000 });
       await delay(WAIT_TIME);
 
       const result = await handleEasyApply(page, jobId);
       console.log(`Auto Apply Result for ${jobId}: ${result}`);
     } catch (error) {
       console.error(`Failed to process job ${jobId}:`, error);
+    } finally {
+      try {
+        if (!page.isClosed()) await page.close();
+      } catch { }
     }
   }
 
-  console.log("Done. Check the browser to see the result!");
+  console.log("\nDone. Check the browser to see the result!");
   // Disconnect from browser without closing it so you can inspect
   browser.disconnect();
 }

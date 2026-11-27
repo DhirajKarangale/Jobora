@@ -5,22 +5,7 @@ import { addToProcessStream } from "../../cloud/redis/index.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import { DataJob, CURSHORT_URL_JOB, CURSHORT_URL_JOB_SEARCH, isBlacklistedCompany, WAIT_TIME } from "../../utils/constants.ts";
 import { incrementJobsScraped, incrementJobsAutoApplied } from "../../utils/automationState.ts";
-
-async function safeClosePage(page: Page | null | undefined): Promise<void> {
-  if (!page) return;
-  try {
-    if (!page.isClosed()) {
-      await page.close();
-    }
-  } catch (err: any) {
-    if (
-      !err?.message?.includes("No target with given id found") &&
-      !err?.message?.includes("Target closed")
-    ) {
-      console.warn("[Cutshort] Notice during page.close:", err.message);
-    }
-  }
-}
+import { trackAndClosePopups, safeClosePage } from "../../utils/popupManager.ts";
 
 async function dismissInterferingModals(page: Page): Promise<boolean> {
   try {
@@ -242,31 +227,38 @@ export default async function cutshort(resilientBrowser: ResilientBrowser): Prom
         role: jobData.role
       };
 
-      const applyStatus = await page.evaluate(async (index) => {
-        const titleLinks = document.querySelectorAll('h3 a[href*="/job/"]');
-        const titleLink = titleLinks[index];
-        const container = titleLink.closest('div[display="flex"]') || titleLink.parentElement?.parentElement?.parentElement?.parentElement;
+      let applyStatus = 'failed';
+      const popupRes = await trackAndClosePopups(resilientBrowser, page, async () => {
+        applyStatus = await page.evaluate(async (index) => {
+          const titleLinks = document.querySelectorAll('h3 a[href*="/job/"]');
+          const titleLink = titleLinks[index];
+          const container = titleLink.closest('div[display="flex"]') || titleLink.parentElement?.parentElement?.parentElement?.parentElement;
 
-        if (!container) return 'failed';
+          if (!container) return 'failed';
 
-        const buttons = Array.from(container.querySelectorAll('button'));
-        const applyBtn = buttons.find(b => b.textContent?.trim() === 'Apply now');
-        if (!applyBtn) return 'not_found';
+          const buttons = Array.from(container.querySelectorAll('button'));
+          const applyBtn = buttons.find(b => b.textContent?.trim() === 'Apply now');
+          if (!applyBtn) return 'not_found';
 
-        applyBtn.click();
-        await new Promise(r => setTimeout(r, 2000));
+          applyBtn.click();
+          await new Promise(r => setTimeout(r, 2000));
 
-        const sendBtns = Array.from(document.querySelectorAll('button'));
-        const sendBtn = sendBtns.find(b => b.textContent?.trim() === 'Send');
-        if (sendBtn) {
-          sendBtn.click();
-          await new Promise(r => setTimeout(r, 3000));
-        }
+          const sendBtns = Array.from(document.querySelectorAll('button'));
+          const sendBtn = sendBtns.find(b => b.textContent?.trim() === 'Send');
+          if (sendBtn) {
+            sendBtn.click();
+            await new Promise(r => setTimeout(r, 3000));
+          }
 
-        const links = Array.from(container.querySelectorAll('a'));
-        const viewConvLink = links.find(l => l.textContent?.trim() === 'View conversation');
-        return viewConvLink ? 'applied' : 'failed';
-      }, i);
+          const links = Array.from(container.querySelectorAll('a'));
+          const viewConvLink = links.find(l => l.textContent?.trim() === 'View conversation');
+          return viewConvLink ? 'applied' : 'failed';
+        }, i);
+      });
+
+      if (popupRes.openedNewTab) {
+        console.log(`[Cutshort] Apply button opened external site. Closed external tab: ${popupRes.finalUrl || 'new tab'}`);
+      }
 
       await delay(WAIT_TIME);
 

@@ -2,6 +2,7 @@ import { type Page } from "puppeteer-core";
 import { setTimeout as delay } from "node:timers/promises";
 import { WAIT_TIME_AUTO_APPLY, WAIT_TIME } from "../../../utils/constants.ts";
 import { handleNaukriQuestions } from "./questions.ts";
+import { trackAndClosePopups } from "../../../utils/popupManager.ts";
 
 export async function handleNaukriApply(page: Page, jobId: string): Promise<boolean> {
   try {
@@ -38,7 +39,15 @@ export async function handleNaukriApply(page: Page, jobId: string): Promise<bool
     }
 
     console.log(`[Naukri] Clicking Apply button for job ${jobId}...`);
-    await page.evaluate(el => (el as HTMLElement).click(), applyBtn);
+    const popupRes = await trackAndClosePopups(page.browser(), page, async () => {
+      await page.evaluate(el => (el as HTMLElement).click(), applyBtn);
+    });
+
+    if (popupRes.openedNewTab) {
+      console.log(`[Naukri] Apply button opened external site for job ${jobId}. Closed external tab.`);
+      return false;
+    }
+
     await delay(WAIT_TIME_AUTO_APPLY);
 
     for (let i = 0; i < 20; i++) {
